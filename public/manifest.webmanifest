@@ -1,0 +1,20 @@
+{
+  "name": "Flapo",
+  "short_name": "Flapo",
+  "description": "El hermano gordito del pájaro famoso. Un juego de un solo botón.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#7cb3d7",
+  "theme_color": "#7cb3d7",
+  "icons": [
+    {
+      "src": "./sprites/icon_app.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

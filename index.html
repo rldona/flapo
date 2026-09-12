@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#7cb3d7" />
+    <meta name="description" content="Flapo, el hermano gordito del pájaro famoso. Un juego de un solo botón." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Flapo</title>
+    <link rel="icon" href="./sprites/icon_app.png" />
+    <link rel="apple-touch-icon" href="./sprites/icon_app.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="preload" as="image" href="./sprites/flapo_0.png" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="side-left" class="side" aria-hidden="true"></div>
+
+      <main id="stage" aria-label="Flapo">
+        <canvas id="playfield" width="288" height="512"></canvas>
+
+        <div id="hud" class="hud is-hidden" aria-live="polite">
+          <div id="hud-score" class="hud-score pixel-font">0</div>
+          <div id="hud-effect" class="hud-effect pixel-font"></div>
+          <div id="hud-shield" class="hud-shield pixel-font"></div>
+          <div id="hud-wind" class="hud-wind pixel-font"></div>
+          <div id="hud-journey" class="hud-journey pixel-font"></div>
+          <div class="hud-breath"><div id="hud-breath-fill" class="hud-breath-fill"></div></div>
+          <div id="glide-hint" class="glide-hint pixel-font is-hidden"></div>
+        </div>
+
+        <button id="pause-button" class="pause-button pixel-font is-hidden" type="button" aria-label="Pausa">
+          II
+        </button>
+      </main>
+
+      <div id="side-right" class="side" aria-hidden="true"></div>
+    </div>
+
+    <div id="overlay" class="overlay"></div>
+    <div id="flash" class="flash"></div>
+    <div id="fade" class="fade"></div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
