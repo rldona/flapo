@@ -24,7 +24,7 @@
 
 </div>
 
-![Captura de una partida de FLAPO](assets/portada.jpg)
+![Captura de una partida de FLAPO](assets/portada-juego.jpg)
 
 ## Índice
 
