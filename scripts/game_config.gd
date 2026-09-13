@@ -15,6 +15,10 @@ extends RefCounted
 ## nodo concreto se expone con `@export` en ese nodo. Los valores de esta
 ## tabla salen de docs/GDD.md y se cierran en T-040.
 
+## Medallas. Con nombre de comida, como pide el GDD ("Concepto y tono"):
+## croqueta de bronce, tortilla de plata, jamón de oro.
+enum Medal { NINGUNA, CROQUETA, TORTILLA, JAMON }
+
 # --- Pantalla -----------------------------------------------------------
 ## Tamaño lógico del viewport, en píxeles. Coincide con
 ## display/window/size/viewport_{width,height} de project.godot.
@@ -56,3 +60,28 @@ static func pipe_spawn_interval() -> float:
 ## suelo. Derivado por el mismo motivo que el intervalo de spawn.
 static func playable_height() -> float:
 	return float(VIEWPORT_SIZE.y) - GROUND_HEIGHT
+
+
+## Qué medalla corresponde a una puntuación. Los umbrales viven aquí y no en
+## el panel: son regla de juego, no decoración (criterio de T-071).
+static func medal_for(score: int) -> Medal:
+	if score >= MEDAL_GOLD:
+		return Medal.JAMON
+	if score >= MEDAL_SILVER:
+		return Medal.TORTILLA
+	if score >= MEDAL_BRONZE:
+		return Medal.CROQUETA
+	return Medal.NINGUNA
+
+
+## Nombre visible de una medalla.
+static func medal_name(medal: Medal) -> String:
+	match medal:
+		Medal.JAMON:
+			return "Jamón"
+		Medal.TORTILLA:
+			return "Tortilla"
+		Medal.CROQUETA:
+			return "Croqueta"
+		_:
+			return ""

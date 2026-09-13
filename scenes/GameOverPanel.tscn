@@ -22,21 +22,40 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -70.0
-offset_top = -50.0
-offset_right = 70.0
-offset_bottom = 50.0
+offset_left = -80.0
+offset_top = -92.0
+offset_right = 80.0
+offset_bottom = 92.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
 [node name="Title" type="Label" parent="Root/Box"]
 text = "¡Uf!"
+horizontal_alignment = 1
+
+[node name="Medal" type="Label" parent="Root/Box"]
+text = ""
 horizontal_alignment = 1
 
 [node name="Score" type="Label" parent="Root/Box"]
 text = "0"
 horizontal_alignment = 1
 
+[node name="HighScore" type="Label" parent="Root/Box"]
+text = "Récord 0"
+horizontal_alignment = 1
+
+[node name="NewRecord" type="Label" parent="Root/Box"]
+visible = false
+text = "¡Nuevo récord!"
+horizontal_alignment = 1
+
 [node name="Button" type="Button" parent="Root/Box"]
+custom_minimum_size = Vector2(0, 48)
 text = "Otra vez"
+
+[node name="ShareButton" type="Button" parent="Root/Box"]
+visible = false
+custom_minimum_size = Vector2(0, 48)
+text = "Compartir"

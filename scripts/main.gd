@@ -152,6 +152,22 @@ func _connect_children() -> void:
 	score_changed.connect(hud.set_score)
 	score_changed.connect(game_over_panel.set_score)
 	game_over_panel.restart_pressed.connect(restart)
+	game_over_panel.share_pressed.connect(_on_share_pressed)
+	state_changed.connect(_on_state_changed_results)
+
+
+## Rellena el panel al morir. Va aparte de `_on_bird_died` porque el panel
+## debe enterarse igual si algún día se llega a GAME_OVER por otra vía.
+func _on_state_changed_results(to: GameState.State) -> void:
+	if to == GameState.State.GAME_OVER:
+		game_over_panel.show_results(_score, _high_score, _is_new_high_score)
+
+
+## Compartir en Android. El intent nativo de texto necesita un plugin, que
+## está fuera del alcance de v1 (GDD, "Fuera de alcance"): de momento se deja
+## la marca en el portapapeles, que es lo que se puede hacer sin plugin.
+func _on_share_pressed(texto: String) -> void:
+	DisplayServer.clipboard_set(texto)
 
 
 func _on_scored() -> void:
