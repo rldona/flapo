@@ -1,9 +1,12 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/background.gd" id="1_bg"]
 [ext_resource type="Texture2D" uid="uid://dxvrbr4ivl8m2" path="res://assets/sprites/cloud_a.png" id="2_ca"]
 [ext_resource type="Texture2D" uid="uid://dayqw6qavebva" path="res://assets/sprites/cloud_b.png" id="3_cb"]
 [ext_resource type="Texture2D" uid="uid://wtoihctu5abf" path="res://assets/sprites/city.png" id="4_city"]
+[ext_resource type="Texture2D" path="res://assets/sprites/stage_parque.png" id="5_parque"]
+[ext_resource type="Texture2D" path="res://assets/sprites/stage_nubes.png" id="6_nubes"]
+[ext_resource type="Texture2D" path="res://assets/sprites/stage_cielo.png" id="7_cielo"]
 
 [node name="Background" type="Node2D"]
 script = ExtResource("1_bg")
@@ -40,6 +43,18 @@ texture = ExtResource("3_cb")
 [node name="Near" type="Parallax2D" parent="."]
 repeat_size = Vector2(96, 0)
 
+[node name="Parque" type="Sprite2D" parent="Near"]
+position = Vector2(48, 388)
+texture = ExtResource("5_parque")
+
 [node name="City" type="Sprite2D" parent="Near"]
 position = Vector2(48, 388)
 texture = ExtResource("4_city")
+
+[node name="Nubes" type="Sprite2D" parent="Near"]
+position = Vector2(48, 388)
+texture = ExtResource("6_nubes")
+
+[node name="Cielo" type="Sprite2D" parent="Near"]
+position = Vector2(48, 388)
+texture = ExtResource("7_cielo")

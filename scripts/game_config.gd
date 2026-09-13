@@ -38,6 +38,10 @@ enum Medal { NINGUNA, CROQUETA, TORTILLA, JAMON }
 ## toca el hueco, la velocidad ni la física.
 enum Scenery { DIA, ATARDECER, NOCHE, LLUVIA }
 
+## Los cuatro paisajes del viaje, en orden. El nido (T-209) está al final del
+## último: el paisaje va contando lo cerca que estás sin decir un número.
+enum Stage { PARQUE, TEJADOS, NUBES, CIELO }
+
 # --- Pantalla -----------------------------------------------------------
 ## Tamaño lógico del viewport, en píxeles. Coincide con
 ## display/window/size/viewport_{width,height} de project.godot.
@@ -344,6 +348,21 @@ const SCENERY_TINT: Array[Color] = [
 ## que haya una variante más, esto sigue diciendo la verdad.
 const SCENERY_LLUEVE: Array[bool] = [false, false, false, true]
 
+## --- Tramos del viaje (T-222) ---
+
+## Cada cuántos puntos se cambia de tramo.
+##
+## 13 no es un número redondo y es a propósito: cuatro tramos de 13 ponen el
+## cielo abierto en el punto 39, y el nido (T-209) cae en el 50, ya dentro del
+## último tramo. Así el paisaje anuncia el final antes de que llegue en vez de
+## cambiar justo encima.
+const JOURNEY_STAGE_SCORE: int = 13
+
+## Cuánto tarda el fundido entre tramos, s. Dos segundos: el cambio tiene que
+## notarse al mirarlo y no al mirarlo fijamente, y sobre todo no puede robar
+## la atención del hueco que se está cruzando.
+const JOURNEY_FADE_TIME: float = 2.0
+
 ## --- Fin del viaje: el nido (T-209) ---
 
 ## A qué puntuación llega Flapo al nido. 50: por encima de la medalla de oro
@@ -474,6 +493,21 @@ static func mirror_unlocked(record: int) -> bool:
 ## solaparse por accidente.
 static func graze_threshold(gap: float) -> float:
 	return gap * 0.5 * GRAZE_RATIO
+
+
+## En qué tramo del viaje va una puntuación (T-222).
+##
+## Función pura, como toda la curva (ADR-0018): no hay estado de tramo que
+## sincronizar, y reiniciar vuelve al parque sin código de reinicio porque el
+## marcador vuelve a 0.
+static func journey_stage(score: int) -> Stage:
+	var indice: int = int(maxi(score, 0) / JOURNEY_STAGE_SCORE)
+	return clampi(indice, 0, Stage.size() - 1) as Stage
+
+
+## Nombre visible del tramo. Lo usan los tests.
+static func stage_name(tramo: Stage) -> String:
+	return ["Parque", "Tejados", "Nubes", "Cielo"][int(tramo)]
 
 
 ## Si a esta tubería del tramo le toca ser blandita (T-067).

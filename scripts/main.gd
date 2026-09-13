@@ -386,6 +386,9 @@ func _aplicar_escenario() -> void:
 		sky.color = GameConfig.scenery_sky(variante)
 	if background != null:
 		background.set_variant(variante)
+		# El tramo también se pone al empezar, no solo al puntuar: si no, una
+		# partida nueva arrancaría con el paisaje de la anterior (T-222).
+		background.set_stage(GameConfig.journey_stage(_score))
 	if snapshot != null:
 		snapshot.set_sky(GameConfig.scenery_sky(variante))
 
@@ -653,6 +656,10 @@ func _on_scored() -> void:
 	if audio != null:
 		audio.play_point()
 	_quiza_medalla(antes_de_puntuar)
+	# El paisaje va contando lo lejos que has llegado (T-222). Se empuja en
+	# cada punto y el fondo decide si eso es un cambio de tramo o no.
+	if background != null:
+		background.set_stage(GameConfig.journey_stage(_score))
 	_apply_difficulty()
 	score_changed.emit(_score)
 
