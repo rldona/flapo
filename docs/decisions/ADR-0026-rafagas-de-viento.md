@@ -137,3 +137,42 @@ térmica no acaba pegada a una giratoria. Los dos tickets se cumplen enteros.
   Como la térmica cae a media separación, **nunca** se solapa con nada y el
   test estaba siempre en verde: quitando la garantía entera no se enteraba.
   Ahora mira la tubería de antes y la de después.
+
+## Ampliación (T-204): el rebufo, y el hermano
+
+El hermano es **puro escenario**: un `Node2D` con un sprite y ni una forma de
+colisión en toda la escena. No es un `CharacterBody2D`, no colisiona, no
+puntúa y no se le alcanza. Es un chiste que cruza la pantalla, y el humor es
+con Flapo, nunca contra él (GDD).
+
+Todo su efecto en el juego es la estela que deja. Planear dentro **no gasta
+aliento**: ni empuja, ni sube, ni puntúa. El rebufo es **descanso, no
+ventaja** — si empujara, el chiste dejaría de serlo y pasaría a ser una pieza
+que hay que cazar.
+
+### El carril del hermano sale de la geometría, no del gusto
+Cruza **pegado a un borde**, arriba o abajo, eligiendo el contrario al hueco
+que toca. No "a media pantalla, lejos del hueco", que es lo que hacía la
+primera versión.
+
+El motivo es que **el hermano atraviesa media pantalla** y se encuentra huecos
+que todavía no existían cuando se decidió su altura. Apartarse del hueco de la
+última tubería no vale para el que viene tres tuberías después. Se midió: 62
+invasiones.
+
+Los huecos se sortean entre el 20 % y el 80 % de la altura jugable, así que un
+carril a 26 px del borde **nunca** cae dentro de ninguno, ni del siguiente ni
+del que venga después. El test lo comprueba con aritmética sobre el hueco más
+extremo que el juego puede generar, no muestreando mientras el hermano pasa —
+pasa en un segundo, y muestrear no encontraba el caso malo.
+
+### Un número que estaba mal por geometría
+`SLIPSTREAM_TIME` era 3,5 s. La estela mide una pantalla de ancho y se mueve
+con el mundo, así que tarda unos 2,4 s en salirse por la izquierda: **el
+temporizador no llegaba a notarse nunca** y su desvanecido no lo veía nadie.
+Ahora son 2,0 s.
+
+Lo destapó el test al preguntar algo que parecía una tontería: no *cuándo*
+muere la estela, sino **dónde**. Preguntando por el tiempo, las dos causas de
+muerte —caducar y salirse— daban casi el mismo número y eran
+indistinguibles.

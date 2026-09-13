@@ -371,6 +371,50 @@ const THERMAL_MAX_RISE: float = 170.0
 ## poder esquivarse.
 const THERMAL_SIZE := Vector2(26.0, 220.0)
 
+## --- El hermano pasa: rebufo (T-204) ---
+
+## Cada cuántas tuberías cruza el hermano. 9 y no 5 como las térmicas: es un
+## chiste, y un chiste repetido deja de serlo.
+const BROTHER_INTERVAL: int = 9
+
+## A qué puntuación empieza a aparecer.
+const BROTHER_MIN_SCORE: int = 12
+
+## A cuánto cruza, en múltiplos de la velocidad del mundo. 2,4x: pasa
+## claramente más rápido que todo lo demás, que es el chiste — él no se
+## esfuerza.
+const BROTHER_SPEED_MULT: float = 2.4
+
+## Cuánto dura la estela, s.
+##
+## 2,0 y no más, y el número sale de la geometría, no del gusto: la estela
+## mide una pantalla de ancho y se mueve con el mundo, así que tarda unos 2,4 s
+## en salirse por la izquierda. Con los 3,5 s de la primera versión, el
+## temporizador **no llegaba a notarse nunca** — la estela ya estaba fuera de
+## pantalla cuando le tocaba caducar, y su desvanecido no lo veía nadie.
+##
+## Lo destapó el test al preguntar algo que parecía una tontería: no *cuándo*
+## muere la estela, sino **dónde**.
+const SLIPSTREAM_TIME: float = 2.0
+
+## Alto de la estela, px. Estrecha: hay que meterse en ella a propósito.
+const SLIPSTREAM_HEIGHT: float = 22.0
+
+## A qué distancia del borde de la pantalla cruza el hermano, px.
+##
+## Cruza **pegado a un borde**, arriba o abajo, y no "a media pantalla lejos
+## del hueco". El motivo es geométrico: los huecos se sortean entre el 20 % y
+## el 80 % de la altura jugable (`Pipe.gap_center_min_ratio`), así que el
+## hueco más alto posible empieza por debajo de este margen y el más bajo
+## acaba por encima del de abajo. Cruzando por el borde, el hermano **nunca**
+## pasa por dentro de ningún hueco — ni del siguiente ni del que venga tres
+## tuberías después, que es por donde también cruza.
+##
+## La primera versión se apartaba del hueco de la última tubería creada y no
+## valía: el hermano atraviesa media pantalla y se encuentra huecos que
+## todavía no existían cuando se decidió su altura. Se midió: 62 invasiones.
+const BROTHER_EDGE_MARGIN: float = 26.0
+
 ## --- Captura del mejor salto (T-077) ---
 
 ## Cuántos segundos de vuelo entran en la captura.

@@ -503,6 +503,7 @@ func _connect_children() -> void:
 		pipe_spawner.pipe_spawned.connect(air_spawner.on_pipe_spawned)
 		air_spawner.set_pipe_spawner(pipe_spawner)
 		air_spawner.thermal_changed.connect(bird.set_in_thermal)
+		air_spawner.slipstream_changed.connect(bird.set_in_slipstream)
 	effects.changed.connect(_on_effects_changed)
 	effects.shield_changed.connect(hud.set_shield)
 	for nombre in piezas:

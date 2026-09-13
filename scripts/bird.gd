@@ -158,6 +158,9 @@ var _gliding: bool = false
 ## Cuántas térmicas lo están tocando (T-203). Un contador y no un `bool`:
 ## dos columnas solapadas y un `bool` se apagaría al salir de la primera.
 var _termicas: int = 0
+## Cuántas estelas de rebufo lo están tocando (T-204). Contador por lo mismo
+## que las térmicas: dos solapadas y un `bool` mentiría al salir de una.
+var _estelas: int = 0
 ## Marcas de tiempo de los últimos aleteos, s. Es el historial del que
 ## `GameConfig.fatigue_impulse_mult()` deriva la fatiga: aquí no hay estado de
 ## fatiga, solo datos (T-049).
@@ -262,6 +265,7 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_held = 0.0
 		_gliding = false
 		_termicas = 0
+		_estelas = 0
 		_breath = max_breath
 		breath_changed.emit(_breath, max_breath)
 		_flap_times.clear()
@@ -366,7 +370,10 @@ func _actualizar_planeo(delta: float) -> void:
 	if _gliding and not antes:
 		glided.emit()
 	if _gliding:
-		_gastar_aliento(GameConfig.BREATH_DRAIN_GLIDE * delta)
+		# Dentro del rebufo, planear no gasta aliento (T-204). No empuja ni
+		# sube: el rebufo es descanso, no ventaja.
+		if _estelas <= 0:
+			_gastar_aliento(GameConfig.BREATH_DRAIN_GLIDE * delta)
 		# Planear descansa: es la salida deliberada a la fatiga, y lo que
 		# convierte "deja de machacar" en una acción y no en una espera.
 		if not antes and not _flap_times.is_empty():
@@ -450,6 +457,16 @@ func set_in_thermal(dentro: bool) -> void:
 ## Si está dentro de alguna térmica. Lo usan los tests.
 func in_thermal() -> bool:
 	return _termicas > 0
+
+
+## Main le dice que ha entrado o salido de una estela de rebufo (T-204).
+func set_in_slipstream(dentro: bool) -> void:
+	_estelas = maxi(_estelas + (1 if dentro else -1), 0)
+
+
+## Si está dentro de alguna estela. Lo usan los tests.
+func in_slipstream() -> bool:
+	return _estelas > 0
 
 
 ## Si Flapo está planeando ahora mismo.

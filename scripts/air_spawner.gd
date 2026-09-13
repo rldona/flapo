@@ -14,8 +14,15 @@ extends Node2D
 ## Flapo ha entrado o salido de una térmica. El spawner solo hace de puente.
 signal thermal_changed(dentro: bool)
 
+## Flapo ha entrado o salido de la estela del hermano (T-204).
+signal slipstream_changed(dentro: bool)
+
 ## Escena de térmica a instanciar. Se asigna en el editor.
 @export var thermal_scene: PackedScene
+
+## Escena del hermano y de su estela (T-204).
+@export var brother_scene: PackedScene
+@export var slipstream_scene: PackedScene
 
 ## X donde nacen las tuberías, px. Se usa como referencia para colocar la
 ## térmica **a mitad de camino de la siguiente**, que es el mismo criterio que
@@ -59,13 +66,14 @@ func set_difficulty(velocidad: float, separacion: float, score: int) -> void:
 	spacing = separacion
 	_score = score
 	for hijo in get_children():
-		if hijo is Thermal:
+		if hijo is Thermal or hijo is Brother or hijo is Slipstream:
 			hijo.scroll_speed = velocidad
 
 
 ## Ha nacido una tubería: toca contar y quizá soltar una térmica.
 func on_pipe_spawned() -> void:
 	_contador += 1
+	_quiza_hermano()
 	if not _toca_termica():
 		return
 	if _pipe_spawner == null:
@@ -83,6 +91,75 @@ func on_pipe_spawned() -> void:
 	if not _pipe_spawner.reservar_normal():
 		return
 	_crear_termica()
+
+
+## Si a esta tubería le toca que pase el hermano (T-204).
+##
+## Va aparte de la térmica y con otro intervalo: son dos cosas distintas y
+## coincidir de vez en cuando está bien, pero atarlas las haría previsibles
+## juntas y el chiste dejaría de sorprender.
+func _quiza_hermano() -> void:
+	if _score < GameConfig.BROTHER_MIN_SCORE:
+		return
+	if GameConfig.BROTHER_INTERVAL <= 0 or _contador % GameConfig.BROTHER_INTERVAL != 0:
+		return
+	if brother_scene == null or slipstream_scene == null:
+		return
+	var y: float = _altura_libre()
+
+	var hermano: Brother = brother_scene.instantiate()
+	hermano.scroll_speed = scroll_speed
+	hermano.position = Vector2(GameConfig.VIEWPORT_SIZE.x + 24.0, y)
+	add_child(hermano)
+
+	var estela: Slipstream = slipstream_scene.instantiate()
+	estela.scroll_speed = scroll_speed
+	estela.ancho = float(GameConfig.VIEWPORT_SIZE.x)
+	estela.position = Vector2(float(GameConfig.VIEWPORT_SIZE.x) * 0.5, y)
+	estela.cambiado.connect(_on_slipstream_cambiado)
+	add_child(estela)
+
+
+## Por dónde cruza el hermano sin tapar ningún hueco (T-204).
+##
+## Por el borde de arriba o el de abajo, eligiendo el contrario al hueco que
+## toca cruzar ahora. Los huecos se sortean entre el 20 % y el 80 % de la
+## altura, así que un borde nunca cae dentro de ninguno — y eso vale para
+## todas las tuberías que el hermano se cruce, no solo la siguiente.
+func _altura_libre() -> float:
+	var alto: float = GameConfig.playable_height()
+	var centro: float = alto * 0.5
+	if _pipe_spawner != null:
+		var ultima: Pipe = _pipe_spawner.ultima_tuberia()
+		if ultima != null:
+			centro = ultima.get_gap_center()
+	# El hueco está arriba: cruza por abajo, y al revés. Así, además de no
+	# tapar nada, pasa por donde el jugador no está mirando.
+	if centro < alto * 0.5:
+		return alto - GameConfig.BROTHER_EDGE_MARGIN
+	return GameConfig.BROTHER_EDGE_MARGIN
+
+
+## Cuántos hermanos hay cruzando. Lo usan los tests.
+func brother_count() -> int:
+	var n: int = 0
+	for hijo in get_children():
+		if hijo is Brother:
+			n += 1
+	return n
+
+
+## Cuántas estelas hay vivas. Lo usan los tests.
+func slipstream_count() -> int:
+	var n: int = 0
+	for hijo in get_children():
+		if hijo is Slipstream:
+			n += 1
+	return n
+
+
+func _on_slipstream_cambiado(dentro: bool) -> void:
+	slipstream_changed.emit(dentro)
 
 
 ## Si a esta tubería le toca térmica.
@@ -126,11 +203,10 @@ func _on_thermal_cambiado(dentro: bool) -> void:
 
 func _liberar_todas() -> void:
 	for hijo in get_children():
-		if hijo is Thermal:
-			hijo.queue_free()
+		hijo.queue_free()
 
 
 func _congelar_todas() -> void:
 	for hijo in get_children():
-		if hijo is Thermal:
+		if hijo is Thermal or hijo is Brother or hijo is Slipstream:
 			hijo.moving = false
