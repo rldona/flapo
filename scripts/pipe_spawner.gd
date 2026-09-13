@@ -34,6 +34,10 @@ signal centered
 var scroll_speed: float = GameConfig.SCROLL_SPEED
 var gap: float = GameConfig.PIPE_GAP
 var spacing: float = GameConfig.PIPE_SPACING
+## Probabilidad de que el próximo par oscile (T-063). La fija Main, que es
+## quien conoce la puntuación: el spawner no consulta el marcador ("call
+## down", ADR-0005).
+var moving_chance: float = 0.0
 
 var _rng := RandomNumberGenerator.new()
 
@@ -116,7 +120,23 @@ func _crear_tuberia() -> void:
 	# Después de add_child: `randomize_gap` toca los nodos internos, que solo
 	# existen una vez ha corrido `_ready()` de la tubería.
 	pipe.randomize_gap(_rng)
+	_quiza_oscilante(pipe)
 	pipe_spawned.emit()
+
+
+## Decide si este par oscila, y con cuánta amplitud (T-063).
+##
+## La amplitud se calcula DESPUÉS de sortear la altura, porque depende de
+## ella: un hueco pegado al techo apenas puede subir. Si no cabe margen sale
+## 0 y la tubería es normal, que es preferible a mover un hueco medio fuera
+## de pantalla.
+func _quiza_oscilante(pipe: Pipe) -> void:
+	if moving_chance <= 0.0 or _rng.randf() >= moving_chance:
+		return
+	pipe.oscillation_amplitude = GameConfig.moving_pipe_amplitude(pipe.gap, pipe.get_gap_center())
+	# Desfase al azar: si todas arrancaran en el mismo punto del seno, la
+	# pantalla entera temblaría a la vez en vez de parecer tuberías sueltas.
+	pipe.oscillation_phase = _rng.randf_range(0.0, TAU)
 
 
 func _on_pipe_scored() -> void:

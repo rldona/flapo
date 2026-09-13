@@ -435,6 +435,9 @@ func _apply_difficulty() -> void:
 	var separacion: float = GameConfig.pipe_spacing_for(_score, _difficulty)
 	if pipe_spawner != null:
 		pipe_spawner.set_difficulty(velocidad, hueco, separacion)
+		# La probabilidad de tubería móvil es una función pura de la
+		# puntuación, como el resto de la curva (T-063).
+		pipe_spawner.moving_chance = GameConfig.moving_pipe_chance(_score)
 	if ground != null:
 		ground.scroll_speed = velocidad
 	if background != null:

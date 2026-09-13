@@ -90,6 +90,21 @@ partir de ahí el juego es el de siempre y sigue apretando.
 La separación sube a propósito: es lo que mantiene los aleteos por encima de
 3. Ver ADR-0018.
 
+### Tuberías móviles (T-063)
+
+A partir de **15 puntos** —cuando acaba la rampa de entrada— algunos pares
+oscilan arriba y abajo. La probabilidad va de 0,15 a los 15 puntos a 0,45 en
+el tope; nunca es certeza.
+
+| Magnitud | Valor | Por qué |
+|---|---|---|
+| Amplitud | hasta ±22 px | recortada por tubería para que el hueco entero quepa en pantalla |
+| Periodo | 2,4 s | 58 px/s de punta |
+| Velocidad frente al aleteo | 15 % | Flapo siempre puede más que la tubería |
+
+Ese 15 % es lo que separa "exigente" de "inevitable": si la tubería subiera
+más rápido de lo que Flapo sube, no habría forma de responder. Ver ADR-0023.
+
 - Muerte: contacto con tubería o suelo.
 - Puntuación: +1 al atravesar el hueco. Una vez por tubería.
 - Récord persistente. Medallas: bronce 10, plata 20, oro 40.

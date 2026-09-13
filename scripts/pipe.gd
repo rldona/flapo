@@ -43,7 +43,29 @@ signal centered
 ## Si está en marcha. `PipeSpawner` lo pone a false en GAME_OVER (T-025).
 @export var moving: bool = true
 
+@export_group("Oscilación (T-063)")
+## Amplitud vertical, px (la mitad del recorrido). 0 = tubería normal, quieta.
+##
+## La calcula `GameConfig.moving_pipe_amplitude()` a partir del hueco y su
+## altura, así que el hueco COMPLETO cabe siempre en la zona jugable. Ver
+## ADR-0023.
+@export var oscillation_amplitude: float = 0.0:
+	set(valor):
+		oscillation_amplitude = maxf(valor, 0.0)
+## Segundos de una oscilación completa.
+@export var oscillation_period: float = GameConfig.MOVING_PIPE_PERIOD
+## Desfase inicial, rad. Se siembra por tubería para que no oscilen todas a la
+## vez, que se leería como un temblor de la pantalla y no como tuberías.
+@export var oscillation_phase: float = 0.0
+
 var _gap_center: float = 256.0
+## Altura alrededor de la cual oscila. `_gap_center` es dónde está ahora;
+## esto es dónde debería estar en reposo.
+var _base_gap_center: float = 256.0
+## Reloj propio de la oscilación. Se acumula en `_physics_process` y no se
+## lee de `Time`: así se para con la pausa y con el hit-stop, igual que la
+## ventana de fatiga de T-049.
+var _osc_tiempo: float = 0.0
 var _ya_puntuada: bool = false
 
 @onready var _top: StaticBody2D = $Top
@@ -66,6 +88,7 @@ func _physics_process(delta: float) -> void:
 	if not moving:
 		return
 	position.x -= scroll_speed * delta
+	_oscilar(delta)
 	# Se libera cuando su borde derecho ha pasado el borde izquierdo de la
 	# pantalla. Sin esto, cada partida acumularía tuberías invisibles para
 	# siempre: el criterio de nodos huérfanos de T-024 es exactamente esto.
@@ -74,9 +97,39 @@ func _physics_process(delta: float) -> void:
 
 
 ## Coloca el centro del hueco a una altura concreta, px.
+##
+## Fija también la altura de reposo: quien llama está diciendo dónde va esta
+## tubería, y la oscilación es un vaivén alrededor de ahí.
 func set_gap_center(y: float) -> void:
 	_gap_center = y
+	_base_gap_center = y
 	_apply_layout()
+
+
+## Si esta tubería oscila. Lo usan los tests y T-067.
+func is_oscillating() -> bool:
+	return oscillation_amplitude > 0.0
+
+
+## Altura de reposo del hueco, px.
+func get_base_gap_center() -> float:
+	return _base_gap_center
+
+
+## Mueve el hueco arriba y abajo (T-063).
+##
+## Los tubos son `StaticBody2D` y se mueven cambiando su `position`, sin
+## `constant_linear_velocity`. No hace falta: para Flapo, cualquier contacto
+## con una tubería es la muerte (`get_slide_collision_count() > 0`), así que
+## no existe el roce en el que un cuerpo estático móvil arrastraría a otro.
+## Ver ADR-0023.
+func _oscilar(delta: float) -> void:
+	if oscillation_amplitude <= 0.0 or oscillation_period <= 0.0:
+		return
+	_osc_tiempo += delta
+	var angulo: float = oscillation_phase + _osc_tiempo * TAU / oscillation_period
+	_gap_center = _base_gap_center + sin(angulo) * oscillation_amplitude
+	_recolocar()
 
 
 ## Centro del hueco, px.
@@ -128,17 +181,28 @@ func _asignar_forma_zona() -> void:
 func _apply_layout() -> void:
 	if _top == null or _bottom == null:
 		return  # Todavía no ha corrido `_ready()`; ya se llamará desde allí.
+	_vestir(_top, false)
+	_vestir(_bottom, true)
+	var forma := (_score_zone.get_node("CollisionShape2D") as CollisionShape2D).shape
+	if forma is RectangleShape2D:
+		(forma as RectangleShape2D).size = Vector2(width, gap)
+	_recolocar()
+
+
+## Solo lo que depende de la altura del hueco.
+##
+## Va aparte de `_apply_layout` porque una tubería que oscila lo llama en
+## cada frame de física: repetir ahí el vestido de los sprites (regiones,
+## cabezas) sería trabajo tirado 60 veces por segundo.
+func _recolocar() -> void:
+	if _top == null or _bottom == null:
+		return
 	var media_luz: float = gap * 0.5
 	# Cada tubo se centra en su propio punto medio, de ahí el medio largo.
 	_top.position.y = _gap_center - media_luz - body_length * 0.5
 	_bottom.position.y = _gap_center + media_luz + body_length * 0.5
-	_vestir(_top, false)
-	_vestir(_bottom, true)
 	# La zona de puntuación ES el hueco: mismo centro, mismo alto.
 	_score_zone.position.y = _gap_center
-	var forma := (_score_zone.get_node("CollisionShape2D") as CollisionShape2D).shape
-	if forma is RectangleShape2D:
-		(forma as RectangleShape2D).size = Vector2(width, gap)
 
 
 ## Estira el cuerpo del tubo y coloca la cabeza en su boca.
