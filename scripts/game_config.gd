@@ -14,14 +14,9 @@ extends Node
 ## display/window/size/viewport_{width,height} de project.godot.
 const VIEWPORT_SIZE := Vector2i(288, 512)
 
-# --- Física de Flapo ----------------------------------------------------
-## Aceleración de caída, px/s². Flapo pesa: es alta a propósito.
-const GRAVITY: float = 1200.0
-## Velocidad vertical que se fija de golpe al aletear, px/s.
-## Negativa porque en Godot 2D el eje Y crece hacia abajo.
-const FLAP_IMPULSE: float = -380.0
-## Altura mínima que puede alcanzar Flapo, px. No se sale por arriba.
-const CEILING_Y: float = 0.0
+# La física de Flapo (gravedad, impulso, techo) no está aquí: vive como
+# `@export` en `scripts/bird.gd` porque es lo que se tunea a ojo en T-040.
+# Ver ADR-0003.
 
 # --- Mundo --------------------------------------------------------------
 ## Velocidad a la que el mundo se desplaza hacia la izquierda, px/s.

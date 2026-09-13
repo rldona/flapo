@@ -13,6 +13,10 @@ extends Node2D
 ## nodo reacciona, `state` ya devuelve el valor nuevo.
 signal state_changed(to: GameState.State)
 
+## Flapo. Se asigna arrastrando el nodo en el inspector, no con una ruta de
+## texto: si algún día se mueve o se renombra, Godot actualiza la referencia.
+@export var bird: Bird
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -31,6 +35,7 @@ var _state: GameState.State = GameState.State.READY
 func _ready() -> void:
 	if log_transitions:
 		state_changed.connect(_on_state_changed_log)
+	_connect_children()
 	# Se anuncia el estado inicial para que nadie tenga que suponerlo. Los
 	# hijos ya están listos: en Godot `_ready()` corre de abajo arriba.
 	state_changed.emit(_state)
@@ -60,6 +65,19 @@ func change_state(to: GameState.State) -> void:
 		return
 	_state = to
 	state_changed.emit(to)
+
+
+## "Call down, signal up": el padre cablea, los hijos no se buscan entre sí.
+func _connect_children() -> void:
+	if bird == null:
+		push_error("Main no tiene asignado el nodo Bird en el inspector.")
+		return
+	state_changed.connect(bird.on_game_state_changed)
+	bird.died.connect(_on_bird_died)
+
+
+func _on_bird_died() -> void:
+	change_state(GameState.State.GAME_OVER)
 
 
 func _on_state_changed_log(to: GameState.State) -> void:
