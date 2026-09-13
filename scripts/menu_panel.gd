@@ -12,6 +12,9 @@ extends CanvasLayer
 ## El jugador quiere empezar.
 signal play_pressed
 
+## El jugador ha escrito su nombre (T-079). Ya viene saneado.
+signal name_changed(nombre: String)
+
 ## El jugador quiere ver sus estadísticas (T-084).
 signal stats_pressed
 
@@ -24,6 +27,7 @@ var _modo: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 @onready var _difficulty: Button = $Root/Box/Difficulty
 @onready var _record: Label = $Root/Box/Record
 @onready var _stats: Button = $Root/Box/Stats
+@onready var _name: LineEdit = $Root/Box/Name
 
 
 func _ready() -> void:
@@ -32,6 +36,11 @@ func _ready() -> void:
 	# quedan por debajo de los 48 dp táctiles que exige T-030.
 	_difficulty.pressed.connect(_on_difficulty_pressed)
 	_stats.pressed.connect(func() -> void: stats_pressed.emit())
+	_name.max_length = GameConfig.PLAYER_NAME_MAX_LEN
+	_name.placeholder_text = GameConfig.PLAYER_NAME_DEFAULT
+	# `text_changed` y no `text_submitted`: en móvil mucha gente cierra el
+	# teclado sin darle a Intro, y el nombre se perdería.
+	_name.text_changed.connect(_on_name_changed)
 	visible = false
 
 
@@ -47,6 +56,17 @@ func set_difficulty(modo: GameConfig.Difficulty) -> void:
 	_refrescar()
 
 
+## Enseña el nombre guardado, sin emitir nada.
+func set_player_name(nombre: String) -> void:
+	if _name != null and _name.text != nombre:
+		_name.text = nombre
+
+
+## Lo que hay escrito ahora mismo. Lo usan los tests.
+func player_name() -> String:
+	return _name.text if _name != null else ""
+
+
 ## El récord, para que el menú no sea una pantalla vacía.
 func set_high_score(record: int) -> void:
 	_record.text = "Récord: %d" % record
@@ -55,6 +75,17 @@ func set_high_score(record: int) -> void:
 ## Qué modo enseña ahora mismo. Lo usan los tests.
 func difficulty() -> GameConfig.Difficulty:
 	return _modo
+
+
+func _on_name_changed(texto: String) -> void:
+	var limpio: String = GameConfig.sanitize_player_name(texto)
+	if limpio != texto:
+		# Se corrige lo escrito en el sitio, para que el jugador vea qué se
+		# va a guardar de verdad. `caret_column` al final: sin esto el cursor
+		# salta al principio en cuanto se sanea un carácter.
+		_name.text = limpio
+		_name.caret_column = limpio.length()
+	name_changed.emit(limpio)
 
 
 func _on_difficulty_pressed() -> void:

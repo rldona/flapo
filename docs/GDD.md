@@ -117,6 +117,11 @@ reacción, nunca el ritmo. Ver ADR-0022.
 
 El modo elegido se recuerda entre sesiones y no se puede cambiar jugando.
 
+### Nombre de jugador (T-079)
+Campo opcional en el menú, máximo 12 caracteres. **Jugar sin nombre nunca se
+bloquea**: quien no pone ninguno comparte en primera persona ("He cruzado 3
+tuberías con Flapo") en vez de firmar.
+
 ### Estadísticas (T-084)
 Desde el menú: partidas jugadas, mejor marca, mejor medalla, tuberías
 cruzadas en total y media por partida. Solo el total de tuberías es un

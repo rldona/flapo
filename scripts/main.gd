@@ -88,6 +88,8 @@ var _score: int = 0
 var _high_score: int = 0
 ## Escalón de confianza (T-074). Se lee del guardado, no se calcula aquí.
 var _confidence: int = 0
+## Nombre del jugador (T-079). Vacío significa "no ha puesto ninguno".
+var _player_name: String = ""
 ## Modo elegido en el menú (T-078). También del guardado.
 var _difficulty: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 ## La última frase que salió, para no repetirla dos veces seguidas.
@@ -106,6 +108,7 @@ func _ready() -> void:
 	_high_score = SaveManager.get_high_score()
 	_confidence = SaveManager.get_confidence()
 	_difficulty = SaveManager.get_difficulty()
+	_player_name = SaveManager.get_player_name()
 	if log_transitions:
 		state_changed.connect(_on_state_changed_log)
 	_connect_children()
@@ -215,6 +218,26 @@ func set_difficulty(modo: GameConfig.Difficulty) -> void:
 	_refrescar_menu()
 
 
+## El nombre del jugador tal y como se guarda: vacío si no puso ninguno.
+func get_player_name() -> String:
+	return _player_name
+
+
+## El nombre a enseñar. Nunca vacío: sin nombre, el de siempre.
+func display_player_name() -> String:
+	return GameConfig.display_player_name(_player_name)
+
+
+## Guarda el nombre. Se llama en cada tecla, así que se sale pronto si no ha
+## cambiado nada: escribir no debería tocar el disco doce veces.
+func set_player_name(nombre: String) -> void:
+	var limpio: String = GameConfig.sanitize_player_name(nombre)
+	if limpio == _player_name:
+		return
+	_player_name = limpio
+	SaveManager.set_player_name(limpio)
+
+
 ## Vuelve al menú desde el Game Over o desde READY.
 func to_menu() -> void:
 	change_state(GameState.State.MENU)
@@ -247,6 +270,7 @@ func _refrescar_menu() -> void:
 	if menu_panel == null:
 		return
 	menu_panel.set_difficulty(_difficulty)
+	menu_panel.set_player_name(_player_name)
 	menu_panel.set_high_score(_high_score)
 
 
@@ -336,6 +360,7 @@ func _connect_children() -> void:
 		menu_panel.play_pressed.connect(func() -> void: change_state(GameState.State.READY))
 		menu_panel.difficulty_selected.connect(set_difficulty)
 		menu_panel.stats_pressed.connect(_abrir_estadisticas)
+		menu_panel.name_changed.connect(set_player_name)
 	if stats_panel != null:
 		stats_panel.back_pressed.connect(func() -> void: stats_panel.set_open(false))
 	pipe_spawner.scored.connect(_on_scored)
@@ -364,6 +389,7 @@ func _notification(what: int) -> void:
 
 func _on_state_changed_results(to: GameState.State) -> void:
 	if to == GameState.State.GAME_OVER:
+		game_over_panel.set_player_name(_player_name)
 		game_over_panel.show_results(_score, _high_score, _is_new_high_score)
 		game_over_panel.set_line(_siguiente_frase())
 

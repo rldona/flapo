@@ -156,7 +156,7 @@ que por ser la mascota debe dibujarlo una persona.
 - ✅ Revisión de accesibilidad: contraste WCAG y 48 dp táctiles verificados en `tests/test_a11y.gd`.
 - ✅ Progresión de confianza: +8 de aliento cada 10 partidas, tope a las 50. → T-074 (ADR-0021)
 - ✅ Pantalla de inicio: título, récord, jugar y selector de dificultad. → T-078 (ADR-0022)
-- 🔲 Nombre de jugador en la pantalla de inicio. → T-079
+- ✅ Nombre de jugador en la pantalla de inicio, usado al compartir. → T-079
 - ✅ Pantalla de estadísticas: partidas, récord, medalla, tuberías cruzadas y media. → T-084
 - ✅ Causa de muerte en la frase del Game Over: tubería, suelo, vacío y agotamiento. → T-075
 - 🔲 Modo espejo desbloqueable tras récord, excepción documentada a "fuera de alcance". → T-076 (ADR-0023)
