@@ -115,6 +115,12 @@ Es predecible a propósito: al poder contarla se convierte en una decisión
 ("me la juego en la séptima") en vez de en un golpe de suerte. Tocar a la vez
 una blandita y una normal sí mata: la blandita no es un escudo. Ver ADR-0023.
 
+### Tubería giratoria (T-065)
+
+A partir de **12 puntos**, algunos pares giran las bocas a 0,35 vueltas por
+segundo. **Es solo el dibujo**: el hueco real y la puntuación son idénticos a
+los de una tubería normal. Ver ADR-0023.
+
 ### Ráfagas de viento (T-064)
 
 A partir de **10 puntos**, cada 12-22 s hay una ráfaga de 5 s que sube o baja

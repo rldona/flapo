@@ -1,9 +1,9 @@
-# ADR-0023 — Tuberías especiales: móviles y blanditas
+# ADR-0023 — Tuberías especiales: móviles, blanditas y giratorias
 
 Fecha: 2026-09-08 · Estado: aceptada · Extiende [ADR-0008](ADR-0008-tuberias.md) y [ADR-0018](ADR-0018-curva-de-dificultad.md)
 
 ## Contexto
-Dos tickets tocan el mismo sistema y por eso comparten ADR: T-063 hace que
+Tres tickets tocan el mismo sistema y por eso comparten ADR: T-063 hace que
 algunos pares oscilen arriba y abajo, y T-066 añade una tubería que **no
 mata**. Las preguntas: qué las mueve, cómo se garantiza que no sea injusto,
 cómo encaja con la curva que ya existe, y qué pasa con la física cuando por
@@ -155,3 +155,37 @@ se encontraría con que no avanza. En la partida real `velocity.x` es siempre
 - El rebote vertical hacia el hueco depende del hueco **actual**, así que en
   una blandita que además oscila apunta al sitio correcto en cada momento.
 - **No cubierto aquí**: si el rebote *se siente* bien. Eso lo dice jugar.
+
+---
+
+# T-065 · La tubería giratoria
+
+## Decisión 8 · Gira el dibujo, no la hitbox — y solo las bocas
+El ticket lo pide explícito: el giro es del sprite, no de la forma de
+colisión. Es "más barato y más justo que mover el hueco físico", y la parte
+de *justo* es la que importa: si el hueco real dejara de coincidir con el que
+se ve, el jugador moriría en un sitio donde ve aire.
+
+La implementación consiste en **no hacer lo natural**. Lo natural sería girar
+el `StaticBody2D`, y eso giraría su `CollisionShape2D` con él. Así que se
+gira cada `Cap` —hijo del cuerpo— sobre su propio centro.
+
+El test lo comprueba girando el cuerpo a propósito: la transformada de la
+forma pasa de identidad a una matriz rotada y, más importante, **el resultado
+de la colisión cambia** (a y=300 se pasa donde antes se chocaba). Cuatro
+fallos.
+
+Y se giran las **bocas** y no el cuerpo del tubo porque el cuerpo es un
+rectángulo repetido de 512 px de largo: girarlo se vería roto, no giratorio.
+
+## Consecuencias de T-065
+- 0,35 vueltas por segundo. Despacio: girar rápido lee como un error de
+  dibujo.
+- La probabilidad es pura y con rampa (0 por debajo de 12 puntos, hasta 0,35
+  en el tope), igual que las móviles.
+- El test es una **equivalencia**: misma puntuación y misma colisión con y sin
+  giro. Una equivalencia entre dos cosas quietas se cumple sola, así que el
+  test afirma **primero** que el giro ocurre de verdad; sin ese aserto todo lo
+  demás pasaría con la variante desactivada.
+- Una giratoria puede además oscilar o ser blandita. No se prohíbe: es lo que
+  pide T-067.

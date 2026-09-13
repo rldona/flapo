@@ -38,6 +38,8 @@ var spacing: float = GameConfig.PIPE_SPACING
 ## quien conoce la puntuación: el spawner no consulta el marcador ("call
 ## down", ADR-0005).
 var moving_chance: float = 0.0
+## Probabilidad de que el próximo par gire (T-065). También la fija Main.
+var spin_chance: float = 0.0
 ## Cuántas tuberías van en esta partida. Es lo que hace predecible a la
 ## blandita (T-066): se puede contar. Se reinicia en READY.
 var _contador: int = 0
@@ -129,6 +131,9 @@ func _crear_tuberia() -> void:
 	# existen una vez ha corrido `_ready()` de la tubería.
 	pipe.randomize_gap(_rng)
 	_quiza_oscilante(pipe)
+	# El giro es puramente visual, así que no depende de la altura ni del
+	# hueco: se decide y ya está.
+	pipe.spin = spin_chance > 0.0 and _rng.randf() < spin_chance
 	pipe_spawned.emit()
 
 

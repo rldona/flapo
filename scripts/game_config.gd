@@ -154,6 +154,19 @@ const MIN_WINDOW_SCALE: int = 1
 ## pantalla entera a 7x, que se ve absurdo en un juego de 288 px de ancho.
 const MAX_WINDOW_SCALE: int = 6
 
+# --- Tubería giratoria (T-065) ------------------------------------------
+## A partir de qué puntuación puede salir una giratoria. Como el resto de
+## variantes: la rampa de entrada se deja limpia.
+const SPIN_PIPE_MIN_SCORE: int = 12
+
+## Probabilidad de que un par gire, al llegar al mínimo y en el tope.
+const SPIN_PIPE_CHANCE_MIN: float = 0.12
+const SPIN_PIPE_CHANCE_MAX: float = 0.35
+
+## Vueltas por segundo de las bocas. Despacio: girar rápido lee como un
+## error de dibujo, no como una tubería que gira.
+const SPIN_PIPE_TURNS_PER_SECOND: float = 0.35
+
 # --- Tubería blandita (T-066) -------------------------------------------
 ## Cada cuántas tuberías sale una blandita. NO es aleatorio a propósito: al
 ## ser predecible se puede contar y buscarla, y eso la convierte en una
@@ -422,6 +435,18 @@ static func wind_factor_for(score: int, modo: Difficulty, a_favor: bool) -> floa
 static func wind_speed_for(score: int, modo: Difficulty, factor: float) -> float:
 	var base: float = scroll_speed_for(score, modo)
 	return clampf(base * factor, scroll_speed_for(0, modo), scroll_speed_for(DIFFICULTY_CAP, modo))
+
+
+## Probabilidad de que un par de tuberías gire, a esa puntuación (T-065).
+##
+## Misma forma que `moving_pipe_chance`: pura, 0 exacto por debajo del
+## mínimo, y con tope para que no sea la norma.
+static func spin_pipe_chance(score: int) -> float:
+	if score < SPIN_PIPE_MIN_SCORE:
+		return 0.0
+	var recorrido: int = maxi(DIFFICULTY_CAP - SPIN_PIPE_MIN_SCORE, 1)
+	var t: float = clampf(float(score - SPIN_PIPE_MIN_SCORE) / float(recorrido), 0.0, 1.0)
+	return lerpf(SPIN_PIPE_CHANCE_MIN, SPIN_PIPE_CHANCE_MAX, t)
 
 
 ## Nombre del modo para la interfaz. Vive aquí y no en el menú porque es

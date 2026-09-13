@@ -504,6 +504,7 @@ func _apply_difficulty() -> void:
 		# La probabilidad de tubería móvil es una función pura de la
 		# puntuación, como el resto de la curva (T-063).
 		pipe_spawner.moving_chance = GameConfig.moving_pipe_chance(_score)
+		pipe_spawner.spin_chance = GameConfig.spin_pipe_chance(_score)
 	if ground != null:
 		ground.scroll_speed = velocidad
 	if background != null:
