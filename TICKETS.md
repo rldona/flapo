@@ -149,6 +149,50 @@ Jugar 5 minutos, anotar bugs como issues `bug`, grabar un GIF para `docs/`.
 
 ## Fase 3 — Game feel
 
+### T-063 · Tuberías con movimiento vertical
+labels: fase:3, area:code · estimate: 3
+A partir de cierta puntuación (`MOVING_PIPE_MIN_SCORE` en `GameConfig`), algunos pares de tuberías oscilan arriba/abajo despacio dentro de un rango que sigue dejando el hueco completo dentro de pantalla. Son `StaticBody2D` (ADR-0008): mover su `position` cada frame no rompe la colisión, pero hay que decidir si necesitan `constant_linear_velocity` para que `move_and_slide()` de Flapo las trate bien en un roce — documentarlo en la ADR.
+**Criterios de aceptación**
+- El rango de oscilación nunca saca el hueco de la zona jugable (`playable_height()`), en toda la curva de dificultad.
+- Probabilidad de que un par sea móvil como función pura de la puntuación, igual que el resto de la curva (T-045).
+- Test en `tests/` que compruebe que el hueco oscilante nunca se sale de los límites y que a puntuación baja nunca aparecen (no rompe la rampa de entrada de T-046).
+- ADR-0023 documenta la decisión de física y cómo convive con ADR-0008 y ADR-0018.
+- Raúl revisa que el movimiento se lee bien en el navegador y no se siente injusto.
+
+### T-064 · Ráfagas de viento
+labels: fase:3, area:code · estimate: 3
+Tramos puntuales (`Timer` global, no por tubería) donde `SCROLL_SPEED` efectivo sube o baja un `WIND_FACTOR` durante unos segundos, siempre anunciados visualmente (parallax/partículas) al menos `WIND_WARNING_TIME` s antes de que empiece.
+**Criterios de aceptación**
+- El viento nunca lleva el scroll fuera de `[SCROLL_SPEED, SCROLL_SPEED_MAX]` combinado con la curva de dificultad ya existente.
+- Test en `tests/` que compruebe el aviso previo y que el factor de viento se deshace solo al terminar el tramo.
+- Raúl revisa en el navegador que el aviso da tiempo real a reaccionar.
+
+### T-065 · Tubería giratoria
+labels: fase:3, area:code · estimate: 2
+Variante visual: un par de tuberías especial gira despacio sobre su propio eje sin cambiar el hueco real de colisión (el giro es del sprite, no de la hitbox) — más barato y más justo que mover el hueco físico.
+**Criterios de aceptación**
+- La hitbox de colisión no cambia por el giro; solo el dibujo.
+- Test en `tests/` que compruebe que la puntuación y la colisión son idénticas con y sin la variante giratoria activada.
+- Raúl revisa que el giro se distingue de las tuberías normales de un vistazo.
+
+### T-066 · Tubería "blandita"
+labels: fase:3, area:code · estimate: 2
+Cada `SOFT_PIPE_INTERVAL` tuberías (no aleatorio: predecible para que se pueda buscar a propósito), una tubería identificable visualmente que al tocarla no mata: rebota a Flapo y le cuesta aliento/puntos en vez de la partida. Coherente con "nunca burla, nunca castigo total" del GDD.
+**Criterios de aceptación**
+- Visualmente distinguible de una tubería normal desde que entra en pantalla, no solo al chocar.
+- Test en `tests/` que compruebe que tocarla no dispara `GAME_OVER` y sí aplica el coste definido.
+- ADR-0023 recoge esta variante junto con T-063 (mismo sistema de tuberías especiales).
+- Raúl revisa el feedback de rebote en el navegador.
+
+### T-067 · Tramo especial al superar récord
+labels: fase:3, area:code · estimate: 2
+Depende de T-063, T-064, T-065, T-066. Al superar el récord guardado, el siguiente tramo combina 2-3 de los gimmicks anteriores a la vez y cambia el color de las tuberías para que se note que es especial (celebración/reto, no un muro de dificultad).
+**Criterios de aceptación**
+- Solo se activa una vez por partida, justo tras superar el récord de esa sesión.
+- Test en `tests/` que compruebe que el tramo especial no se dispara si no se ha superado el récord.
+- ADR-0024 documenta por qué combinar gimmicks aquí y no en cualquier momento (evitar que se sienta injusto fuera de este contexto).
+- Raúl revisa el ritmo del tramo en el navegador: debe notarse especial, no imposible.
+
 ### T-040 · Tuning de constantes
 labels: fase:3, area:code · estimate: 2
 Iterar gravedad/impulso/velocidad/hueco hasta que el salto sea legible y transmita el peso de Flapo (ver GDD, Concepto y tono). Registrar valores finales en el GDD.

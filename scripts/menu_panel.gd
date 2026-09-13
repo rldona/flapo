@@ -12,6 +12,9 @@ extends CanvasLayer
 ## El jugador quiere empezar.
 signal play_pressed
 
+## El jugador quiere ver sus estadísticas (T-084).
+signal stats_pressed
+
 ## El jugador ha cambiado de modo.
 signal difficulty_selected(modo: GameConfig.Difficulty)
 
@@ -20,6 +23,7 @@ var _modo: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 @onready var _play: Button = $Root/Box/Play
 @onready var _difficulty: Button = $Root/Box/Difficulty
 @onready var _record: Label = $Root/Box/Record
+@onready var _stats: Button = $Root/Box/Stats
 
 
 func _ready() -> void:
@@ -27,6 +31,7 @@ func _ready() -> void:
 	# Un solo botón que cicla en vez de tres: a 288 px de ancho tres botones
 	# quedan por debajo de los 48 dp táctiles que exige T-030.
 	_difficulty.pressed.connect(_on_difficulty_pressed)
+	_stats.pressed.connect(func() -> void: stats_pressed.emit())
 	visible = false
 
 

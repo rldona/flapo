@@ -102,6 +102,11 @@ Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 - ✅ Pequeña pausa (hit-stop) de 50-100 ms al morir. → T-042 (80 ms)
 - ✅ Parallax de fondo (2 capas: nubes lentas, ciudad media). → T-043
 - ✅ Transiciones: fundido entre `Ready` y `Playing`, retardo antes de mostrar Game Over. → T-044
+- 🔲 Tuberías con movimiento vertical a partir de cierta puntuación. → T-063 (ADR-0023)
+- 🔲 Ráfagas de viento anunciadas, tramos puntuales. → T-064
+- 🔲 Tubería giratoria (variante visual, misma hitbox). → T-065
+- 🔲 Tubería "blandita": cuesta aliento/puntos, no mata. → T-066 (ADR-0023)
+- 🔲 Tramo especial combinando gimmicks al superar récord. → T-067 (ADR-0024)
 
 Entregable: build jugable con vídeo/GIF en `docs/`.
 
@@ -152,7 +157,7 @@ que por ser la mascota debe dibujarlo una persona.
 - ✅ Progresión de confianza: +8 de aliento cada 10 partidas, tope a las 50. → T-074 (ADR-0021)
 - ✅ Pantalla de inicio: título, récord, jugar y selector de dificultad. → T-078 (ADR-0022)
 - 🔲 Nombre de jugador en la pantalla de inicio. → T-079
-- 🔲 Pantalla de estadísticas (partidas jugadas, medalla más alta, etc.). → T-084
+- ✅ Pantalla de estadísticas: partidas, récord, medalla, tuberías cruzadas y media. → T-084
 - ✅ Causa de muerte en la frase del Game Over: tubería, suelo, vacío y agotamiento. → T-075
 - 🔲 Modo espejo desbloqueable tras récord, excepción documentada a "fuera de alcance". → T-076 (ADR-0023)
 - 🔲 Captura automática del mejor salto para compartir. → T-077

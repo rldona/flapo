@@ -59,6 +59,9 @@ const _TRANSITIONS: Dictionary = {
 ## La pantalla de inicio (T-078).
 @export var menu_panel: MenuPanel
 
+## La pantalla de estadísticas (T-084).
+@export var stats_panel: StatsPanel
+
 ## El velo de pausa.
 @export var pause_panel: PausePanel
 
@@ -217,6 +220,29 @@ func to_menu() -> void:
 	change_state(GameState.State.MENU)
 
 
+## Las estadísticas que se enseñan (T-084).
+##
+## Solo una de las cinco filas necesita un contador nuevo (`total_score`); el
+## resto se deriva de lo que ya había. Esa es la regla del ticket: no llenar
+## el guardado de números que nadie mira.
+func stats_rows() -> Array:
+	var medalla: GameConfig.Medal = GameConfig.medal_for(SaveManager.get_high_score())
+	return [
+		["Partidas", str(SaveManager.get_games_played())],
+		["Mejor marca", str(SaveManager.get_high_score())],
+		["Mejor medalla", GameConfig.medal_name(medalla)],
+		["Tuberías cruzadas", str(SaveManager.get_total_score())],
+		["Media por partida", "%.1f" % SaveManager.get_average_score()],
+	]
+
+
+func _abrir_estadisticas() -> void:
+	if stats_panel == null:
+		return
+	stats_panel.set_stats(stats_rows())
+	stats_panel.set_open(true)
+
+
 func _refrescar_menu() -> void:
 	if menu_panel == null:
 		return
@@ -246,6 +272,10 @@ func change_state(to: GameState.State) -> void:
 	if to == GameState.State.MENU:
 		_score = 0
 		_refrescar_menu()
+	elif stats_panel != null:
+		# Salir del menú cierra las estadísticas: si no, se quedarían encima
+		# de la partida.
+		stats_panel.set_open(false)
 	if to == GameState.State.READY:
 		_score = 0
 		_is_new_high_score = false
@@ -305,6 +335,9 @@ func _connect_children() -> void:
 	if menu_panel != null:
 		menu_panel.play_pressed.connect(func() -> void: change_state(GameState.State.READY))
 		menu_panel.difficulty_selected.connect(set_difficulty)
+		menu_panel.stats_pressed.connect(_abrir_estadisticas)
+	if stats_panel != null:
+		stats_panel.back_pressed.connect(func() -> void: stats_panel.set_open(false))
 	pipe_spawner.scored.connect(_on_scored)
 	pipe_spawner.centered.connect(_on_centered)
 	bird.breath_changed.connect(hud.set_breath)
