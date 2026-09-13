@@ -312,6 +312,22 @@ const MEDAL_BRONZE: int = 10
 const MEDAL_SILVER: int = 20
 const MEDAL_GOLD: int = 40
 
+## --- Fantasma del récord (T-243) ---
+
+## Transparencia del fantasma. 0.45 y no menos: por debajo desaparece sobre
+## el cielo claro y el fantasma deja de servir para nada; por encima se
+## confunde con Flapo en un hueco estrecho, que es justo lo que no debe pasar.
+const GHOST_ALPHA: float = 0.45
+
+## Tinte del fantasma. Azulado a propósito: la silueta es la misma que la de
+## Flapo, así que el color es lo ÚNICO que los distingue de un vistazo.
+const GHOST_TINT: Color = Color("#8FB8D8")
+
+## Tope de frames que se graban, unos 10 minutos a 60 Hz. No es un límite de
+## diseño sino un seguro: un fichero de fantasma no puede crecer sin fin ni
+## por una partida eterna ni por un fichero manipulado a mano.
+const GHOST_MAX_FRAMES: int = 36000
+
 
 ## Cuánto de dificultad se ha desbloqueado, de 0 a 1.
 ##

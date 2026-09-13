@@ -20,8 +20,9 @@
 [ext_resource type="Script" path="res://scripts/layout_director.gd" id="17_layout"]
 [ext_resource type="Script" path="res://scripts/wind.gd" id="18_wind"]
 [ext_resource type="PackedScene" path="res://scenes/GlideHint.tscn" id="19_hint"]
+[ext_resource type="PackedScene" path="res://scenes/Ghost.tscn" id="20_ghost"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint")]
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
 pipe_spawner = NodePath("PipeSpawner")
@@ -40,6 +41,7 @@ stats_panel = NodePath("StatsPanel")
 layout = NodePath("Layout")
 wind = NodePath("Wind")
 glide_hint = NodePath("GlideHint")
+ghost = NodePath("Ghost")
 death_lines = ExtResource("14_lines")
 
 [node name="Sky" type="ColorRect" parent="." unique_id=1166350777]
@@ -49,6 +51,9 @@ mouse_filter = 2
 color = Color(0.4863, 0.7020, 0.8431, 1)
 
 [node name="Background" parent="." instance=ExtResource("8_bg")]
+
+[node name="Ghost" parent="." node_paths=PackedStringArray("bird") instance=ExtResource("20_ghost")]
+bird = NodePath("../Bird")
 
 [node name="Bird" parent="." unique_id=269885029 instance=ExtResource("2_bird")]
 position = Vector2(72, 256)

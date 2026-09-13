@@ -62,6 +62,9 @@ const _TRANSITIONS: Dictionary = {
 ## El aviso que enseña a planear (T-200).
 @export var glide_hint: GlideHint
 
+## El fantasma del récord (T-243). Graba y reproduce; no colisiona ni puntúa.
+@export var ghost: Ghost
+
 ## Las ráfagas de viento (T-064).
 @export var wind: Wind
 
@@ -328,6 +331,10 @@ func change_state(to: GameState.State) -> void:
 		# sembrado antes de que su propio `on_game_state_changed` los
 		# reinicie y empiece a pedirle números.
 		_session.sembrar([pipe_spawner, fruit_spawner, wind])
+		# Después de sembrar: hasta ahí, la semilla de una partida libre
+		# todavía es 0 y el fantasma no sabría si le toca salir (T-243).
+		if ghost != null:
+			ghost.preparar(_session.seed())
 		_huecos_sin_planear = 0
 		bird.gravity_mult = 1.0
 		bird.size_mult = 1.0
@@ -356,6 +363,7 @@ func _connect_children() -> void:
 		"FruitSpawner": fruit_spawner,
 		"MenuPanel": menu_panel,
 		"Wind": wind,
+		"Ghost": ghost,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
@@ -641,6 +649,9 @@ func _on_bird_died(cause: Bird.DeathCause, sin_aliento: bool) -> void:
 	# dos cosas que se comparan con gente distinta (T-241).
 	_is_new_high_score = _session.registrar_partida(_score)
 	_high_score = SaveManager.get_high_score()
+	# Antes de cambiar de estado, mientras el vuelo grabado sigue completo.
+	if ghost != null:
+		ghost.terminar(_score, _is_new_high_score)
 	change_state(GameState.State.GAME_OVER)
 
 
