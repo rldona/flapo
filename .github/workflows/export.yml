@@ -32,6 +32,19 @@ jobs:
 
       # Un fallo de export no se ve jugando en el editor y revienta justo en
       # la release. Aquí se detecta en cada push.
+      # La imagen godot-ci instala las plantillas en /root, pero GitHub
+      # Actions ejecuta el contenedor con HOME=/github/home, así que Godot
+      # las busca donde no están. Se copian antes de exportar.
+      - name: Colocar las export templates
+        run: |
+          DEST="$HOME/.local/share/godot/export_templates"
+          mkdir -p "$DEST"
+          for SRC in /root/.local/share/godot/export_templates/*/; do
+            [ -d "$SRC" ] || continue
+            cp -r "$SRC" "$DEST/"
+          done
+          ls -1 "$DEST"
+
       - name: Export Web
         run: |
           mkdir -p export/Web
@@ -74,6 +87,19 @@ jobs:
       - uses: actions/checkout@v4
       - name: Importar assets
         run: godot --headless --path . --import
+      # La imagen godot-ci instala las plantillas en /root, pero GitHub
+      # Actions ejecuta el contenedor con HOME=/github/home, así que Godot
+      # las busca donde no están. Se copian antes de exportar.
+      - name: Colocar las export templates
+        run: |
+          DEST="$HOME/.local/share/godot/export_templates"
+          mkdir -p "$DEST"
+          for SRC in /root/.local/share/godot/export_templates/*/; do
+            [ -d "$SRC" ] || continue
+            cp -r "$SRC" "$DEST/"
+          done
+          ls -1 "$DEST"
+
       - name: Export ${{ matrix.preset }}
         run: |
           mkdir -p export/${{ matrix.preset }}
