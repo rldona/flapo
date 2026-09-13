@@ -59,6 +59,9 @@ const _TRANSITIONS: Dictionary = {
 ## La pantalla de inicio (T-078).
 @export var menu_panel: MenuPanel
 
+## El vigilante del tamaño de ventana (T-085). No dibuja: solo publica.
+@export var layout: LayoutDirector
+
 ## La pantalla de estadísticas (T-084).
 @export var stats_panel: StatsPanel
 

@@ -159,6 +159,10 @@ Acción `flap`: toque, click izquierdo, espacio. `restart`, `pause`.
 Sonidos: aleteo, punto, golpe, caída, botón. Al morir: flash blanco, sacudida de cámara, hit-stop 60–100 ms. Parallax de fondo en 2 capas.
 
 ## Estilo
+El playfield mide siempre 288×512 lógicos y se escala a la mayor **escala
+entera** que cabe en la ventana (tope 6x), centrado en cualquier proporción y
+recalculado en vivo al redimensionar. Ver ADR-0025.
+
 288×512 vertical, pixel art, paleta propia de 16 colores (ver `docs/art-guide.md`). Flapo 24×24 px (hitbox: círculo de radio 8, más generosa que el dibujo).
 
 ## Aliento (T-048)

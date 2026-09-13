@@ -9,6 +9,8 @@ Flapo es un juego de un solo botón inspirado en Flappy Bird; el pájaro protago
 
 Estado: 🔲 pendiente · 🔄 en curso · ✅ hecho
 
+**Ola 2 (T-200 a T-290)**: cuarenta ideas para que Flapo no sea *otro* Flappy, repartidas en la fase que les toca bajo el epígrafe "Ola 2 — innovación". Reglas de la ola: todo offline y gratis (sin servidor, sin pagos, sin anuncios); lo que reabre el "fuera de alcance v1" del GDD (complementos, modos) lo hace con ADR, como ya pasó con las frutas (ADR-0019). Dependen entre sí en cadena: primero T-048/T-201 (el aliento visible), luego T-240 (semilla), que sostiene reto del día, códigos, fantasma, bot y replays.
+
 ---
 
 ## Fase 0 — Preparación (1-2 días)
@@ -108,6 +110,20 @@ Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 - ✅ Tubería "blandita" cada 7: cuesta aliento y un punto, no mata. → T-066 (ADR-0023)
 - 🔲 Tramo especial combinando gimmicks al superar récord. → T-067 (ADR-0024)
 
+**Ola 2 — innovación**
+
+- 🔲 Descubrir el planeo en un segundo: pictograma en `READY`, se apaga al primer planeo. → T-200
+- 🔲 Jadeo visible: alas temblando, mejillas rojas y sudor con el aliento bajo. → T-201
+- 🔲 Bocanada: franja central marcada y feedback al recuperar aliento. → T-202
+- 🔲 Térmicas: columnas de aire donde planear sube. → T-203 (ADR-0026)
+- 🔲 El hermano pasa: estela de rebufo donde planear es gratis. → T-204 (ADR-0026)
+- 🔲 Racha de huecos centrados: ×2 en puntos. → T-205
+- 🔲 "Casi": roces celebrados con "uf" y aliento. → T-206
+- 🔲 Siesta en `READY`: Flapo se duerme si no le tocas. → T-207
+- 🔲 Eructo propulsor tras 3 frutas. → T-208
+- 🔲 Fin del viaje: el nido a 50 puntos, y la partida sigue. → T-209 (ADR-0027)
+- 🔲 Sombra en el suelo para leer la altura. → T-210
+
 Entregable: build jugable con vídeo/GIF en `docs/`.
 
 Estado: T-041 a T-044 hechos y verificados en headless. Queda T-040 (tuning),
@@ -130,6 +146,16 @@ Objetivo: sustituir todos los placeholders por pixel art propio.
 - 🔲 Variantes de escenario (clima/hora del día) sobre el parallax existente, cosmético. → T-057
 - 🔲 Compañero silencioso: NPC no jugable que reacciona a eventos del juego. → T-058
 
+**Ola 2 — innovación**
+
+- 🔲 Expresiones de Flapo: capa de cara por estado. → T-220
+- 🔲 Tuberías con cara que reaccionan. → T-221
+- 🔲 Tramos del viaje: parque, tejados, nubes, cielo. → T-222
+- 🔲 Reloj real: el cielo sigue la hora del dispositivo. → T-223
+- 🔲 La ciudad reacciona: ventanas, vecinos, cortinas. → T-224
+- 🔲 Complementos ganados por logros, nunca comprados. → T-225 (ADR-0028)
+- 🔲 Batacazos distintos según la causa de muerte. → T-226
+
 Entregable: juego sin ningún placeholder. Fuentes de arte (`.pxo`) en `assets/sprites/src/`.
 
 Estado: todo el arte salvo Flapo se genera con `tools/generar_arte.py` en la
@@ -144,6 +170,14 @@ que por ser la mascota debe dibujarlo una persona.
 - ⏭️ Música: descartada a propósito. El Flappy original no tiene, y un loop mediocre cansa en partidas de 20 s. El bus `Music` queda listo por si se retoma. → T-062
 - ✅ `AudioStreamPlayer` por sonido, buses SFX y Music separados. → T-061
 - ✅ Botón de silencio persistente en `user://settings.cfg`. → T-061
+
+**Ola 2 — innovación**
+
+- 🔲 Jadeo dinámico: loop de respiración que sigue el aliento. → T-230
+- 🔲 Aleteo con peso: pitch según fatiga y frutas. → T-231
+- 🔲 Cada aleteo, una nota: escala pentatónica, el juego como instrumento. → T-232 (ADR-0029)
+- 🔲 La voz de Flapo: gruñidos sintetizados. → T-233
+- 🔲 Silencio antes del golpe: ducking en el hit-stop. → T-234
 
 ---
 
@@ -161,6 +195,22 @@ que por ser la mascota debe dibujarlo una persona.
 - ✅ Causa de muerte en la frase del Game Over: tubería, suelo, vacío y agotamiento. → T-075
 - 🔲 Modo espejo desbloqueable tras récord, excepción documentada a "fuera de alcance". → T-076 (ADR-0023)
 - 🔲 Captura automática del mejor salto para compartir. → T-077
+- ✅ Layout adaptativo: la ventana se redimensiona en vivo y el playfield recalcula su escala entera. → T-085 (ADR-0025)
+- 🔲 Contenido adaptativo en el espacio sobrante. → T-086 (necesita reabrir ADR-0002, ver ADR-0025)
+
+**Ola 2 — innovación**
+
+- 🔲 Semilla determinista: un solo RNG inyectado, partidas reproducibles. → T-240 (ADR-0030)
+- 🔲 Reto del día: semilla por fecha, sin servidor. → T-241
+- 🔲 Semilla compartible: código corto para jugar las mismas tuberías. → T-242
+- 🔲 Fantasma del récord: replay translúcido de tu mejor vuelo. → T-243
+- 🔲 Logros con nombre de tapa. → T-244
+- 🔲 Soplar para aletear: entrada por micrófono, opcional. → T-245 (ADR-0031)
+- 🔲 Dos Flapos en una pantalla. → T-246 (ADR-0032)
+- 🔲 Mapa de calor de muertes en estadísticas. → T-247
+- 🔲 Accesibilidad: formas en frutas, menos movimiento, vibración. → T-248
+- 🔲 "Hasta yo descanso": pausa amable tras 15 partidas seguidas. → T-249
+- 🔲 Novedades en el menú al cambiar de versión. → T-250
 
 ---
 
@@ -171,6 +221,11 @@ que por ser la mascota debe dibujarlo una persona.
 - 🔄 Perfilado: sin fugas de nodos, verificado en cada push (`docs/perf.md`). → T-082. Los fps en Android de gama baja siguen pendientes: necesitan dispositivo.
 - ✅ Formateo y lint con gdtoolkit en pre-commit y en CI. → T-083
 
+**Ola 2 — innovación**
+
+- 🔲 Bot que juega: 200 partidas headless para medir si la curva es justa. → T-260 (ADR-0033)
+- 🔲 Replay determinista para reproducir bugs en CI. → T-261
+
 ---
 
 ## Fase 8 — CI/CD y exportación (1-2 días)
@@ -180,6 +235,11 @@ que por ser la mascota debe dibujarlo una persona.
 - 🔲 Export Web: comprobar cabeceras COOP/COEP (itch.io las soporta con la opción SharedArrayBuffer).
 - 🔲 Export Android: keystore de release (guardado como secreto de GitHub, nunca en el repo), firma, versionado (`version/code` y `version/name`).
 - 🔲 Reproducir el build de Android en un dispositivo real.
+
+**Ola 2 — innovación**
+
+- 🔲 Build jugable por cada PR en GitHub Pages. → T-270
+- 🔲 Versionado semántico y changelog automáticos desde los commits. → T-271
 
 Entregable: `v1.0.0` con builds descargables desde Releases.
 
@@ -192,6 +252,10 @@ Entregable: `v1.0.0` con builds descargables desde Releases.
 - 🔲 (Opcional) **Steam**: no para este proyecto; se documenta el proceso para el siguiente.
 - 🔄 README con badges y documentación. Faltan los enlaces a las tiendas y la captura. → T-103
 
+**Ola 2 — innovación**
+
+- 🔲 PWA instalable y `navigator.share` en la build web. → T-280 (ADR-0034)
+
 ---
 
 ## Fase 10 — Retrospectiva y cierre
@@ -199,6 +263,10 @@ Entregable: `v1.0.0` con builds descargables desde Releases.
 - 🔲 `docs/retro.md`: qué salió bien, qué mal, qué haría distinto, horas reales por fase.
 - 🔲 Post/hilo público contando el proceso (devlog en itch.io o blog).
 - ✅ Lista de aprendizajes reutilizables: `docs/aprendizajes.md`.
+
+**Ola 2 — innovación**
+
+- 🔲 Museo de placeholders: el making of dentro del juego. → T-290
 
 ---
 
