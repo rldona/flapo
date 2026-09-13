@@ -164,12 +164,12 @@ func _un_guardado_corrupto_no_rompe_el_arranque() -> void:
 		"%d" % main.get_confidence()
 	)
 	h.check(
-		"y el juego llega a READY igualmente",
-		main.get_state() == GameState.State.READY,
+		"y el juego llega al menú igualmente",
+		main.get_state() == GameState.State.MENU,
 		"estado: %d" % main.get_state()
 	)
 	# Y se puede jugar: lo importante no es leer 0, es que la partida arranque.
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await physics_frame
 	h.check("y se puede empezar a jugar", main.get_state() == GameState.State.PLAYING, "")
 	main.free()
@@ -198,7 +198,7 @@ func _main_aplica_la_confianza_desde_la_primera_partida() -> void:
 		is_equal_approx(main.bird.max_breath, esperado),
 		"max_breath %f, esperado %f" % [main.bird.max_breath, esperado]
 	)
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await physics_frame
 	h.check(
 		"y arranca con la barra llena hasta el nuevo máximo",

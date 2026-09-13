@@ -36,7 +36,7 @@ func on_game_state_changed(to: GameState.State) -> void:
 	# Criterio de T-043: se detiene en GAME_OVER. En READY sigue, igual que
 	# el suelo: el mundo está vivo mientras Flapo espera.
 	moving = to != GameState.State.GAME_OVER
-	if to == GameState.State.READY:
+	if to == GameState.State.READY or to == GameState.State.MENU:
 		_offset = 0.0
 		_apply_offset()
 

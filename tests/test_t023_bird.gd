@@ -35,7 +35,7 @@ func _flota_en_ready() -> void:
 func _no_sale_por_arriba() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	bird.position.y = 3.0
 	bird.velocity.y = -2000.0
 	var y_min: float = INF
@@ -61,7 +61,7 @@ func _muere_al_caer() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	var bird: Node = main.bird
 	main.state_changed.connect(_on_state)
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(180)
 	h.check(
 		"muere al caer",
@@ -88,7 +88,7 @@ func _muere_al_caer() -> void:
 func _aleteo_fija_la_velocidad() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(20)
 	h.pulsa(KEY_SPACE)
 	var v_min: float = INF

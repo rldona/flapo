@@ -107,7 +107,7 @@ func _main_lleva_la_cuenta_y_la_reinicia() -> void:
 	main.pipe_spawner.random_seed = 7
 	var emitidos: Array[int] = []
 	main.score_changed.connect(func(s: int) -> void: emitidos.append(s))
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 
 	# Flapo quieto en el centro; las tuberías vienen hacia él. El hueco se
 	# fuerza a su altura en cada tubería que nace: si se dejara al azar,

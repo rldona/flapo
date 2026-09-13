@@ -106,7 +106,7 @@ func _la_partida_registra_record_y_cuenta() -> void:
 	SaveManager.forget_cache()
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	main.pipe_spawner.random_seed = 5
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_scored()
 	main._on_scored()
 	for tick in 600:

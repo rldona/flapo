@@ -61,3 +61,14 @@ func ticks(n: int) -> void:
 func resumen(titulo: String) -> int:
 	print("--- %s: %d fallo(s) ---" % [titulo, fallos])
 	return 1 if fallos > 0 else 0
+
+
+## Arranca una partida desde donde esté: MENU → READY → PLAYING.
+##
+## Desde T-078 el juego arranca en MENU, así que ningún test puede saltar
+## directo a PLAYING. Vive aquí y no en cada test para que el día que el
+## flujo cambie otra vez haya un solo sitio que tocar. READY → READY no hace
+## nada, así que también vale llamándolo ya estando listo.
+func jugar(main: Node) -> void:
+	main.change_state(GameState.State.READY)
+	main.change_state(GameState.State.PLAYING)

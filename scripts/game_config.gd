@@ -17,6 +17,14 @@ extends RefCounted
 
 ## Medallas. Con nombre de comida, como pide el GDD ("Concepto y tono"):
 ## croqueta de bronce, tortilla de plata, jamón de oro.
+## Los tres modos que se eligen en el menú. NORMAL es el juego tal y como se
+## diseñó: los otros dos son ese mismo juego escalado, no tablas aparte.
+enum Difficulty {
+	FACIL,
+	NORMAL,
+	DIFICIL,
+}
+
 enum Medal { NINGUNA, CROQUETA, TORTILLA, JAMON }
 
 # --- Pantalla -----------------------------------------------------------
@@ -84,6 +92,15 @@ const BREATH_RECOVER_ON_GAP: float = 25.0
 ## dejaría de existir.
 const BREATH_BAND_RATIO: float = 0.5
 
+# --- Modos de dificultad (T-078) ----------------------------------------
+## Multiplicador del hueco. Es la palanca que más se nota: el margen de paso
+## va de 51 px por lado en fácil a 28 en difícil (hitbox de radio 8).
+const DIFFICULTY_GAP_MULT: Array[float] = [1.18, 1.0, 0.88]
+
+## Multiplicador de la velocidad del mundo. Cambia el tiempo de reacción
+## desde que la tubería entra en pantalla: 2,5 s en fácil, 1,9 s en difícil.
+const DIFFICULTY_SPEED_MULT: Array[float] = [0.85, 1.0, 1.15]
+
 # --- Confianza (T-074) --------------------------------------------------
 ## Partidas jugadas por cada escalón de confianza. Se cuentan PARTIDAS, no
 ## puntos: mejora quien insiste, no quien ya juega bien. Es lo que hace la
@@ -126,32 +143,58 @@ static func difficulty(score: int) -> float:
 	return clampf(float(score) / float(DIFFICULTY_CAP), 0.0, 1.0)
 
 
+## Cuánto escala el hueco en cada modo (T-078).
+static func gap_mult(modo: Difficulty) -> float:
+	return DIFFICULTY_GAP_MULT[clampi(int(modo), 0, DIFFICULTY_GAP_MULT.size() - 1)]
+
+
+## Cuánto escala la velocidad del mundo en cada modo (T-078).
+static func speed_mult(modo: Difficulty) -> float:
+	return DIFFICULTY_SPEED_MULT[clampi(int(modo), 0, DIFFICULTY_SPEED_MULT.size() - 1)]
+
+
 ## Velocidad de scroll para una puntuación, px/s.
-static func scroll_speed_for(score: int) -> float:
-	return lerpf(SCROLL_SPEED, SCROLL_SPEED_MAX, difficulty(score))
+static func scroll_speed_for(score: int, modo: Difficulty = Difficulty.NORMAL) -> float:
+	return lerpf(SCROLL_SPEED, SCROLL_SPEED_MAX, difficulty(score)) * speed_mult(modo)
 
 
 ## Alto del hueco para una puntuación, px.
-static func pipe_gap_for(score: int) -> float:
-	return lerpf(PIPE_GAP, PIPE_GAP_MIN, difficulty(score))
+static func pipe_gap_for(score: int, modo: Difficulty = Difficulty.NORMAL) -> float:
+	return lerpf(PIPE_GAP, PIPE_GAP_MIN, difficulty(score)) * gap_mult(modo)
 
 
 ## Separación entre tuberías para una puntuación, px.
-static func pipe_spacing_for(score: int) -> float:
-	return lerpf(PIPE_SPACING, PIPE_SPACING_MAX, difficulty(score))
+##
+## Escala con la MISMA proporción que la velocidad, y eso no es casualidad:
+## así el tiempo entre dos tuberías —y por tanto los aleteos que caben— es
+## idéntico en los tres modos. La dificultad cambia el margen y el tiempo de
+## reacción, nunca el invariante de ADR-0018 de no bajar de 3 aleteos.
+static func pipe_spacing_for(score: int, modo: Difficulty = Difficulty.NORMAL) -> float:
+	return lerpf(PIPE_SPACING, PIPE_SPACING_MAX, difficulty(score)) * speed_mult(modo)
 
 
 ## Segundos entre spawns para una puntuación.
-static func pipe_spawn_interval_for(score: int) -> float:
-	return pipe_spacing_for(score) / scroll_speed_for(score)
+static func pipe_spawn_interval_for(score: int, modo: Difficulty = Difficulty.NORMAL) -> float:
+	return pipe_spacing_for(score, modo) / scroll_speed_for(score, modo)
 
 
 ## Cuántos aleteos caben entre dos tuberías a esa puntuación.
 ##
 ## Es el número que decide si la curva es difícil o injusta: por debajo de 3
 ## no da tiempo a corregir. Ver docs/GDD.md.
-static func flaps_between_pipes(score: int) -> float:
-	return pipe_spawn_interval_for(score) / FLAP_CYCLE
+static func flaps_between_pipes(score: int, modo: Difficulty = Difficulty.NORMAL) -> float:
+	return pipe_spawn_interval_for(score, modo) / FLAP_CYCLE
+
+
+## Nombre del modo para la interfaz. Vive aquí y no en el menú porque es
+## contenido de las reglas, no de la pantalla que lo enseña.
+static func difficulty_name(modo: Difficulty) -> String:
+	match modo:
+		Difficulty.FACIL:
+			return "Fácil"
+		Difficulty.DIFICIL:
+			return "Difícil"
+	return "Normal"
 
 
 ## Segundos entre spawns de tuberías (T-025).

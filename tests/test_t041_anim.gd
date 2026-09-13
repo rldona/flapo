@@ -39,7 +39,7 @@ func _tiene_tres_frames() -> void:
 func _acelera_al_aletear() -> void:
 	var main: Node = await _partida()
 	var sp: AnimatedSprite2D = _sprite(main)
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(30)
 	var reposo: float = sp.speed_scale * 10.0
 	h.pulsa(KEY_SPACE)
@@ -65,7 +65,7 @@ func _acelera_al_aletear() -> void:
 func _se_pausa_al_morir() -> void:
 	var main: Node = await _partida()
 	var sp: AnimatedSprite2D = _sprite(main)
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:
@@ -84,7 +84,7 @@ func _se_pausa_al_morir() -> void:
 func _vuelve_a_animarse_al_reiniciar() -> void:
 	var main: Node = await _partida()
 	var sp: AnimatedSprite2D = _sprite(main)
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:

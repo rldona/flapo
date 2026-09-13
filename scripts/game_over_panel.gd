@@ -14,6 +14,9 @@ signal restart_pressed
 ## El jugador quiere compartir su marca. Solo se puede pulsar en Android.
 signal share_pressed(texto: String)
 
+## El jugador quiere volver a la pantalla de inicio (T-078).
+signal menu_pressed
+
 ## El jugador ha tocado el botón de silencio.
 signal mute_pressed
 
@@ -42,12 +45,14 @@ var _score: int = 0
 @onready var _high_label: Label = $Root/Box/HighScore
 @onready var _record_label: Label = $Root/Box/NewRecord
 @onready var _button: Button = $Root/Box/Button
+@onready var _menu_button: Button = $Root/Box/MenuButton
 @onready var _mute_button: Button = $Root/Box/MuteButton
 @onready var _share_button: Button = $Root/Box/ShareButton
 
 
 func _ready() -> void:
 	_mute_button.pressed.connect(func() -> void: mute_pressed.emit())
+	_menu_button.pressed.connect(func() -> void: menu_pressed.emit())
 	_button.pressed.connect(_on_button_pressed)
 	_share_button.pressed.connect(_on_share_pressed)
 	# Compartir solo tiene sentido donde hay algo con lo que compartir.

@@ -24,6 +24,9 @@ func _partida() -> Node:
 	SaveManager.forget_cache()
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	main.pipe_spawner.random_seed = 77
+	# Se sale del menú ANTES de aislar a Flapo: entrar en READY le devuelve la
+	# máscara de colisión, así que aislarlo antes no serviría de nada (T-078).
+	main.change_state(GameState.State.READY)
 	# Flapo, inmune: sin gravedad y sin máscara de colisión. Si no, choca con
 	# una tubería a mitad de medición, el mundo se para —correctamente— y lo
 	# que se acaba midiendo es la velocidad de un juego en GAME_OVER.
@@ -126,7 +129,7 @@ func _el_hueco_siempre_cabe() -> void:
 ## moverse más rápido de verdad, y todo a la vez.
 func _la_partida_acelera_de_verdad() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(30)
 
 	# El suelo recicla con `fmod` (ADR-0010), así que su x da la vuelta cada
@@ -187,7 +190,7 @@ func _la_partida_acelera_de_verdad() -> void:
 ## día deja de serlo, la segunda partida empezaría en modo difícil.
 func _reiniciar_devuelve_la_dificultad_inicial() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for punto in GameConfig.DIFFICULTY_CAP:
 		main._on_scored()
 	await h.ticks(2)

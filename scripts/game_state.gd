@@ -8,6 +8,7 @@ extends RefCounted
 ## instancia y no guarda nada.
 
 enum State {
+	MENU,  ## Pantalla de inicio: título, jugar y elección de dificultad.
 	READY,  ## Flapo flota sin gravedad, esperando el primer aleteo.
 	PLAYING,  ## La partida corre: gravedad, scroll y puntuación.
 	GAME_OVER,  ## Flapo ha chocado; el mundo está parado.

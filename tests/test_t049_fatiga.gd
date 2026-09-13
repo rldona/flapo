@@ -87,7 +87,7 @@ func _machacar(veces: int) -> void:
 func _una_rafaga_reduce_el_impulso() -> void:
 	var main: Node = await _partida()
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 
 	# Un aleteo aislado da el impulso completo.
 	h.pulsa(KEY_SPACE)
@@ -125,7 +125,7 @@ func _una_rafaga_reduce_el_impulso() -> void:
 func _planear_descansa() -> void:
 	var main: Node = await _partida()
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await _machacar(GameConfig.FATIGUE_FLAP_COUNT + 2)
 	h.check("de partida, fatigado", bird.is_fatigued(), "%d aleteos" % bird.recent_flaps())
 
@@ -146,7 +146,7 @@ func _planear_descansa() -> void:
 func _dejar_de_aletear_tambien_descansa() -> void:
 	var main: Node = await _partida()
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await _machacar(GameConfig.FATIGUE_FLAP_COUNT + 2)
 	h.check("de partida, fatigado", bird.is_fatigued(), "%d aleteos" % bird.recent_flaps())
 
@@ -163,7 +163,7 @@ func _dejar_de_aletear_tambien_descansa() -> void:
 func _reiniciar_borra_la_fatiga() -> void:
 	var main: Node = await _partida()
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await _machacar(GameConfig.FATIGUE_FLAP_COUNT + 2)
 	bird.gravity = 1200.0
 	bird.collision_mask = Bird.OBSTACULOS

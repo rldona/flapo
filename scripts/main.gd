@@ -21,9 +21,10 @@ signal score_changed(score: int)
 ## convierte un bug de lógica (reiniciar desde PLAYING, morir dos veces) en
 ## un aviso en consola en lugar de en un estado imposible.
 const _TRANSITIONS: Dictionary = {
-	GameState.State.READY: [GameState.State.PLAYING],
+	GameState.State.MENU: [GameState.State.READY],
+	GameState.State.READY: [GameState.State.PLAYING, GameState.State.MENU],
 	GameState.State.PLAYING: [GameState.State.GAME_OVER],
-	GameState.State.GAME_OVER: [GameState.State.READY],
+	GameState.State.GAME_OVER: [GameState.State.READY, GameState.State.MENU],
 }
 
 ## Flapo. Se asigna arrastrando el nodo en el inspector, no con una ruta de
@@ -55,6 +56,9 @@ const _TRANSITIONS: Dictionary = {
 ## assets/data/death_lines.tres sin tocar código.
 @export var death_lines: DeathLines
 
+## La pantalla de inicio (T-078).
+@export var menu_panel: MenuPanel
+
 ## El velo de pausa.
 @export var pause_panel: PausePanel
 
@@ -74,11 +78,15 @@ const _TRANSITIONS: Dictionary = {
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
-var _state: GameState.State = GameState.State.READY
+## El juego arranca en el menú (T-078), no en READY: la dificultad se elige
+## antes de la primera partida, no después.
+var _state: GameState.State = GameState.State.MENU
 var _score: int = 0
 var _high_score: int = 0
 ## Escalón de confianza (T-074). Se lee del guardado, no se calcula aquí.
 var _confidence: int = 0
+## Modo elegido en el menú (T-078). También del guardado.
+var _difficulty: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 ## La última frase que salió, para no repetirla dos veces seguidas.
 var _ultima_frase: String = ""
 ## De qué murió Flapo la última vez y si llegó sin aliento (T-075). Se
@@ -94,6 +102,7 @@ func _ready() -> void:
 	_rng_frases.randomize()
 	_high_score = SaveManager.get_high_score()
 	_confidence = SaveManager.get_confidence()
+	_difficulty = SaveManager.get_difficulty()
 	if log_transitions:
 		state_changed.connect(_on_state_changed_log)
 	_connect_children()
@@ -109,6 +118,10 @@ func _ready() -> void:
 ## `_unhandled_input` y no `_input`: así la UI (botones de T-071) se queda
 ## primero con el evento y el juego solo ve lo que nadie ha consumido.
 func _unhandled_input(event: InputEvent) -> void:
+	if _state == GameState.State.MENU:
+		# En el menú manda la UI: los botones ya consumen sus toques y el
+		# resto no debe colarse como un aleteo.
+		return
 	if _state == GameState.State.READY and event.is_action_pressed("flap"):
 		change_state(GameState.State.PLAYING)
 	elif _state == GameState.State.GAME_OVER and event.is_action_pressed("restart"):
@@ -179,6 +192,38 @@ func get_confidence() -> int:
 	return _confidence
 
 
+## Modo de dificultad activo (T-078).
+func get_difficulty() -> GameConfig.Difficulty:
+	return _difficulty
+
+
+## Cambia el modo y lo recuerda. Se guarda al elegir, no al morir: si el
+## jugador cierra el juego desde el menú, la elección no se pierde.
+##
+## Solo tiene efecto fuera de una partida: cambiar la dificultad a mitad de
+## vuelo movería las tuberías que ya están en pantalla.
+func set_difficulty(modo: GameConfig.Difficulty) -> void:
+	if _state == GameState.State.PLAYING:
+		push_warning("La dificultad no se cambia en mitad de una partida.")
+		return
+	_difficulty = modo
+	SaveManager.set_difficulty(modo)
+	_apply_difficulty()
+	_refrescar_menu()
+
+
+## Vuelve al menú desde el Game Over o desde READY.
+func to_menu() -> void:
+	change_state(GameState.State.MENU)
+
+
+func _refrescar_menu() -> void:
+	if menu_panel == null:
+		return
+	menu_panel.set_difficulty(_difficulty)
+	menu_panel.set_high_score(_high_score)
+
+
 ## Traslada la confianza guardada a Flapo (T-074).
 ##
 ## Es lo único que la progresión toca del juego, y se hace al empezar cada
@@ -198,6 +243,9 @@ func change_state(to: GameState.State) -> void:
 	_state = to
 	# La puntuación se reinicia al volver a READY, no al morir: el panel de
 	# Game Over (T-071) tiene que poder seguir enseñándola.
+	if to == GameState.State.MENU:
+		_score = 0
+		_refrescar_menu()
 	if to == GameState.State.READY:
 		_score = 0
 		_is_new_high_score = false
@@ -227,6 +275,7 @@ func _connect_children() -> void:
 		"Background": background,
 		"Fade": fade,
 		"FruitSpawner": fruit_spawner,
+		"MenuPanel": menu_panel,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
@@ -252,6 +301,10 @@ func _connect_children() -> void:
 		state_changed.connect(piezas[nombre].on_game_state_changed)
 
 	bird.died.connect(_on_bird_died)
+	game_over_panel.menu_pressed.connect(to_menu)
+	if menu_panel != null:
+		menu_panel.play_pressed.connect(func() -> void: change_state(GameState.State.READY))
+		menu_panel.difficulty_selected.connect(set_difficulty)
 	pipe_spawner.scored.connect(_on_scored)
 	pipe_spawner.centered.connect(_on_centered)
 	bird.breath_changed.connect(hud.set_breath)
@@ -318,19 +371,17 @@ func _on_scored() -> void:
 func _apply_difficulty() -> void:
 	# La velocidad del mundo es la curva de dificultad POR el modificador de
 	# la fruta violeta: una cosa sube con la puntuación y la otra es temporal.
-	var velocidad: float = GameConfig.scroll_speed_for(_score) * effects.speed_mult()
+	var velocidad: float = GameConfig.scroll_speed_for(_score, _difficulty) * effects.speed_mult()
+	var hueco: float = GameConfig.pipe_gap_for(_score, _difficulty)
+	var separacion: float = GameConfig.pipe_spacing_for(_score, _difficulty)
 	if pipe_spawner != null:
-		pipe_spawner.set_difficulty(
-			velocidad, GameConfig.pipe_gap_for(_score), GameConfig.pipe_spacing_for(_score)
-		)
+		pipe_spawner.set_difficulty(velocidad, hueco, separacion)
 	if ground != null:
 		ground.scroll_speed = velocidad
 	if background != null:
 		background.scroll_speed = velocidad
 	if fruit_spawner != null:
-		fruit_spawner.set_difficulty(
-			velocidad, GameConfig.pipe_gap_for(_score), GameConfig.pipe_spacing_for(_score)
-		)
+		fruit_spawner.set_difficulty(velocidad, hueco, separacion)
 
 
 ## Alterna el silencio y lo cuenta a los dos paneles que lo enseñan.

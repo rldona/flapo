@@ -24,7 +24,7 @@ func _partida() -> Node:
 
 
 func _morir(main: Node) -> void:
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:
@@ -57,7 +57,7 @@ func _al_morir_hay_flash_sacudida_y_rebote() -> void:
 	h.check("antes de morir no hay flash", is_zero_approx(flash.color.a), "")
 	h.check("antes de morir la cámara está centrada", camara.offset.is_zero_approx(), "")
 
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	var subio: bool = false
 	var y_previa: float = main.bird.position.y
 	var flash_max: float = 0.0
@@ -92,7 +92,7 @@ func _al_morir_hay_flash_sacudida_y_rebote() -> void:
 ## posible: el juego no vuelve y no hay nada que el jugador pueda hacer.
 func _el_hit_stop_siempre_devuelve_el_reloj() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	var congelo: bool = false
 	for tick in 600:
 		await process_frame
@@ -115,7 +115,7 @@ func _el_hit_stop_siempre_devuelve_el_reloj() -> void:
 ## para todo el motor, y el juego no volvía nunca.
 func _liberar_a_media_congelacion_no_deja_el_juego_parado() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:

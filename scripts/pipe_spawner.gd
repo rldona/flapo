@@ -57,7 +57,9 @@ func _ready() -> void:
 ## Main llama a esto al cambiar de estado ("call down", ADR-0005).
 func on_game_state_changed(to: GameState.State) -> void:
 	match to:
-		GameState.State.READY:
+		# MENU se trata igual que READY: la pantalla de inicio es el mundo
+		# quieto con un panel encima, no un sitio aparte (T-078).
+		GameState.State.MENU, GameState.State.READY:
 			_timer.stop()
 			_liberar_todas()
 			_reiniciar_rng()

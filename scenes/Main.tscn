@@ -15,7 +15,9 @@
 [ext_resource type="PackedScene" path="res://scenes/FruitSpawner.tscn" id="13_fruits"]
 [ext_resource type="Resource" path="res://assets/data/death_lines.tres" id="14_lines"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner")]
+[ext_resource type="PackedScene" path="res://scenes/MenuPanel.tscn" id="15_menu"]
+
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
 pipe_spawner = NodePath("PipeSpawner")
@@ -29,6 +31,7 @@ pause_panel = NodePath("PausePanel")
 audio = NodePath("Audio")
 effects = NodePath("Effects")
 fruit_spawner = NodePath("FruitSpawner")
+menu_panel = NodePath("MenuPanel")
 death_lines = ExtResource("14_lines")
 
 [node name="Sky" type="ColorRect" parent="." unique_id=1166350777]
@@ -77,3 +80,5 @@ flash_rect = NodePath("../FlashLayer/Flash")
 script = ExtResource("12_effects")
 
 [node name="FruitSpawner" parent="." instance=ExtResource("13_fruits")]
+
+[node name="MenuPanel" parent="." instance=ExtResource("15_menu")]

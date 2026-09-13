@@ -76,7 +76,7 @@ func _contraste_del_juego() -> void:
 ## queda más bajo. Se comprueban dos móviles reales.
 func _tamano_de_los_botones() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:

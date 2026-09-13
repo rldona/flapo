@@ -74,7 +74,7 @@ func punch() -> void:
 ## Main llama a esto al volver a READY: el jugo no debe sobrevivir al
 ## reinicio (criterio "no rompe el reinicio" de T-042).
 func on_game_state_changed(to: GameState.State) -> void:
-	if to == GameState.State.READY:
+	if to == GameState.State.READY or to == GameState.State.MENU:
 		_reset()
 
 
