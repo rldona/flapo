@@ -1,14 +1,13 @@
 extends SceneTree
 ## T-202 — Bocanada: feedback al recuperar aliento.
 ##
-## Los dos criterios que headless puede juzgar:
+## **`breath_recovered` se emite una sola vez por hueco y solo en la franja
+## central.** Esa es la regla, y es lo que se comprueba aquí.
 ##
-## 1. **La franja marcada coincide EXACTAMENTE con `BREATH_BAND_RATIO`**, con
-##    el mismo cálculo y no un número duplicado. Es el criterio que evita el
-##    bug más probable de este ticket: un brillo que enseña una franja y una
-##    regla que premia otra.
-## 2. **`breath_recovered` se emite una sola vez por hueco y solo en la
-##    franja.**
+## El ticket también pedía **dibujar** esa franja: un brillo tenue en el hueco
+## que enseñara dónde se recupera. Se implementó y se quitó — jugando no se
+## leía como una pista, se leía como un rectángulo raro en medio del hueco.
+## La regla sigue exactamente igual; lo que se fue es el dibujo.
 
 const MAIN := "res://scenes/Main.tscn"
 const PIPE := "res://scenes/Pipe.tscn"
@@ -20,81 +19,11 @@ var h: Harness
 func _init() -> void:
 	h = Harness.new(self)
 	print("--- T-202 · Bocanada ---")
-	await _el_brillo_es_exactamente_la_franja()
-	await _el_brillo_sigue_al_hueco_cuando_oscila()
 	await _solo_se_recupera_dentro_de_la_franja()
 	await _una_sola_vez_por_hueco()
 	await _la_senal_lleva_lo_que_de_verdad_ha_entrado()
 	SaveManager.clear()
 	quit(h.resumen("T-202"))
-
-
-## Criterio 1: mismo cálculo, no un número duplicado.
-func _el_brillo_es_exactamente_la_franja() -> void:
-	var pipe: Pipe = load(PIPE).instantiate()
-	root.add_child(pipe)
-	await process_frame
-	pipe.scroll_speed = 0.0
-	var descuadres: Array = []
-	for gap in [82.0, 100.0, 118.0, 139.0]:
-		for centro in [90.0, 224.0, 358.0]:
-			pipe.gap = gap
-			pipe.set_gap_center(centro)
-			await process_frame
-			var esperado: float = GameConfig.breath_band_half(gap) * 2.0
-			if not is_equal_approx(pipe.band_height(), esperado):
-				descuadres.append(
-					"gap %.0f -> alto %.2f, esperado %.2f" % [gap, pipe.band_height(), esperado]
-				)
-			if not is_equal_approx(pipe.band_center(), centro):
-				descuadres.append("centro %.0f -> brillo en %.2f" % [centro, pipe.band_center()])
-	h.check(
-		"el brillo mide y se coloca como la franja, en 12 combinaciones",
-		descuadres.is_empty(),
-		"%s" % str(descuadres)
-	)
-	# Y ese "esperado" no es un número copiado: sale de la misma función que
-	# usa la regla de verdad. Si alguien cambiara BREATH_BAND_RATIO, las dos
-	# cosas se moverían juntas.
-	pipe.gap = 118.0
-	await process_frame
-	h.check(
-		"y la franja es la mitad del hueco, como dice el GDD",
-		is_equal_approx(pipe.band_height(), 118.0 * GameConfig.BREATH_BAND_RATIO),
-		"%.2f de un hueco de 118" % pipe.band_height()
-	)
-	pipe.free()
-
-
-## El brillo es hijo de la tubería, así que oscila con ella (T-063) sin
-## código de sincronización. Si fuera un nodo aparte, se descolgaría.
-func _el_brillo_sigue_al_hueco_cuando_oscila() -> void:
-	var pipe: Pipe = load(PIPE).instantiate()
-	root.add_child(pipe)
-	await process_frame
-	pipe.scroll_speed = 0.0
-	pipe.gap = GameConfig.PIPE_GAP
-	pipe.set_gap_center(224.0)
-	pipe.oscillation_amplitude = GameConfig.moving_pipe_amplitude(pipe.gap, 224.0)
-	var desfases: Array = []
-	var centros: Array = []
-	for i in 90:
-		await physics_frame
-		centros.append(pipe.get_gap_center())
-		if absf(pipe.band_center() - pipe.get_gap_center()) > 0.01:
-			desfases.append("%.2f vs %.2f" % [pipe.band_center(), pipe.get_gap_center()])
-	# Premisa: si no hubiera oscilado, "sigue al hueco" se cumpliría solo.
-	h.check(
-		"premisa: el hueco se ha movido de verdad",
-		centros.max() - centros.min() > 10.0,
-		"recorrido %.1f px" % (centros.max() - centros.min())
-	)
-	h.check(
-		"el brillo no se descuelga del hueco ni un frame",
-		desfases.is_empty(),
-		"%d desfases" % desfases.size()
-	)
-	pipe.free()
 
 
 ## Criterio 2, primera mitad: solo en la franja.
