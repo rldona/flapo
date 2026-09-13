@@ -155,6 +155,9 @@ var _breath: float = GameConfig.MAX_BREATH
 ## Cuánto lleva pulsado el botón, s. Distingue toque de mantener.
 var _held: float = 0.0
 var _gliding: bool = false
+## Cuántas térmicas lo están tocando (T-203). Un contador y no un `bool`:
+## dos columnas solapadas y un `bool` se apagaría al salir de la primera.
+var _termicas: int = 0
 ## Marcas de tiempo de los últimos aleteos, s. Es el historial del que
 ## `GameConfig.fatigue_impulse_mult()` deriva la fatiga: aquí no hay estado de
 ## fatiga, solo datos (T-049).
@@ -258,6 +261,7 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_burst_left = 0.0
 		_held = 0.0
 		_gliding = false
+		_termicas = 0
 		_breath = max_breath
 		breath_changed.emit(_breath, max_breath)
 		_flap_times.clear()
@@ -434,6 +438,20 @@ func breath() -> float:
 	return _breath
 
 
+## Main le dice que ha entrado o salido de una térmica (T-203).
+##
+## Se cuentan las entradas en vez de guardar un `sí/no`: con dos columnas
+## solapadas, salir de la primera apagaría el efecto estando aún dentro de la
+## segunda.
+func set_in_thermal(dentro: bool) -> void:
+	_termicas = maxi(_termicas + (1 if dentro else -1), 0)
+
+
+## Si está dentro de alguna térmica. Lo usan los tests.
+func in_thermal() -> bool:
+	return _termicas > 0
+
+
 ## Si Flapo está planeando ahora mismo.
 func is_gliding() -> bool:
 	return _gliding
@@ -458,6 +476,14 @@ func _apply_gravity(delta: float) -> void:
 	# Planeando cae a una fracción de la gravedad y con un tope mucho más
 	# bajo: es descender despacio, no flotar.
 	if _gliding:
+		# Dentro de una térmica, planear SUBE (T-203). El aleteo no cambia:
+		# la térmica le da un segundo uso al planeo, no un control nuevo.
+		if _termicas > 0:
+			velocity.y = maxf(
+				velocity.y - GameConfig.THERMAL_LIFT * delta * signo,
+				-GameConfig.THERMAL_MAX_RISE * signo
+			)
+			return
 		velocity.y = _limitar(
 			velocity.y + gravity * gravity_mult * glide_gravity_mult * delta * signo,
 			glide_max_fall_speed

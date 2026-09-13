@@ -344,6 +344,33 @@ const SCENERY_TINT: Array[Color] = [
 ## que haya una variante más, esto sigue diciendo la verdad.
 const SCENERY_LLUEVE: Array[bool] = [false, false, false, true]
 
+## --- Térmicas: columnas de aire ascendente (T-203) ---
+
+## Cada cuántas tuberías sale una térmica. 5: sale a menudo para que se
+## aprenda a usarla, no tanto como para que sea el modo normal de volar.
+const THERMAL_INTERVAL: int = 5
+
+## A qué puntuación empiezan a salir. Antes de eso el jugador todavía está
+## aprendiendo que el planeo existe (T-200); darle un segundo uso al planeo
+## antes del primero es enseñar dos cosas a la vez.
+const THERMAL_MIN_SCORE: int = 8
+
+## Aceleración hacia arriba dentro de la térmica, px/s². Es una aceleración y
+## no una velocidad fija: así entrar en la columna se **siente** —tarda un
+## momento en tirar— en vez de teletransportar a Flapo hacia arriba.
+const THERMAL_LIFT: float = 900.0
+
+## Tope de subida dentro de la térmica, px/s.
+##
+## Sin tope, planear dentro sube cada vez más rápido y Flapo se estampa contra
+## el techo sin poder hacer nada. 170 es menos de la mitad de lo que sube un
+## aleteo: la térmica ayuda, no vuela por ti.
+const THERMAL_MAX_RISE: float = 170.0
+
+## Tamaño de la columna, px. Estrecha y alta: es una columna, y tiene que
+## poder esquivarse.
+const THERMAL_SIZE := Vector2(26.0, 220.0)
+
 ## --- Captura del mejor salto (T-077) ---
 
 ## Cuántos segundos de vuelo entran en la captura.

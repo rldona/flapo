@@ -25,8 +25,10 @@
 [ext_resource type="Script" path="res://scripts/replay_recorder.gd" id="22_rec"]
 [ext_resource type="PackedScene" path="res://scenes/Buddy.tscn" id="23_buddy"]
 [ext_resource type="Script" path="res://scripts/snapshot.gd" id="24_snap"]
+[ext_resource type="Script" path="res://scripts/air_spawner.gd" id="25_air"]
+[ext_resource type="PackedScene" path="res://scenes/Thermal.tscn" id="26_thermal"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost", "options_panel", "replay_recorder", "sky", "buddy", "snapshot")]
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost", "options_panel", "replay_recorder", "sky", "buddy", "snapshot", "air_spawner")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
 pipe_spawner = NodePath("PipeSpawner")
@@ -51,6 +53,7 @@ replay_recorder = NodePath("ReplayRecorder")
 sky = NodePath("Sky")
 buddy = NodePath("Buddy")
 snapshot = NodePath("Snapshot")
+air_spawner = NodePath("AirSpawner")
 death_lines = ExtResource("14_lines")
 
 [node name="Sky" type="ColorRect" parent="." unique_id=1166350777]
@@ -63,6 +66,10 @@ color = Color(0.4863, 0.7020, 0.8431, 1)
 
 [node name="Buddy" parent="." node_paths=PackedStringArray("bird") instance=ExtResource("23_buddy")]
 bird = NodePath("../Bird")
+
+[node name="AirSpawner" type="Node2D" parent="."]
+script = ExtResource("25_air")
+thermal_scene = ExtResource("26_thermal")
 
 [node name="Snapshot" type="Node" parent="." node_paths=PackedStringArray("bird", "pipe_spawner")]
 script = ExtResource("24_snap")

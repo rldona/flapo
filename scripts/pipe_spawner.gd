@@ -46,6 +46,13 @@ var spin_chance: float = 0.0
 ## Tuberías que quedan del tramo especial (T-067). La pone Main, que es quien
 ## sabe si se ha batido el récord; el spawner solo las va gastando.
 var special_left: int = 0
+## Si la próxima tubería tiene que salir sin variantes (T-203).
+##
+## Lo pide `AirSpawner` cuando va a poner una térmica entre esta y la
+## siguiente: el ticket exige que una térmica **nunca** coincida con una
+## tubería móvil ni con el tramo especial, y que lo garantice el spawner y no
+## el azar.
+var _reservada_normal: bool = false
 ## Cuántas tuberías van en esta partida. Es lo que hace predecible a la
 ## blandita (T-066): se puede contar. Se reinicia en READY.
 var _contador: int = 0
@@ -107,6 +114,30 @@ func set_difficulty(velocidad: float, hueco: float, separacion: float) -> void:
 			hijo.scroll_speed = scroll_speed
 
 
+## La última tubería creada, o `null`. La usa `AirSpawner` para saber si la
+## térmica que va a poner tendría una tubería móvil al lado (T-203).
+func ultima_tuberia() -> Pipe:
+	var mejor: Pipe = null
+	for hijo in get_children():
+		if hijo is Pipe and (mejor == null or hijo.position.x > mejor.position.x):
+			mejor = hijo
+	return mejor
+
+
+## Reserva que la próxima tubería salga sin variantes (T-203).
+##
+## Siempre puede prometerlo. Si el tramo especial (T-067) arranca entre la
+## reserva y la tubería reservada, **el tramo se aplaza una tubería** en vez de
+## pisarla: sigue durando sus cuatro y la térmica no acaba pegada a una
+## tubería giratoria. Los dos tickets se cumplen enteros.
+##
+## Este caso no se dedujo leyendo el código: lo encontró el test de T-203
+## jugando 1.500 frames con la puntuación al máximo.
+func reservar_normal() -> bool:
+	_reservada_normal = true
+	return true
+
+
 ## Número de tuberías vivas. Lo usan los tests y el criterio de T-028.
 func pipe_count() -> int:
 	var n: int = 0
@@ -139,29 +170,34 @@ func _crear_tuberia() -> void:
 	# Después de add_child: `randomize_gap` toca los nodos internos, que solo
 	# existen una vez ha corrido `_ready()` de la tubería.
 	pipe.randomize_gap(_rng)
-	if special_left > 0:
+
+	# **Cada tubería consume siempre los mismos números**, decida lo que
+	# decida ser. Es un invariante y no un detalle: si la cantidad de tiradas
+	# dependiera de lo que sale, cualquier cosa que empuje una decisión —una
+	# térmica reservando (T-203), el tramo especial (T-067)— desplazaría la
+	# secuencia entera, y dos partidas con la misma semilla dejarían de ser la
+	# misma. Se tira siempre y se usa lo que haga falta.
+	var sale_movil: bool = moving_chance > 0.0 and _rng.randf() < moving_chance
+	var fase: float = _rng.randf_range(0.0, TAU)
+	var sale_giro: bool = spin_chance > 0.0 and _rng.randf() < spin_chance
+
+	var reservada: bool = _reservada_normal
+	_reservada_normal = false
+
+	if special_left > 0 and not reservada:
 		_vestir_de_tramo(pipe)
-	else:
-		_quiza_oscilante(pipe)
-		# El giro es puramente visual, así que no depende de la altura ni del
-		# hueco: se decide y ya está.
-		pipe.spin = spin_chance > 0.0 and _rng.randf() < spin_chance
+	elif not reservada:
+		if sale_movil:
+			pipe.oscillation_amplitude = GameConfig.moving_pipe_amplitude(
+				pipe.gap, pipe.get_gap_center()
+			)
+			# Desfase al azar: si todas arrancaran en el mismo punto del seno,
+			# la pantalla entera temblaría a la vez en vez de parecer tuberías
+			# sueltas.
+			pipe.oscillation_phase = fase
+		pipe.spin = sale_giro
+
 	pipe_spawned.emit()
-
-
-## Decide si este par oscila, y con cuánta amplitud (T-063).
-##
-## La amplitud se calcula DESPUÉS de sortear la altura, porque depende de
-## ella: un hueco pegado al techo apenas puede subir. Si no cabe margen sale
-## 0 y la tubería es normal, que es preferible a mover un hueco medio fuera
-## de pantalla.
-func _quiza_oscilante(pipe: Pipe) -> void:
-	if moving_chance <= 0.0 or _rng.randf() >= moving_chance:
-		return
-	pipe.oscillation_amplitude = GameConfig.moving_pipe_amplitude(pipe.gap, pipe.get_gap_center())
-	# Desfase al azar: si todas arrancaran en el mismo punto del seno, la
-	# pantalla entera temblaría a la vez en vez de parecer tuberías sueltas.
-	pipe.oscillation_phase = _rng.randf_range(0.0, TAU)
 
 
 ## Viste una tubería del tramo especial (T-067).

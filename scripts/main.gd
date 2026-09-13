@@ -78,6 +78,9 @@ const _TRANSITIONS: Dictionary = {
 ## La captura del mejor salto (T-077). Solo mira; no toca el juego.
 @export var snapshot: Snapshot
 
+## El aire: térmicas (T-203) y, más adelante, el rebufo del hermano (T-204).
+@export var air_spawner: AirSpawner
+
 ## Las ráfagas de viento (T-064).
 @export var wind: Wind
 
@@ -478,6 +481,7 @@ func _connect_children() -> void:
 		"ReplayRecorder": replay_recorder,
 		"Buddy": buddy,
 		"Snapshot": snapshot,
+		"AirSpawner": air_spawner,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
@@ -495,6 +499,10 @@ func _connect_children() -> void:
 		return
 	fruit_spawner.taken.connect(_on_fruit_taken)
 	pipe_spawner.pipe_spawned.connect(fruit_spawner.on_pipe_spawned)
+	if air_spawner != null:
+		pipe_spawner.pipe_spawned.connect(air_spawner.on_pipe_spawned)
+		air_spawner.set_pipe_spawner(pipe_spawner)
+		air_spawner.thermal_changed.connect(bird.set_in_thermal)
 	effects.changed.connect(_on_effects_changed)
 	effects.shield_changed.connect(hud.set_shield)
 	for nombre in piezas:
@@ -757,6 +765,8 @@ func _apply_difficulty() -> void:
 		background.scroll_speed = velocidad
 	if fruit_spawner != null:
 		fruit_spawner.set_difficulty(velocidad, hueco, separacion)
+	if air_spawner != null:
+		air_spawner.set_difficulty(velocidad, separacion, puntos)
 
 
 ## Guarda una copia del replay desde la pausa (T-261).
