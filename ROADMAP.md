@@ -147,7 +147,7 @@ que por ser la mascota debe dibujarlo una persona.
 - ✅ Pausa, y automática al perder el foco. → T-072 (ADR-0014)
 - ✅ Márgenes seguros y letterbox del color del cielo. → T-073. Falta verlo en un emulador con notch.
 - ✅ Revisión de accesibilidad: contraste WCAG y 48 dp táctiles verificados en `tests/test_a11y.gd`.
-- 🔲 Progresión de confianza: mejoras pequeñas y permanentes con la práctica, persistidas junto al récord. → T-074 (ADR-0021)
+- ✅ Progresión de confianza: +8 de aliento cada 10 partidas, tope a las 50. → T-074 (ADR-0021)
 
 ---
 

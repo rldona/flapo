@@ -28,13 +28,27 @@ static func get_games_played() -> int:
 	return _leer_int("games_played")
 
 
+## Escalón de confianza alcanzado (T-074).
+##
+## Se guarda además de derivarse de las partidas jugadas, y no es
+## redundancia gratuita: si algún día se sube `CONFIDENCE_STEP`, quien ya
+## había llegado a un escalón no lo pierde. La progresión nunca va hacia
+## atrás, que es lo único que un jugador no perdona.
+static func get_confidence() -> int:
+	return _leer_int("confidence")
+
+
 ## Registra una partida terminada. Devuelve `true` si ha sido récord.
 static func record_game(score: int) -> bool:
 	var cfg: ConfigFile = _datos()
 	var record: bool = score > get_high_score()
 	if record:
 		cfg.set_value(SECCION, "high_score", score)
-	cfg.set_value(SECCION, "games_played", get_games_played() + 1)
+	var partidas: int = get_games_played() + 1
+	cfg.set_value(SECCION, "games_played", partidas)
+	# Nunca baja: se queda con lo mejor entre lo guardado y lo que toca.
+	var nivel: int = maxi(get_confidence(), GameConfig.confidence_level(partidas))
+	cfg.set_value(SECCION, "confidence", nivel)
 	# Un fallo al escribir (disco lleno, permisos) no puede tumbar la
 	# partida: se avisa y se sigue jugando con los datos en memoria.
 	var err: Error = cfg.save(RUTA)

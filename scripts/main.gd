@@ -77,6 +77,8 @@ const _TRANSITIONS: Dictionary = {
 var _state: GameState.State = GameState.State.READY
 var _score: int = 0
 var _high_score: int = 0
+## Escalón de confianza (T-074). Se lee del guardado, no se calcula aquí.
+var _confidence: int = 0
 ## La última frase que salió, para no repetirla dos veces seguidas.
 var _ultima_frase: String = ""
 var _rng_frases := RandomNumberGenerator.new()
@@ -86,9 +88,14 @@ var _is_new_high_score: bool = false
 func _ready() -> void:
 	_rng_frases.randomize()
 	_high_score = SaveManager.get_high_score()
+	_confidence = SaveManager.get_confidence()
 	if log_transitions:
 		state_changed.connect(_on_state_changed_log)
 	_connect_children()
+	# La primera partida también cuenta: `change_state(READY)` no hace nada
+	# cuando ya se está en READY, así que sin esta llamada la confianza no se
+	# aplicaría hasta después de la primera muerte.
+	_aplicar_confianza()
 	# Se anuncia el estado inicial para que nadie tenga que suponerlo. Los
 	# hijos ya están listos: en Godot `_ready()` corre de abajo arriba.
 	state_changed.emit(_state)
@@ -162,6 +169,20 @@ func is_new_high_score() -> bool:
 	return _is_new_high_score
 
 
+## Escalón de confianza acumulado (T-074).
+func get_confidence() -> int:
+	return _confidence
+
+
+## Traslada la confianza guardada a Flapo (T-074).
+##
+## Es lo único que la progresión toca del juego, y se hace al empezar cada
+## partida: el jugador la nota en una barra de aliento más larga, no en un
+## menú ni en un mensaje. Ver ADR-0021.
+func _aplicar_confianza() -> void:
+	bird.max_breath = GameConfig.max_breath_for(_confidence)
+
+
 ## Intenta pasar a `to`. Ignora el cambio si no es una transición legal.
 func change_state(to: GameState.State) -> void:
 	if to == _state:
@@ -176,6 +197,7 @@ func change_state(to: GameState.State) -> void:
 		_score = 0
 		_is_new_high_score = false
 		effects.clear()
+		_aplicar_confianza()
 		bird.gravity_mult = 1.0
 		bird.size_mult = 1.0
 		bird.hitbox_mult = 1.0
@@ -361,6 +383,7 @@ func _on_bird_died() -> void:
 	# recibir GAME_OVER y tiene que ver ya el dato de esta partida.
 	_is_new_high_score = SaveManager.record_game(_score)
 	_high_score = SaveManager.get_high_score()
+	_confidence = SaveManager.get_confidence()
 	change_state(GameState.State.GAME_OVER)
 
 
