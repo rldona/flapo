@@ -1,8 +1,11 @@
 # Flapo
 
+### 🎮 [Jugar ahora](https://rldona.github.io/flapo/)
+
 [![CI](https://github.com/rldona/flapo/actions/workflows/export.yml/badge.svg)](https://github.com/rldona/flapo/actions/workflows/export.yml)
 [![Godot](https://img.shields.io/badge/Godot-4.7.2-478cbf)](https://godotengine.org)
 [![Licencia](https://img.shields.io/badge/c%C3%B3digo-MIT-green)](LICENSE)
+[![Jugar](https://img.shields.io/badge/jugar-en%20el%20navegador-E6B84A)](https://rldona.github.io/flapo/)
 
 Un juego de un solo botón: toca para que **Flapo** aletee, cruza los huecos entre tuberías y no toques nada. Inspirado en Flappy Bird.
 
@@ -11,6 +14,9 @@ Flapo es el hermano gordito del pájaro famoso: quiere volar como él, pero pesa
 Primer proyecto de [Plazoleta](https://plazoleta.dev) en desarrollo de videojuegos, hecho de principio a fin en público: diseño, arte, código, audio, pruebas, CI/CD y publicación en itch.io y Google Play.
 
 > Estado: 🔄 **Fases 0 a 7 hechas**. Bucle completo, arte, audio, récord, pausa y CI. Pendiente: tuning final, retoque del sprite, y publicación.
+> Se juega en el navegador, sin instalar nada: <https://rldona.github.io/flapo/>
+> Es la build de `main`, y se actualiza sola en cada push.
+>
 > [Roadmap](ROADMAP.md) · [Tickets](TICKETS.md) · [GDD](docs/GDD.md) · [Decisiones](docs/decisions/)
 
 <!-- TODO: captura y GIF del juego (T-100). Requieren el juego corriendo con

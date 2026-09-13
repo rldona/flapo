@@ -111,6 +111,22 @@ func _la_variante_llega_al_cielo_y_a_las_capas() -> void:
 				% [main.sky.color.to_html(), GameConfig.scenery_sky(esperada).to_html()]
 			)
 		)
+		# El letterbox: en una pantalla que no es múltiplo exacto de 288×512
+		# sobra sitio, y ese sobrante tiene que llevar el cielo de la partida.
+		# En negro parecía que el juego no cabía en el móvil.
+		h.check(
+			"y las franjas del letterbox se pintan del mismo cielo",
+			RenderingServer.get_default_clear_color().is_equal_approx(
+				GameConfig.scenery_sky(esperada)
+			),
+			(
+				"%s, esperado %s"
+				% [
+					RenderingServer.get_default_clear_color().to_html(),
+					GameConfig.scenery_sky(esperada).to_html()
+				]
+			)
+		)
 		h.check(
 			"y las capas su tinte",
 			main.background.get_node("Far").modulate.is_equal_approx(

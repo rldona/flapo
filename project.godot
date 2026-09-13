@@ -65,6 +65,10 @@ pause={
 
 [rendering]
 
+; Lo que se ve en las franjas del escalado entero (ADR-0002): el cielo, no
+; negro. Main lo cambia en cada partida según el escenario (T-057).
+environment/defaults/default_clear_color=Color(0.4863, 0.702, 0.8431, 1)
+
 textures/canvas_textures/default_texture_filter=0
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
