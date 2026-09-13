@@ -28,9 +28,11 @@ a ser una apuesta: la coges cuando vas sobrado y la esquivas cuando vas justo.
 ## Reglas de composición
 Elegidas para que el jugador sepa siempre en qué estado está sin leer nada:
 
-- **Un solo efecto temporal a la vez.** Coger una fruta sustituye el anterior
-  y reinicia el reloj. Verde y luego roja deja "pesado", no "normal": nada de
-  cancelaciones que haya que deducir.
+- **Un efecto por eje, varios ejes a la vez.** Los ejes son gravedad
+  (roja/verde), tamaño (naranja) y velocidad del mundo (violeta). Verde y
+  luego roja deja "pesado", no "normal": nada de cancelaciones que haya que
+  deducir. Pero naranja y luego violeta deja **grande y lento**, porque son
+  cosas distintas. Ver la ampliación al final.
 - **El escudo va aparte y no caduca.** Es una carga que se gasta al chocar, y
   convive con cualquier efecto.
 - **Seis segundos** de duración, y el HUD enseña cuál está activo y cuánto
@@ -93,3 +95,33 @@ hasta que se ejecuta. Aquí lo escribí en el propio comentario del código
 - Los efectos no cruzan partidas: `Effects.clear()` al volver a `READY`.
 - Queda por decidir jugando: la probabilidad de fruta (45 % por hueco), la
   duración (6 s) y los puntos del castigo (3). Los tres son `@export`.
+
+---
+
+## Ampliación: los efectos se acumulan
+
+La regla original era **un solo efecto temporal a la vez**, y la razón era
+buena: evitar que el jugador tuviera que deducir cancelaciones. Verde más roja
+no puede dar "normal".
+
+Pero la regla era más ancha que su motivo. Raúl lo encontró jugando: **siendo
+grande, coger la violeta le dejaba lento y pequeño**. Grande y lento no se
+cancelan — son cosas distintas que actúan sobre cosas distintas— y perder el
+tamaño al coger otra fruta se siente como que el juego te quita algo sin
+avisar.
+
+La regla nueva conserva el motivo y tira lo demás: **un efecto por eje**.
+
+| Eje | Frutas | Qué toca |
+|---|---|---|
+| Gravedad | roja, verde | Cuánto pesa Flapo |
+| Tamaño | naranja | Cuánto ocupa |
+| Mundo | violeta | Cuánto corre todo |
+
+Dos frutas del mismo eje se sustituyen —lo que protege la intención
+original— y dos de ejes distintos conviven, cada una con su propio reloj: la
+que se cogió antes se va antes.
+
+El HUD pasa de enseñar un efecto a enseñar los que haya, separados por "·".
+Con tres a la vez el texto se hace largo para 288 px; si llega a molestar,
+habrá que enseñarlos con iconos en vez de con nombres.

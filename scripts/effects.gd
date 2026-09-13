@@ -14,13 +14,26 @@ extends Node
 ## Este nodo no toca a nadie: solo lleva la cuenta y publica multiplicadores.
 ## Main los reparte ("call down", ADR-0005).
 
-## El efecto activo ha cambiado. `restante` es 0 si no hay ninguno.
-signal changed(kind: Kind, restante: float)
+## Han cambiado los efectos activos. Lleva la lista entera y no uno solo:
+## desde que se acumulan, "el efecto activo" ya no es una cosa.
+signal changed(activos: Array)
 ## El escudo se ha ganado o se ha gastado. Lleva **cuántos quedan**, no un
 ## sí/no: los escudos se acumulan y el HUD tiene que poder decir cuántos.
 signal shield_changed(cantidad: int)
 
 enum Kind { NINGUNO, INMUNIDAD, PESADO, LIGERO, GRANDE, LENTO }
+
+## Qué efectos compiten entre sí. Los del mismo eje se sustituyen; los de
+## ejes distintos conviven.
+##
+## Pesado y ligero comparten eje **porque son opuestos**: dejarlos convivir
+## los haría cancelarse, y el jugador vería "no pasa nada" con dos frutas
+## encima. Eso es justo lo que ADR-0019 no quería.
+const EJES: Dictionary = {
+	"gravedad": [Kind.PESADO, Kind.LIGERO],
+	"tamano": [Kind.GRANDE],
+	"mundo": [Kind.LENTO],
+}
 
 ## Cuánto dura un efecto temporal, s.
 @export var duration: float = 6.0
@@ -35,22 +48,22 @@ enum Kind { NINGUNO, INMUNIDAD, PESADO, LIGERO, GRANDE, LENTO }
 ## Multiplicador de velocidad del mundo de la fruta violeta.
 @export var slow_speed_mult: float = 0.6
 
-var _kind: Kind = Kind.NINGUNO
-var _left: float = 0.0
+## Cuánto le queda a cada efecto activo, en segundos. Diccionario y no una
+## variable suelta: los efectos se acumulan (ADR-0019, ampliación).
+var _restantes: Dictionary = {}
 ## Cuántos escudos lleva encima. Un contador y no un `bool`: coger una azul
 ## teniendo otra ya no desperdicia la segunda.
 var _shield: int = 0
 
 
 func _process(delta: float) -> void:
-	if _kind == Kind.NINGUNO:
+	if _restantes.is_empty():
 		return
-	_left = maxf(_left - delta, 0.0)
-	if _left <= 0.0:
-		_kind = Kind.NINGUNO
-		changed.emit(_kind, 0.0)
-	else:
-		changed.emit(_kind, _left)
+	for k in _restantes.keys():
+		_restantes[k] = float(_restantes[k]) - delta
+		if _restantes[k] <= 0.0:
+			_restantes.erase(k)
+	changed.emit(activos())
 
 
 ## Activa lo que da una fruta.
@@ -62,9 +75,15 @@ func apply(kind: Kind) -> void:
 		_shield = mini(_shield + 1, GameConfig.SHIELD_MAX)
 		shield_changed.emit(_shield)
 		return
-	_kind = kind
-	_left = duration
-	changed.emit(_kind, _left)
+	# Un efecto por EJE, varios ejes a la vez. Coger la violeta llevando la
+	# naranja deja "grande y lento", que es lo que uno espera; coger la roja
+	# llevando la verde deja "pesado" y no "normal", que es lo que ADR-0019
+	# quería evitar: cancelaciones que el jugador tenga que deducir.
+	for otro in EJES.get(_eje_de(kind), []):
+		if otro != kind:
+			_restantes.erase(otro)
+	_restantes[kind] = duration
+	changed.emit(activos())
 
 
 ## Gasta el escudo. Devuelve `true` si había uno y ha absorbido el golpe.
@@ -85,34 +104,64 @@ func shield_count() -> int:
 	return _shield
 
 
+## Los efectos activos, como `[[kind, segundos], ...]`, del más reciente al
+## más antiguo. Lo usan el HUD y los tests.
+func activos() -> Array:
+	var salida: Array = []
+	for k in _restantes:
+		salida.append([k, float(_restantes[k])])
+	salida.sort_custom(func(a: Array, b: Array) -> bool: return a[1] > b[1])
+	return salida
+
+
+## Si ese efecto está activo ahora mismo.
+func activo(kind: Kind) -> bool:
+	return _restantes.has(kind)
+
+
+## Cuánto le queda a ese efecto, o 0.
+func time_left_of(kind: Kind) -> float:
+	return float(_restantes.get(kind, 0.0))
+
+
+## El efecto activo al que más le queda, o NINGUNO. Se conserva porque hay
+## sitios a los que solo les interesa "¿hay algo?".
 func kind() -> Kind:
-	return _kind
+	var lista: Array = activos()
+	return lista[0][0] if not lista.is_empty() else Kind.NINGUNO
 
 
 func time_left() -> float:
-	return _left
+	var lista: Array = activos()
+	return lista[0][1] if not lista.is_empty() else 0.0
 
 
 func gravity_mult() -> float:
-	match _kind:
-		Kind.PESADO:
-			return heavy_gravity_mult
-		Kind.LIGERO:
-			return light_gravity_mult
-		_:
-			return 1.0
+	if activo(Kind.PESADO):
+		return heavy_gravity_mult
+	if activo(Kind.LIGERO):
+		return light_gravity_mult
+	return 1.0
 
 
 func speed_mult() -> float:
-	return slow_speed_mult if _kind == Kind.LENTO else 1.0
+	return slow_speed_mult if activo(Kind.LENTO) else 1.0
 
 
 func size_mult() -> float:
-	return big_size_mult if _kind == Kind.GRANDE else 1.0
+	return big_size_mult if activo(Kind.GRANDE) else 1.0
 
 
 func hitbox_mult() -> float:
-	return big_hitbox_mult if _kind == Kind.GRANDE else 1.0
+	return big_hitbox_mult if activo(Kind.GRANDE) else 1.0
+
+
+## A qué eje pertenece un efecto.
+static func _eje_de(kind: Kind) -> String:
+	for eje in EJES:
+		if (EJES[eje] as Array).has(kind):
+			return eje
+	return ""
 
 
 ## Nombre corto para el HUD.
@@ -132,8 +181,7 @@ func kind_name(kind: Kind) -> String:
 
 ## Main llama a esto al volver a READY: los efectos no cruzan partidas.
 func clear() -> void:
-	_kind = Kind.NINGUNO
-	_left = 0.0
+	_restantes.clear()
 	_shield = 0
-	changed.emit(_kind, 0.0)
+	changed.emit(activos())
 	shield_changed.emit(0)

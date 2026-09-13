@@ -90,10 +90,14 @@ func set_score(score: int) -> void:
 ##
 ## Se enseña el nombre y los segundos porque un efecto invisible es un efecto
 ## que el jugador cree que es un bug: "¿por qué caigo más rápido de golpe?".
-func set_effect(nombre: String, restante: float) -> void:
-	_effect_label.visible = nombre != ""
+## Los efectos activos, ya en texto. Varios a la vez desde que se acumulan.
+##
+## Se separan con "·" y no con coma: a 288 px de ancho cada carácter cuenta, y
+## el punto medio se lee como separador sin parecer parte del texto.
+func set_effects(lineas: PackedStringArray) -> void:
+	_effect_label.visible = not lineas.is_empty()
 	if _effect_label.visible:
-		_effect_label.text = "%s %.0f" % [nombre, ceilf(restante)]
+		_effect_label.text = " · ".join(lineas)
 
 
 ## Anuncia o niega el viento (T-064).

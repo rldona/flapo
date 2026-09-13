@@ -247,8 +247,14 @@ curva, así que **jugar bien nunca fatiga**: solo machacar el botón. Y el
 impulso reducido sigue subiendo, nunca deja a Flapo sin control.
 
 ## Frutas (T-047)
-Aparecen flotando entre tuberías, en la franja central. Un solo efecto activo a
-la vez, 6 s de duración; el escudo va aparte y no caduca.
+Aparecen flotando entre tuberías, en la franja central. 6 s de duración; el
+escudo va aparte y no caduca.
+
+Los efectos **se acumulan, uno por eje**: gravedad, tamaño y velocidad del
+mundo. Ser grande y coger la violeta deja **grande y lento**, no lento y
+pequeño. Lo que sí se sustituye son los opuestos: coger la roja llevando la
+verde deja pesado, no "normal" — dejarlos convivir los cancelaría y el jugador
+vería que no pasa nada con dos frutas encima.
 
 El **escudo se acumula** hasta 3 (`SHIELD_MAX`). Coger una azul llevando otra
 ya no desperdicia la segunda: se apilan, el HUD dice cuántos quedan

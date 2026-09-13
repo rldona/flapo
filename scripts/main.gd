@@ -875,13 +875,25 @@ func _on_fruit_taken(kind: Effects.Kind, puntos: int) -> void:
 
 
 ## El efecto activo ha cambiado o ha caducado: hay que reflejarlo en el mundo.
-func _on_effects_changed(kind: Effects.Kind, restante: float) -> void:
+func _on_effects_changed(activos: Array) -> void:
 	if hud != null:
-		hud.set_effect(effects.kind_name(kind), restante)
+		hud.set_effects(_efectos_en_texto(activos))
 	bird.gravity_mult = effects.gravity_mult()
 	bird.size_mult = effects.size_mult()
 	bird.hitbox_mult = effects.hitbox_mult()
 	_apply_difficulty()
+
+
+## Los efectos activos en texto, para el HUD.
+##
+## Se arma aquí y no en el HUD porque el HUD no sabe cómo se llama un efecto
+## —eso lo sabe `Effects`— y `Effects` no sabe cómo se enseña. Main, que
+## conoce a los dos, hace de traductor ("call down", ADR-0005).
+func _efectos_en_texto(activos: Array) -> PackedStringArray:
+	var salida := PackedStringArray()
+	for e in activos:
+		salida.append("%s %.0f" % [effects.kind_name(e[0]), ceilf(e[1])])
+	return salida
 
 
 ## Flapo ha pasado rozando el borde de un hueco (T-058).
