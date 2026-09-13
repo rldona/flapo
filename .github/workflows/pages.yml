@@ -78,7 +78,10 @@ jobs:
 
       - name: Publicar en gh-pages
         run: |
-          set -euo pipefail
+          # `set -eu` y no `-o pipefail`: este paso corre dentro de la imagen
+          # de godot-ci, que no trae bash. Ver la nota del mismo caso en
+          # export.yml.
+          set -eu
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             DESTINO="pr-${{ github.event.number }}"
           else

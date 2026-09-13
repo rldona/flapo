@@ -127,7 +127,11 @@ jobs:
       - name: Calcular y escribir
         id: calcular
         run: |
-          set -euo pipefail
+          # `set -eu` y no `-o pipefail`: la imagen de godot-ci no trae bash,
+          # así que GitHub cae a `sh` (dash) y dash no conoce `pipefail`. El
+          # workflow moría con "Illegal option -o pipefail" antes de ejecutar
+          # nada. En los jobs sin contenedor sí hay bash y sí se usa.
+          set -eu
           git config --global --add safe.directory "$PWD"
           SALIDA=$(godot --headless --path . -s tools/versionar.gd)
           echo "$SALIDA"
@@ -139,7 +143,8 @@ jobs:
         env:
           NUEVA: ${{ steps.calcular.outputs.nueva }}
         run: |
-          set -euo pipefail
+          # También dentro del contenedor: sin bash, sin pipefail.
+          set -eu
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add project.godot CHANGELOG.md assets/data/changelog.tres
