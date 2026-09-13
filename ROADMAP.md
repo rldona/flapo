@@ -152,7 +152,7 @@ Entregable: juego sin ningún placeholder. Fuentes de arte (`.pxo`) en `assets/s
 
 ## Fase 8 — CI/CD y exportación (1-2 días)
 
-- 🔲 GitHub Actions (`export.yml`): en cada tag `v*`, exportar Web + Android + Linux/Windows con `godot --headless --export-release`.
+- 🔄 GitHub Actions (`export.yml`): en cada push y PR, tests headless + export a Web (T-091, hecho); en cada tag `v*`, exportar los presets existentes. Faltan Android/Linux/Windows (T-090).
 - 🔲 Subir artefactos a GitHub Releases automáticamente.
 - 🔲 Export Web: comprobar cabeceras COOP/COEP (itch.io las soporta con la opción SharedArrayBuffer).
 - 🔲 Export Android: keystore de release (guardado como secreto de GitHub, nunca en el repo), firma, versionado (`version/code` y `version/name`).

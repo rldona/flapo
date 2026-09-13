@@ -296,9 +296,18 @@ Medir fps y nodos vivos con el profiler y `Performance.get_monitor`; objetivo 60
 
 ### T-083 · Lint y formato con pre-commit
 labels: fase:7, area:ci · estimate: 1
-gdtoolkit (`gdformat`, `gdlint`) vía pre-commit; `.gdlintrc` en el repo.
+gdtoolkit (`gdformat`, `gdlint`) vía pre-commit; `.gdlintrc` en el repo. Quitar el `|| true` del job `lint` de `export.yml`.
+
+Estado actual (medido en CI, T-091): **17 problemas**. Casi todos son
+`class-definitions-order` (gdlint quiere señales → constantes → exports →
+variables → onready → métodos, y el proyecto agrupa por tema), tres líneas de
+más de 100 caracteres en `tests/`, y `_connect_children` de `main.gd` con más
+de 6 `return`. Decidir en el ticket qué reglas se acatan y cuáles se relajan
+en `.gdlintrc`; el orden de definiciones probablemente se acata y el resto se
+refactoriza.
 **Criterios de aceptación**
 - `pre-commit run --all-files` pasa limpio.
+- El job `lint` del CI ya no lleva `|| true`.
 
 ---
 
