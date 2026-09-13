@@ -94,6 +94,14 @@ var hitbox_mult: float = 1.0:
 		hitbox_mult = valor
 		_aplicar_tamano()
 
+## Aliento máximo. Lo fija Main según la confianza acumulada (T-074); por
+## defecto, el de salida.
+var max_breath: float = GameConfig.MAX_BREATH:
+	set(valor):
+		max_breath = valor
+		_breath = minf(_breath, max_breath)
+		breath_changed.emit(_breath, max_breath)
+
 var _state: GameState.State = GameState.State.READY
 var _dead: bool = false
 ## Segundos que le quedan al acelerón de la animación.
@@ -194,8 +202,8 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_burst_left = 0.0
 		_held = 0.0
 		_gliding = false
-		_breath = GameConfig.MAX_BREATH
-		breath_changed.emit(_breath, GameConfig.MAX_BREATH)
+		_breath = max_breath
+		breath_changed.emit(_breath, max_breath)
 		_flap_times.clear()
 		fatigue_changed.emit(false, 0)
 		gravity_mult = 1.0
@@ -299,9 +307,9 @@ func _gastar_aliento(cantidad: float) -> void:
 
 func _ajustar_aliento(delta_aliento: float) -> void:
 	var antes: float = _breath
-	_breath = clampf(_breath + delta_aliento, 0.0, GameConfig.MAX_BREATH)
+	_breath = clampf(_breath + delta_aliento, 0.0, max_breath)
 	if not is_equal_approx(antes, _breath):
-		breath_changed.emit(_breath, GameConfig.MAX_BREATH)
+		breath_changed.emit(_breath, max_breath)
 
 
 ## Recupera aliento. Lo llama Main al cruzar el centro de un hueco.

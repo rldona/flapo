@@ -119,6 +119,18 @@ central**.
 impulso completo.** Flapo nunca se queda sin poder aletear: el castigo es
 perder una herramienta, no el control. Ver ADR-0020.
 
+### Confianza (T-074)
+Cada **10 partidas jugadas** (no puntos), Flapo gana **+8 de `MAX_BREATH`**,
+con tope en el escalón 5: de 100 a 140 a las 50 partidas. Sube solo, se
+guarda con el récord y nunca baja.
+
+**No es un power-up comprado ni un desbloqueable.** No hay moneda, ni tienda,
+ni menú de mejoras, ni aviso de "has subido de nivel": lo único que el
+jugador ve es que la barra de aliento es un poco más larga que hace unos
+días. Por eso la lista de "fuera de alcance en v1" sigue intacta. Mejora
+quien insiste, no quien ya juega bien, y solo mejora el **planeo**: el
+aleteo, que es el control, no cambia nunca. Ver ADR-0021.
+
 ### Fatiga (T-049)
 Más de **4 aleteos en 1,2 s** reduce el impulso del siguiente un **30 %**. Se
 quita planeando una vez o dejando pasar la ventana.
@@ -144,6 +156,9 @@ de en una trampa. Ver ADR-0019.
 
 ## Fuera de alcance en v1
 Skins, ranking online, anuncios, compras, modos de juego.
+
+La **progresión de confianza (T-074) no está en esta lista** y no la
+contradice: no se compra, no se elige y no tiene pantalla. Ver ADR-0021.
 
 Los **power-ups estaban aquí** hasta T-047: se sacaron de la lista a
 propósito, con ADR-0019, cuando el juego ya estaba completo y se vio que

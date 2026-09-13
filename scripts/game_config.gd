@@ -84,6 +84,20 @@ const BREATH_RECOVER_ON_GAP: float = 25.0
 ## dejaría de existir.
 const BREATH_BAND_RATIO: float = 0.5
 
+# --- Confianza (T-074) --------------------------------------------------
+## Partidas jugadas por cada escalón de confianza. Se cuentan PARTIDAS, no
+## puntos: mejora quien insiste, no quien ya juega bien. Es lo que hace la
+## progresión narrativa en vez de competitiva ("va cogiendo el truco").
+const CONFIDENCE_STEP: int = 10
+
+## Tope de escalones. La progresión termina: un juego que mejora sin límite
+## acaba jugándose solo, y a las 50 partidas Flapo ya ha cogido el truco.
+const CONFIDENCE_MAX_LEVEL: int = 5
+
+## Aliento extra por escalón. Pequeño a propósito: 8 sobre 100 no se nota en
+## una partida, pero la barra es visiblemente más larga a las 50.
+const CONFIDENCE_BREATH_BONUS: float = 8.0
+
 # --- Fatiga (T-049) -----------------------------------------------------
 ## Cuántos aleteos caben en la ventana antes de que empiece a notarse. A los
 ## 3,4 aleteos por hueco que da la curva de dificultad en su tope (ADR-0018),
@@ -153,6 +167,20 @@ static func pipe_spawn_interval() -> float:
 ## suelo. Derivado por el mismo motivo que el intervalo de spawn.
 static func playable_height() -> float:
 	return float(VIEWPORT_SIZE.y) - GROUND_HEIGHT
+
+
+## En qué escalón de confianza está alguien que ha jugado `partidas` partidas.
+##
+## Función pura, como el resto de la progresión: no hay estado de confianza
+## que sincronizar, solo un número guardado del que se deriva todo.
+static func confidence_level(partidas: int) -> int:
+	return clampi(partidas / CONFIDENCE_STEP, 0, CONFIDENCE_MAX_LEVEL)
+
+
+## Aliento máximo en ese escalón. En el tope, 140 sobre los 100 de salida.
+static func max_breath_for(nivel: int) -> float:
+	var n: int = clampi(nivel, 0, CONFIDENCE_MAX_LEVEL)
+	return MAX_BREATH + float(n) * CONFIDENCE_BREATH_BONUS
 
 
 ## Multiplicador del impulso de aleteo según cuántos aleteos ha habido en la
