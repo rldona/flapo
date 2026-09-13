@@ -6,6 +6,8 @@ Estimación en puntos (1 = ~1 h, 2 = media tarde, 3 = una tarde, 5 = dos tardes)
 Labels: `fase:N`, `area:code|art|audio|docs|ci|qa|release`.
 Milestone = fase.
 
+Los tickets **T-2xx** son la *ola 2*: cuarenta ideas para que Flapo no sea un Flappy más. Van dentro de la fase que les corresponde (el label `fase:N` manda, no el número) y siguen las mismas reglas: un ticket por vez, test en `tests/` para lo que headless puede ver, ADR para cada decisión que lo merezca.
+
 ---
 
 ## Fase 0 — Preparación
@@ -283,6 +285,108 @@ Fundido `READY → PLAYING`, retardo de 0,5 s antes de mostrar Game Over.
 **Criterios de aceptación**
 - Ninguna transición bloquea la entrada más de 1 s.
 
+#### Ola 2 — innovación
+
+### T-200 · Descubrir el planeo en un segundo
+labels: fase:3, area:code · estimate: 2
+Depende de T-048. El planeo es la mecánica que ningún clon tiene y hoy nadie la descubre. En `READY`, la primera vez que se juega (flag en `SaveManager`), un pictograma "mantén pulsado" con Flapo planeando en bucle; en la primera partida, si a los 3 huecos no se ha planeado nunca, un aviso de una línea sin pausar. Se apaga solo en cuanto el jugador planea una vez.
+**Criterios de aceptación**
+- Nunca bloquea la entrada: aletear en `READY` sigue empezando la partida igual que ahora.
+- El aviso sale como máximo en las `GLIDE_HINT_MAX_GAMES` primeras partidas (`GameConfig`) y desaparece para siempre tras el primer planeo.
+- Test en `tests/` que compruebe el flag persistido, que el aviso no sale tras planear y que un guardado ausente/corrupto cuenta como "primera vez".
+- Raúl comprueba en el navegador que el pictograma se lee a 1x y no tapa a Flapo.
+
+### T-201 · Jadeo visible: el aliento se ve en Flapo
+labels: fase:3, area:code|art · estimate: 2
+La barra de aliento es UI; el aliento tiene que verse en el cuerpo. Por debajo de `BREATH_LOW_RATIO` (0,3): alas temblando (frames alternos más rápidos), mejillas rojas (modulación de color, no sprites nuevos) y gotas de sudor como partículas; a 0, un "¡puf!" de vaho. `CPUParticles2D`, no `GPUParticles2D`: tiene que funcionar en headless (ADR-0007).
+**Criterios de aceptación**
+- La hitbox no cambia con ningún estado de jadeo.
+- Umbrales en `GameConfig`; el estado visual es función pura de `breath`, sin estado propio en `bird.gd`.
+- Test en `tests/` que compruebe que el jadeo se activa/desactiva en los umbrales y no queda activo tras reiniciar.
+- Raúl revisa en el navegador que el jadeo se nota sin mirar la barra.
+
+### T-202 · Bocanada: feedback al recuperar aliento
+labels: fase:3, area:code|audio · estimate: 1
+Depende de T-048. Hoy cruzar el hueco por el centro recupera +25 en silencio. Marcar la franja central del hueco con un brillo sutil mientras Flapo se acerca, y al cruzarla: partícula de aire, sonido de inhalación y un tirón visible de la barra. Es lo que enseña la regla sin texto.
+**Criterios de aceptación**
+- La franja marcada coincide exactamente con `BREATH_BAND_RATIO` (mismo cálculo, no un número duplicado).
+- Test en `tests/` que compruebe que la señal `breath_recovered` se emite una sola vez por hueco y solo en la franja.
+- Raúl revisa que el brillo no se confunde con una fruta ni con el tramo especial (T-067).
+
+### T-203 · Térmicas: columnas de aire ascendente
+labels: fase:3, area:code · estimate: 3
+Depende de T-048. Cada `THERMAL_INTERVAL` tuberías aparece entre dos pares una columna vertical de aire caliente, visible por partículas ascendentes (polvo, hojas) desde que entra en pantalla. Dentro, **planear sube** en vez de caer despacio (`THERMAL_LIFT` px/s²); el aleteo no cambia. Es un `Area2D` que avisa a `bird.gd` por señal, igual que las frutas (T-047). Da un segundo uso al planeo: no solo ahorrar, también trepar.
+**Criterios de aceptación**
+- Dentro de una térmica, planear nunca supera el tope superior de pantalla ni saca a Flapo del control (tope de subida en `GameConfig`).
+- Nunca coincide con una tubería móvil (T-063) ni con el tramo especial (T-067): lo garantiza el spawner, no el azar.
+- Test en `tests/` que simule planeo dentro y fuera de la térmica y compruebe las velocidades resultantes y que el efecto se retira al salir.
+- ADR-0026 documenta el sistema de "aire" (térmicas y rebufo de T-204) y por qué se modela con `Area2D` propio y no con la gravedad de área de Godot.
+- Raúl revisa en el navegador que la columna se ve venir con tiempo.
+
+### T-204 · El hermano pasa: estela de rebufo
+labels: fase:3, area:code|art · estimate: 3
+Depende de T-203 (mismo sistema de aire). Cada `BROTHER_INTERVAL` tuberías, el hermano famoso cruza la pantalla por delante, sin esfuerzo, y deja una estela horizontal que dura `SLIPSTREAM_TIME` s: planear dentro de ella no gasta aliento. No colisiona, no puntúa, no se le alcanza. El chiste es que él pasa y tú aprovechas el rebufo; el humor es con Flapo, nunca contra él (GDD).
+**Criterios de aceptación**
+- El hermano nunca tapa el hueco que hay que cruzar: su trayectoria sale de la franja jugable del siguiente par.
+- Test en `tests/` que compruebe que el drenaje de aliento es 0 dentro de la estela y vuelve a `BREATH_DRAIN_GLIDE` fuera, y que la estela se libera sola.
+- ADR-0026 recoge que el hermano es puro escenario (sin física), no un `CharacterBody2D`.
+- Raúl revisa el sprite del hermano (esbelto, mismo estilo que Flapo) y que el paso se lee como broma, no como obstáculo.
+
+### T-205 · Racha de huecos centrados: multiplicador
+labels: fase:3, area:code · estimate: 2
+Cruzar `STREAK_LENGTH` (3) huecos seguidos por la franja central (la misma de T-048) activa un ×2 en los puntos mientras dure la racha; el primer hueco fuera de la franja la rompe sin castigo. Une puntuación y aliento en la misma decisión: ir por el centro paga dos veces.
+**Criterios de aceptación**
+- El récord y las medallas siguen midiendo tuberías cruzadas; el multiplicador afecta solo a `score`, documentado en `docs/GDD.md`.
+- HUD enseña la racha actual sin tapar aliento ni puntuación.
+- Test en `tests/` que compruebe activación, mantenimiento y ruptura de la racha, y que reiniciar la pone a 0.
+- Raúl revisa que el ×2 se entiende sin leer nada.
+
+### T-206 · "Casi": roces que se celebran
+labels: fase:3, area:code · estimate: 2
+Pasar a menos de `NEAR_MISS_PX` (4) de una tubería sin tocarla dispara un "¡uf!" (texto flotante, sonido corto, hit-stop de 30 ms) y devuelve `NEAR_MISS_BREATH` (+5) de aliento. La hitbox generosa (ADR-0015) ya crea estos momentos; hoy pasan desapercibidos. Se detecta con un segundo `CollisionShape2D` de radio mayor en un `Area2D` hijo, sin tocar la hitbox de muerte.
+**Criterios de aceptación**
+- La colisión de muerte no cambia en nada (los tests de T-028 siguen idénticos).
+- Un solo "casi" por tubería aunque se roce arriba y abajo.
+- Test en `tests/` con trayectorias a 3 px y a 6 px que compruebe cuál dispara el roce.
+- Raúl revisa que el "uf" no se confunde con un golpe.
+
+### T-207 · Siesta en READY
+labels: fase:3, area:code|art|audio · estimate: 2
+Si en `READY` o `MENU` no pasa nada durante `NAP_IDLE_TIME` s (10), Flapo se duerme: ojos cerrados, "z" flotando, ronquido suave. El primer toque le despierta con un sobresalto (frame extra) y **ese toque empieza la partida igual que siempre**: la siesta es puro personaje, no un estado nuevo de la máquina.
+**Criterios de aceptación**
+- No añade estados a `Main` (ADR-0005): es una animación dentro de `READY`.
+- El aleteo de despertar tiene el mismo impulso que uno normal; ningún retardo por encima de los 50 ms del GDD.
+- Test en `tests/` que compruebe que la siesta arranca a los `NAP_IDLE_TIME` s, se cancela al primer input y nunca aparece en `PLAYING`.
+- Raúl revisa que el ronquido no suena con el juego en segundo plano (T-072 ya pausa).
+
+### T-208 · Eructo propulsor
+labels: fase:3, area:code|audio · estimate: 2
+Depende de T-047. Comer `BURP_FRUITS` (3) frutas en la misma partida sin morir carga un eructo: el siguiente aleteo tiene impulso ×`BURP_FACTOR` (1,5), onda expansiva de partículas y sonido. Se consume solo, no hay botón extra. Humor de hermano gordito y recompensa por arriesgarse a por las frutas.
+**Criterios de aceptación**
+- El impulso resultante nunca saca a Flapo por el tope superior en un solo aleteo (cap en `GameConfig`).
+- HUD muestra que hay eructo cargado (icono junto al efecto activo de T-047).
+- Test en `tests/` que compruebe la carga, el consumo en un solo aleteo y el reset al reiniciar.
+- Raúl revisa que el sonido es simpático, no asqueroso (tono del GDD).
+
+### T-209 · Fin del viaje: el nido
+labels: fase:3, area:code|art · estimate: 3
+A `JOURNEY_END_SCORE` puntos (50) las tuberías paran, el fondo se abre y Flapo llega a un nido donde le espera su hermano: 3 s de escena sin input, una línea ("Ha llegado. Gordo, pero ha llegado.") y la partida **continúa** con la dificultad en tope. Da un final alcanzable a un género que no lo tiene, sin quitar el bucle infinito a quien quiera seguir.
+**Criterios de aceptación**
+- Durante la escena no se puede morir ni puntuar; al terminar, `PLAYING` sigue con todo intacto (aliento, efectos, racha).
+- Se guarda `journey_completed` en `SaveManager`; el menú lo enseña con un nido pequeño junto al récord.
+- Test en `tests/` que compruebe que la escena se dispara exactamente a `JOURNEY_END_SCORE`, una vez por partida, y que el spawner reanuda después.
+- ADR-0027 documenta por qué un final en un juego infinito y por qué se implementa como pausa del spawner y no como estado nuevo (ADR-0005).
+- Raúl revisa la escena en el navegador: tiene que emocionar un poco.
+
+### T-210 · Sombra en el suelo
+labels: fase:3, area:code|art · estimate: 1
+Una sombra elíptica bajo Flapo, en el suelo, que se encoge y aclara con la altura. Es el truco clásico de plataformas para leer la altura: en un juego donde cada aleteo son 2,4 alturas de Flapo (GDD), ayuda a estimar dónde acabará el salto. Un `Sprite2D` hijo de `Ground` actualizado con la `y` de Flapo, sin física.
+**Criterios de aceptación**
+- Escala y alpha son funciones puras de la altura, en `GameConfig`.
+- La sombra no se dibuja en `GAME_OVER` cuando Flapo está en el suelo.
+- Test en `tests/` que compruebe los valores en altura mínima y máxima.
+- Raúl decide en el navegador si ayuda o distrae: es una hipótesis de legibilidad y puede caer.
+
 ---
 
 ## Fase 4 — Arte
@@ -340,6 +444,69 @@ Cambiar todas las texturas, confirmar filtro `Nearest` y sin mipmaps en cada imp
 **Criterios de aceptación**
 - `grep` de "placeholder" en `scenes/` devuelve 0 resultados.
 
+#### Ola 2 — innovación
+
+### T-220 · Expresiones de Flapo
+labels: fase:4, area:art|code · estimate: 2
+Cara según lo que pasa, sin sprites completos nuevos: una capa de ojos y boca (`Sprite2D` hijo con hoja de 8×8) que se combina con los 3 frames de aleteo. Estados: decidido (por defecto), asustado (tubería a menos de 40 px), feliz (punto), agotado (aliento bajo, T-201), dormido (T-207). Tamaños según `docs/art-guide.md`.
+**Criterios de aceptación**
+- Fuente `.pxo` de la hoja de caras en `assets/sprites/src/`.
+- La expresión es función pura del estado del juego, con prioridad documentada (asustado gana a todo, agotado gana a feliz).
+- Test en `tests/` que compruebe la prioridad de expresiones.
+- Raúl revisa que las caras se leen a 1x y son Flapo, no un emoji.
+
+### T-221 · Tuberías con cara
+labels: fase:4, area:art|code · estimate: 2
+Una de cada `FACE_PIPE_EVERY` tuberías lleva una cara pintada en la cabeza que reacciona: mueca cuando Flapo roza (T-206), bostezo si pasa lejos, ojos cerrados al chocar. Solo cambia el sprite de la cabeza (T-051); la hitbox no.
+**Criterios de aceptación**
+- Hitbox y puntuación idénticas con y sin cara (mismo test de referencia que T-065).
+- Las caras nunca burlan (GDD): susto sí, risa no.
+- Test en `tests/` que compruebe que cada reacción se dispara con la señal correcta.
+- Raúl revisa las caras: son personaje.
+
+### T-222 · Tramos del viaje: parque, tejados, nubes, cielo
+labels: fase:4, area:art|code · estimate: 3
+Depende de T-057 y T-209. El fondo cambia cada `JOURNEY_STAGE_SCORE` puntos (parque → tejados → nubes → cielo abierto, con el nido de T-209 al final), con fundido del parallax, no de golpe. Convierte "cuántas tuberías" en "hasta dónde he llegado": el paisaje dice lo cerca que está el récord.
+**Criterios de aceptación**
+- Las capas nuevas usan la paleta del proyecto y se generan con `tools/generar_arte.py` como el resto (ADR-0016).
+- El tramo es función pura de la puntuación; reiniciar vuelve al parque.
+- Test en `tests/` que compruebe los umbrales y que la transición no deja capas huérfanas.
+- Raúl revisa que el cambio de tramo se nota sin distraer del hueco.
+
+### T-223 · Reloj real: el cielo del juego es el de fuera
+labels: fase:4, area:code · estimate: 1
+Depende de T-057. Sin ajuste manual, la variante de escenario sigue la hora del dispositivo (`Time.get_time_dict_from_system()`): amanecer, día, atardecer, noche. La selección aleatoria de T-057 queda como opción (`SCENERY_MODE` en `GameConfig`).
+**Criterios de aceptación**
+- Umbrales horarios en `GameConfig`; si la partida cruza la hora, fundido en vivo, no corte.
+- Test en `tests/` con la hora inyectada (nunca la del sistema) que compruebe cada franja.
+- Raúl lo abre de noche y de día.
+
+### T-224 · La ciudad reacciona
+labels: fase:4, area:art|code · estimate: 2
+Depende de T-052. Detalles en la capa de ciudad que responden a la partida: ventanas que se encienden con cada punto, un vecino que asoma y aplaude en cada medalla, cortinas que se cierran al morir. Sprites pequeños sobre el parallax, sin lógica de juego.
+**Criterios de aceptación**
+- Ninguna reacción toca `Main` ni la física: escuchan señales existentes (`scored`, `medal_earned`, `died`).
+- Test en `tests/` que compruebe que las reacciones se disparan con las señales y no dejan nodos tras reiniciar.
+- Raúl revisa que no roban la atención al hueco.
+
+### T-225 · Complementos ganados
+labels: fase:4, area:art|code · estimate: 3
+Depende de T-244. Cada logro desbloquea un complemento cosmético (bufanda, gorro de chef, gafas de aviador, chapa de "casi"), elegible en el menú: capa `Sprite2D` sobre el aleteo, sin cambiar hitbox. El GDD deja "skins" fuera de v1; se reabre con ADR como hizo ADR-0019, con una regla dura: **nunca se compran, solo se ganan jugando**.
+**Criterios de aceptación**
+- Complementos y su logro asociado en `assets/data/accessories.tres`, no en código.
+- El elegido se persiste en `user://save.cfg`; uno no desbloqueado no se activa aunque se edite el fichero (se revalida al cargar).
+- Test en `tests/` que compruebe desbloqueo, selección y revalidación.
+- ADR-0028 documenta la reapertura y la regla "ganados, no comprados"; `docs/GDD.md` actualizado.
+- Raúl revisa que Flapo sigue siendo Flapo con cualquier complemento (es la mascota de Plazoleta).
+
+### T-226 · Batacazos según la causa
+labels: fase:4, area:art|code · estimate: 2
+Depende de T-075. Tres animaciones de muerte en vez de una: contra tubería (se espachurra y resbala), contra suelo (rebota y queda panza arriba), agotado (cae como un saco con "puf" de vaho). Misma duración total que hoy para no tocar el retardo de T-044.
+**Criterios de aceptación**
+- La causa que elige la animación es la misma que elige la frase (T-075): una sola fuente de verdad.
+- Test en `tests/` que compruebe que cada causa selecciona su animación y que todas terminan antes del panel.
+- Raúl revisa que las tres son cómicas y ninguna es cruel.
+
 ---
 
 ## Fase 5 — Audio
@@ -365,6 +532,50 @@ y un loop mediocre cansa más que el silencio en partidas de veinte segundos.
 El bus `Music` existe y está a −6 dB por si se retoma.
 **Criterios de aceptación**
 - Loop sin click audible en el punto de unión.
+
+#### Ola 2 — innovación
+
+### T-230 · Jadeo dinámico
+labels: fase:5, area:audio|code · estimate: 2
+Depende de T-201. Loop de respiración generado con `tools/generar_audio.py` (ADR-0017) cuyo volumen y velocidad siguen el aliento: inaudible por encima del 60 %, resuello claro por debajo del 30 %. Es el aliento contado por el oído, para poder jugar sin mirar la barra.
+**Criterios de aceptación**
+- `AudioStreamPlayer` propio en el bus `SFX`, con `pitch_scale` y volumen como funciones puras de `breath` en `GameConfig`.
+- Test en `tests/` que compruebe los valores al 100 %, 50 % y 0 % y que el loop para en `GAME_OVER` y `MENU`.
+- Raúl revisa que no cansa en una partida larga.
+
+### T-231 · Aleteo con peso
+labels: fase:5, area:audio|code · estimate: 1
+El sonido de aleteo cambia con el estado: más grave y arrastrado con fatiga (T-049) o fruta roja, más agudo y ligero con fruta verde, seco con el eructo (T-208). Un solo sample con `pitch_scale` y volumen; sin samples nuevos.
+**Criterios de aceptación**
+- Mapeo estado → pitch en `GameConfig`, documentado.
+- Test en `tests/` que compruebe el pitch en cada estado.
+- Raúl revisa que la diferencia se oye con los altavoces del móvil.
+
+### T-232 · Cada aleteo, una nota
+labels: fase:5, area:audio|code · estimate: 3
+El aleteo dispara además una nota de una escala pentatónica (siempre suena bien: no hay notas falsas): sube por la escala con la racha de huecos centrados (T-205) y vuelve al inicio al romperla. Jugar bien compone una melodía; es la música que ADR-0017 descartó, pero generada por el jugador en vez de por un loop. `AudioStreamGenerator` con ondas simples, sin samples.
+**Criterios de aceptación**
+- Opción de apagarlo independiente del mute general, persistida en `user://settings.cfg`.
+- Latencia aleteo → nota por debajo de 50 ms (medida con `AudioServer.get_output_latency()` y anotada en `docs/perf.md`).
+- Test en `tests/` que compruebe la secuencia de notas para una racha dada.
+- ADR-0029 revisa ADR-0017: por qué esto no es la "música de fondo" descartada.
+- Raúl decide si queda activado por defecto tras jugar 10 partidas con y 10 sin.
+
+### T-233 · La voz de Flapo
+labels: fase:5, area:audio · estimate: 2
+Gruñidos cortos sintetizados ("uf" al aletear fatigado, "ay" al rozar, "¡ah!" al recuperar aliento, ronquido en la siesta, "¡hala!" en medalla), generados con `tools/generar_audio.py`: formantes simples, nunca voz grabada, para que envejezca bien y no dependa de una persona.
+**Criterios de aceptación**
+- Cada voz enlazada a una señal existente, con un límite de una voz cada `VOICE_COOLDOWN` s para no machacar.
+- Test en `tests/` que compruebe el cooldown y que en `MENU` solo suena el ronquido.
+- Raúl revisa que suena a Flapo (gordito, simpático) y no a alarma.
+
+### T-234 · Silencio antes del golpe
+labels: fase:5, area:audio|code · estimate: 1
+Depende de T-042. En el hit-stop de 80 ms, todo el bus `SFX` se atenúa a −24 dB y el golpe entra después, solo, a volumen completo. Ducking con `AudioEffectAmplify` en un bus hijo, no tocando cada player. Es la diferencia entre "sonó un golpe" y "¡pum!".
+**Criterios de aceptación**
+- La atenuación se deshace sola al terminar el hit-stop, también si se reinicia dentro de él.
+- Test en `tests/` que compruebe el volumen del bus antes, durante y después.
+- Raúl revisa con auriculares y con altavoz de móvil.
 
 ---
 
@@ -422,6 +633,24 @@ Depende de T-078. Accesible desde el menú: partidas jugadas, mejor puntuación 
 - Test en `tests/` que compruebe que los contadores se acumulan bien entre partidas y sobreviven a un fichero de guardado ausente/corrupto (igual que T-070/T-074).
 - Raúl revisa qué estadísticas se muestran; son contenido de producto, no solo dato técnico.
 
+### T-085 · Layout adaptativo real (RWD por ventana)
+labels: fase:6, area:code · estimate: 3
+Depende de T-073. Sustituye la idea de "layout móvil vs. layout escritorio" por un cálculo continuo: escucha el resize de la ventana en vivo (no solo al arrancar) y recalcula el mejor `scale` entero para el playfield de 288×512 (ADR-0002 sigue mandando: nunca fractional) más cuánto espacio sobra alrededor. El playfield no cambia nunca de tamaño lógico ni de posición relativa; lo único que se adapta es cuánto "extra" hay y dónde queda.
+**Criterios de aceptación**
+- Redimensionar la ventana en vivo (sin reiniciar) recalcula el `scale` entero sin dejar píxeles fraccionados.
+- El playfield queda siempre centrado, en cualquier proporción (16:9, 21:9, 4:3, vertical extremo).
+- Test en `tests/` que, dado un conjunto de tamaños de ventana, compruebe que el `scale` elegido es siempre entero y el mayor que cabe.
+- ADR-0025 documenta que se abandona el par fijo de layouts por un cálculo continuo y por qué no contradice el resto de ADR-0002 (`integer`, `viewport`, `keep` siguen mandando en el playfield).
+- Raúl prueba redimensionando la ventana en directo en el navegador, no solo abriendo tamaños distintos.
+
+### T-086 · Contenido adaptativo en el espacio sobrante
+labels: fase:6, area:code · estimate: 2
+Depende de T-085 y T-084. Define 2-3 tramos de espacio sobrante (nada, panel pequeño, panel grande) y qué se muestra en cada uno: nada o algo decorativo si no cabe nada útil, récord y datos básicos si cabe un panel pequeño, estadísticas completas (T-084) si cabe más. Nunca contenido interactivo que distraiga de la partida en curso.
+**Criterios de aceptación**
+- Los umbrales de cada tramo están en `GameConfig` (px de espacio sobrante), no hardcodeados en la escena.
+- Test en `tests/` que compruebe qué contenido se activa en cada tramo, dado un tamaño de ventana simulado.
+- Raúl revisa que el panel no compita visualmente con el playfield ni distraiga durante `PLAYING`.
+
 ### T-074 · Progresión de confianza
 labels: fase:6, area:code · estimate: 3
 Depende de T-048/T-049 y de `SaveManager` (T-070, ADR-0013). Cada `CONFIDENCE_STEP` partidas jugadas (no puntuación), Flapo gana una mejora pequeña y permanente hasta un tope: más `MAX_BREATH` o menos penalización de fatiga. Es progresión narrativa ("va cogiendo el truco"), no un desbloqueable comprado ni un menú de mejoras: se nota jugando, no se elige.
@@ -455,6 +684,105 @@ labels: fase:6, area:code · estimate: 1
 HUD respeta `DisplayServer.get_display_safe_area()`; fondo cubre relaciones 16:9 a 21:9.
 **Criterios de aceptación**
 - Probado en emulador con notch.
+
+#### Ola 2 — innovación
+
+### T-240 · Semilla determinista
+labels: fase:6, area:code · estimate: 2
+Base de T-241, T-242, T-243, T-260 y T-261. Toda la aleatoriedad de una partida (huecos, tuberías móviles, frutas, térmicas, hermano) sale de un único `RandomNumberGenerator` con semilla conocida, inyectado desde `Main`; nada usa `randi()` global. Con la misma semilla y los mismos inputs, la partida es idéntica frame a frame (física a 60 Hz fija, T-020).
+**Criterios de aceptación**
+- `grep -r "randi\|randf" scripts/` solo encuentra usos del RNG inyectado.
+- Test en `tests/` que corra dos partidas con la misma semilla y los mismos inputs simulados y compare posiciones de tuberías y puntuación; y que semillas distintas den partidas distintas.
+- ADR-0030 documenta el RNG único, qué garantiza y qué no (el determinismo no sobrevive a cambiar `GameConfig`).
+
+### T-241 · Reto del día
+labels: fase:6, area:code · estimate: 2
+Depende de T-240. Botón en el menú: "Reto de hoy". La semilla es la fecha (`AAAAMMDD`), así que todo el mundo juega las mismas tuberías ese día, sin servidor. Guarda la mejor marca del día y el histórico de retos; al compartir (T-071) dice "Reto del 8 de septiembre: 14".
+**Criterios de aceptación**
+- Semilla derivada solo de la fecha local; modo y frutas no cambian respecto al juego normal.
+- El récord general no se mezcla con el del reto (claves separadas en `SaveManager`).
+- Test en `tests/` que compruebe que dos arranques el mismo día dan la misma partida y que cambia al día siguiente.
+- Raúl revisa el texto de compartir.
+
+### T-242 · Semilla compartible
+labels: fase:6, area:code · estimate: 2
+Depende de T-240. Cada partida enseña en Game Over un código corto (semilla en base 36, 5-6 caracteres) y el menú tiene "Jugar un código". Dos amigos juegan exactamente las mismas tuberías y comparan, sin ranking online ni servidor.
+**Criterios de aceptación**
+- El código va en el texto de compartir (T-071/T-079).
+- Un código inválido no rompe nada: aviso corto y se queda en el menú.
+- Test en `tests/` que compruebe codificación/decodificación y el rechazo de códigos inválidos.
+- Raúl revisa que el código cabe en la pantalla de Game Over a 1x.
+
+### T-243 · Fantasma del récord
+labels: fase:6, area:code · estimate: 3
+Depende de T-240. Al superar el récord se guardan la semilla y la lista de inputs (frame + aleteo/planeo) en `user://ghost.dat`. Al jugar el reto o un código con la misma semilla, un Flapo translúcido reproduce ese vuelo. Es la única forma honesta de competir contigo mismo sin online. Un `AnimatedSprite2D` sin física que sigue las posiciones reproducidas, no un segundo `Bird`.
+**Criterios de aceptación**
+- El fantasma no colisiona, no puntúa ni toca el RNG.
+- Fichero de fantasma ausente o corrupto no rompe el arranque (mismo trato que `SaveManager`).
+- Test en `tests/` que grabe una partida simulada, la reproduzca y compruebe que las posiciones coinciden.
+- Raúl revisa que el fantasma se distingue de Flapo y no confunde en un hueco estrecho.
+
+### T-244 · Logros con nombre de tapa
+labels: fase:6, area:code · estimate: 2
+Doce logros offline con nombre de bar ("Pincho de tortilla": 5 huecos centrados seguidos; "De rasante": 10 roces en una partida; "Siesta": dormir a Flapo; "Ha llegado": el nido…), definidos en `assets/data/achievements.tres` y mostrados en estadísticas (T-084). Sin recompensa más que el nombre y, con T-225, un complemento.
+**Criterios de aceptación**
+- Cada logro es una condición sobre señales o contadores existentes; ninguno añade estado al juego más que su propio flag.
+- Aviso al desbloquear: una línea en el HUD, nunca un popup que pare la partida.
+- Test en `tests/` que compruebe el desbloqueo de al menos 3 logros y su persistencia.
+- Raúl revisa los nombres: son contenido.
+
+### T-245 · Soplar para aletear
+labels: fase:6, area:code · estimate: 5
+Modo de entrada opcional: el micrófono. Un soplido corto aletea, uno sostenido planea. Es el juego del aliento controlado con el aliento de verdad. `AudioEffectCapture` en un bus de entrada, detección por energía con umbral e histéresis, calibración de 3 s al activarlo. Web y Android; el botón sigue funcionando siempre.
+**Criterios de aceptación**
+- Opt-in desde el menú con explicación de una línea; permiso de micrófono pedido solo entonces; nada se graba ni se guarda (documentado en `docs/tiendas.md` para la declaración de datos de Google Play).
+- Umbrales en `GameConfig`; la calibración se persiste en `user://settings.cfg`.
+- Test en `tests/` con señal de audio sintética inyectada (no micrófono real) que compruebe soplido corto → aleteo y sostenido → planeo.
+- ADR-0031 documenta la entrada por micrófono y por qué no sustituye al botón (ADR-0004).
+- Raúl prueba en el navegador y en Android en un sitio con ruido.
+
+### T-246 · Dos Flapos en una pantalla
+labels: fase:6, area:code · estimate: 5
+Modo local para dos en el mismo dispositivo: mitad izquierda/derecha de la pantalla táctil (o espacio y flecha arriba), dos Flapos (el segundo con complemento distinto, T-225) en el mismo túnel. Al morir uno, el otro sigue hasta morir; gana quien más aguanta. El GDD deja "modos de juego" fuera de v1: se reabre con ADR como T-076.
+**Criterios de aceptación**
+- Los dos pájaros usan la misma escena `Bird` con la acción de input parametrizada; ninguna lógica duplicada.
+- Sin colisión entre Flapos; frutas y aliento son por jugador.
+- Test en `tests/` que compruebe que la muerte de uno no termina la partida y que las puntuaciones son independientes.
+- ADR-0032 documenta el modo y cómo `Main` gestiona dos `Bird` sin romper ADR-0005.
+- Raúl prueba con otra persona en el móvil.
+
+### T-247 · Mapa de calor de muertes
+labels: fase:6, area:code · estimate: 2
+Depende de T-084. `SaveManager` acumula, por índice de tubería (1ª, 2ª… hasta 60) y por causa, dónde muere el jugador. La pantalla de estadísticas dibuja una tira con cada índice teñido según las muertes. Sirve al jugador ("siempre caigo en la 7") y al proyecto (T-260 mide lo mismo con el bot).
+**Criterios de aceptación**
+- Datos agregados, sin lista de partidas: el fichero no crece con el número de partidas.
+- Test en `tests/` que compruebe la acumulación y la tolerancia a guardado ausente/corrupto.
+- Raúl revisa que la tira se lee a 1x.
+
+### T-248 · Accesibilidad de verdad: formas, movimiento, vibración
+labels: fase:6, area:code|art · estimate: 2
+Tres ajustes persistidos: las frutas llevan forma además de color (círculo, rombo, estrella…) para daltonismo; "menos movimiento" quita sacudida de cámara, flash y parallax rápido conservando el hit-stop; vibración háptica en Android (`Input.vibrate_handheld`) al aletear fatigado y al morir. Amplía `tests/test_a11y.gd`.
+**Criterios de aceptación**
+- Con "menos movimiento" ninguna animación de cámara ni flash se ejecuta (test), y el juego es el mismo.
+- Las formas van en el mismo sprite de fruta (sin sprites duplicados por opción).
+- Test en `tests/` que compruebe los tres ajustes y su persistencia.
+- Raúl revisa las formas a 1x y la vibración en Android.
+
+### T-249 · "Hasta yo descanso"
+labels: fase:6, area:code · estimate: 1
+Tras `REST_HINT_GAMES` partidas seguidas (15) en la misma sesión, en el siguiente Game Over Flapo, con la cara agotada de T-220, sugiere un descanso en una línea. Una vez por sesión, no bloquea nada, no vuelve hasta cerrar el juego. Coherente con "se ríe con él": cuidar al jugador también es tono.
+**Criterios de aceptación**
+- Una vez por sesión de proceso, sin persistir.
+- Test en `tests/` que compruebe que aparece en la partida 15 y no en la 16.
+- Raúl revisa el texto: ánimo, no regañina.
+
+### T-250 · Novedades en el menú
+labels: fase:6, area:code|docs · estimate: 1
+Al arrancar con una versión distinta de la última guardada, el menú enseña "Novedades" con 2-3 líneas leídas de `assets/data/changelog.tres` (rellenado en cada release; automático con T-271). El jugador que vuelve ve qué cambió sin pasar por la tienda.
+**Criterios de aceptación**
+- Versión leída de `ProjectSettings` (`application/config/version`), comparada con la persistida en `user://settings.cfg`.
+- Test en `tests/` que compruebe que solo aparece al cambiar de versión.
+- `docs/qa-checklist.md` añade "changelog actualizado" al checklist de release.
 
 ---
 
@@ -494,6 +822,25 @@ refactoriza.
 - `pre-commit run --all-files` pasa limpio.
 - El job `lint` del CI ya no lleva `|| true`.
 
+#### Ola 2 — innovación
+
+### T-260 · Bot que juega: métrica de justicia
+labels: fase:7, area:qa · estimate: 3
+Depende de T-240. Un jugador automático en `tools/bot_flapo.gd` con una política simple y fija (aletea cuando la `y` prevista cae por debajo del centro del siguiente hueco, planea cuando está por encima). Corre 200 partidas en headless con semillas distintas y reporta media, mediana y el histograma de muertes por índice de tubería (mismo formato que T-247). No mide diversión; mide **si la curva es justa**: si el bot muere siempre en la misma tubería, hay un pico.
+**Criterios de aceptación**
+- `./tests/run.sh` no lo ejecuta (es lento); comando propio documentado en `docs/testing.md`.
+- Test en `tests/` que corra 5 partidas y compruebe que el bot puntúa > 0 y que el reporte se genera.
+- Resultado inicial anotado en `docs/perf.md` como línea base para T-040 y para cada cambio de `GameConfig`.
+- ADR-0033 documenta qué garantiza la métrica del bot y qué no.
+
+### T-261 · Replay determinista para reproducir bugs
+labels: fase:7, area:qa · estimate: 2
+Depende de T-240 y T-243. Cualquier partida se vuelca (semilla + inputs) a un fichero `.replay`, y `tests/replay.gd` la reproduce en headless y compara el resultado. Un bug reportado con su replay se reproduce en CI sin que nadie tenga que jugar.
+**Criterios de aceptación**
+- Volcado desde el menú de pausa ("guardar esta partida") y automático de la última partida en cada muerte (`user://last.replay`).
+- Test en `tests/` que reproduzca un replay de referencia versionado en `tests/fixtures/` y compruebe la puntuación esperada.
+- `docs/testing.md` explica cómo adjuntar un replay a una issue; la plantilla de bug (T-005) lo pide.
+
 ---
 
 ## Fase 8 — CI/CD y exportación
@@ -526,6 +873,23 @@ Subir build web de prueba; activar SharedArrayBuffer si Godot lo requiere.
 **Criterios de aceptación**
 - Juega en Chrome, Firefox y Safari móvil.
 
+#### Ola 2 — innovación
+
+### T-270 · Build jugable por cada PR
+labels: fase:8, area:ci · estimate: 2
+Depende de T-091. Cada PR publica su export Web en GitHub Pages bajo `/pr-NNN/` y un bot comenta el enlace. Raúl prueba desde el móvil sin clonar nada; al cerrar la PR se borra la carpeta.
+**Criterios de aceptación**
+- El enlace aparece en la PR en menos de 5 minutos tras el push.
+- Las cabeceras COOP/COEP funcionan en Pages, o la build usa el modo sin threads; documentar cuál.
+- `main` publica en la raíz de Pages la build actual, que es la que enlaza el README.
+
+### T-271 · Versionado semántico automático
+labels: fase:8, area:ci · estimate: 1
+Depende de T-091. Los Conventional Commits ya llevan la información: un job calcula la siguiente versión (`feat` → minor, `fix` → patch), escribe `application/config/version` en `project.godot`, genera `CHANGELOG.md` y `assets/data/changelog.tres` (T-250) y crea el tag. Nadie edita versiones a mano.
+**Criterios de aceptación**
+- Un `feat:` mergeado en `main` produce un tag minor con release y changelog.
+- El número de versión del menú (T-250) coincide con el tag.
+
 ---
 
 ## Fase 9 — Publicación
@@ -554,6 +918,18 @@ Tag, notas de versión, badges y enlaces a tiendas en README.
 **Criterios de aceptación**
 - Release publicada y README actualizado.
 
+#### Ola 2 — innovación
+
+### T-280 · Instalable y compartible desde la web
+labels: fase:9, area:release|code · estimate: 3
+La build web se convierte en PWA: `manifest.json`, icono (T-054) y service worker que cachea la build para jugar sin conexión y con icono en el móvil, sin pasar por Google Play. Y el botón de compartir usa `navigator.share` vía `JavaScriptBridge` cuando existe (texto + código de T-242), con el portapapeles como respaldo.
+**Criterios de aceptación**
+- Lighthouse marca la página como instalable; la segunda carga funciona en modo avión.
+- El service worker se invalida al cambiar la versión (T-271): nunca sirve una build vieja de una nueva.
+- Test en `tests/` que compruebe el texto de compartir y el respaldo cuando `JavaScriptBridge` no está (escritorio).
+- ADR-0034 documenta la PWA y sus límites frente a la tienda.
+- Raúl instala desde Chrome en Android y desde Safari en iPhone.
+
 ---
 
 ## Fase 10 — Retrospectiva
@@ -569,3 +945,13 @@ labels: fase:10, area:docs · estimate: 2
 Post en itch.io o blog contando el proceso con GIFs por fase.
 **Criterios de aceptación**
 - Publicado y enlazado desde README.
+
+#### Ola 2 — innovación
+
+### T-290 · Museo de placeholders
+labels: fase:10, area:code|docs · estimate: 2
+Pantalla desbloqueada al completar el viaje (T-209): la evolución del juego, de los rectángulos de la Fase 2 al arte final, con una línea por hito y su fecha, leídas de `docs/museo.tres` (capturas versionadas de cada fase). El proyecto es público y de aprendizaje: el "making of" está dentro del juego, no solo en el devlog (T-111).
+**Criterios de aceptación**
+- Capturas de cada fase en `docs/museo/` con licencia CC BY 4.0 como el resto de assets.
+- Test en `tests/` que compruebe que el desbloqueo depende de `journey_completed`.
+- Raúl elige las capturas y escribe las líneas: es la retro (T-110) contada al jugador.
