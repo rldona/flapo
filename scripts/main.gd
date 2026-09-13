@@ -74,6 +74,9 @@ const _TRANSITIONS: Dictionary = {
 ## La pantalla de estadísticas (T-084).
 @export var stats_panel: StatsPanel
 
+## El submenú de opciones (T-087).
+@export var options_panel: OptionsPanel
+
 ## El velo de pausa.
 @export var pause_panel: PausePanel
 
@@ -281,6 +284,41 @@ func stats_rows() -> Array:
 	]
 
 
+## Abre las opciones enseñando el estado real de cada ajuste.
+##
+## Se rellena al abrir y no al arrancar: el silencio se puede cambiar desde
+## la pausa y desde el Game Over, así que el panel no puede fiarse de lo que
+## le dijeron una vez.
+func _abrir_opciones() -> void:
+	if options_panel == null:
+		return
+	options_panel.set_player_name(_session.player_name())
+	options_panel.set_difficulty(_session.difficulty())
+	options_panel.set_muted(audio.is_muted() if audio != null else false)
+	options_panel.set_ghost_hidden(Settings.is_ghost_hidden())
+	options_panel.set_open(true)
+
+
+## El jugador ha escondido o enseñado el fantasma del récord (T-087).
+##
+## Tiene efecto en la SIGUIENTE partida, no en la que está en curso: desde el
+## menú no hay ninguna en curso, y el fantasma decide si sale al entrar en
+## PLAYING.
+func _on_ghost_toggled() -> void:
+	if options_panel == null:
+		return
+	options_panel.set_ghost_hidden(Settings.set_ghost_hidden(not Settings.is_ghost_hidden()))
+	if audio != null:
+		audio.play_button()
+
+
+## El jugador ha tocado el sonido desde opciones (T-087).
+func _on_sound_toggled() -> void:
+	if audio == null or options_panel == null:
+		return
+	options_panel.set_muted(_on_mute_pressed())
+
+
 func _abrir_estadisticas() -> void:
 	if stats_panel == null:
 		return
@@ -289,11 +327,11 @@ func _abrir_estadisticas() -> void:
 
 
 func _refrescar_menu() -> void:
-	if menu_panel == null:
-		return
-	menu_panel.set_difficulty(_session.difficulty())
-	menu_panel.set_player_name(_session.player_name())
-	menu_panel.set_high_score(_high_score)
+	if menu_panel != null:
+		menu_panel.set_high_score(_high_score)
+	if options_panel != null:
+		options_panel.set_difficulty(_session.difficulty())
+		options_panel.set_player_name(_session.player_name())
 
 
 ## Traslada la confianza guardada a Flapo (T-074).
@@ -318,10 +356,13 @@ func change_state(to: GameState.State) -> void:
 	if to == GameState.State.MENU:
 		_score = 0
 		_refrescar_menu()
-	elif stats_panel != null:
-		# Salir del menú cierra las estadísticas: si no, se quedarían encima
-		# de la partida.
-		stats_panel.set_open(false)
+	else:
+		# Salir del menú cierra lo que hubiera abierto encima: si no, se
+		# quedaría delante de la partida.
+		if stats_panel != null:
+			stats_panel.set_open(false)
+		if options_panel != null:
+			options_panel.set_open(false)
 	if to == GameState.State.READY:
 		_score = 0
 		_is_new_high_score = false
@@ -399,14 +440,19 @@ func _connect_children() -> void:
 	game_over_panel.menu_pressed.connect(to_menu)
 	if menu_panel != null:
 		menu_panel.play_pressed.connect(start_free)
-		menu_panel.difficulty_selected.connect(_on_difficulty_selected)
 		menu_panel.stats_pressed.connect(_abrir_estadisticas)
+		menu_panel.options_pressed.connect(_abrir_opciones)
 		# Jugar normal sortea semilla; el reto usa la de hoy (T-241).
 		menu_panel.daily_pressed.connect(start_daily.bind([]))
 		menu_panel.code_pressed.connect(_on_code_pressed)
-		menu_panel.name_changed.connect(_session.set_player_name)
 	if stats_panel != null:
 		stats_panel.back_pressed.connect(func() -> void: stats_panel.set_open(false))
+	if options_panel != null:
+		options_panel.back_pressed.connect(func() -> void: options_panel.set_open(false))
+		options_panel.name_changed.connect(_session.set_player_name)
+		options_panel.difficulty_selected.connect(_on_difficulty_selected)
+		options_panel.sound_toggled.connect(_on_sound_toggled)
+		options_panel.ghost_toggled.connect(_on_ghost_toggled)
 	pipe_spawner.scored.connect(_on_scored)
 	pipe_spawner.centered.connect(_on_centered)
 	bird.breath_changed.connect(hud.set_breath)
@@ -586,13 +632,14 @@ func _apply_difficulty() -> void:
 
 
 ## Alterna el silencio y lo cuenta a los dos paneles que lo enseñan.
-func _on_mute_pressed() -> void:
+func _on_mute_pressed() -> bool:
 	if audio == null:
-		return
+		return false
 	var muted: bool = audio.toggle_muted()
 	audio.play_button()
 	pause_panel.set_muted(muted)
 	game_over_panel.set_muted(muted)
+	return muted
 
 
 ## Flapo ha cogido una fruta.

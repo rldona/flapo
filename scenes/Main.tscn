@@ -21,8 +21,9 @@
 [ext_resource type="Script" path="res://scripts/wind.gd" id="18_wind"]
 [ext_resource type="PackedScene" path="res://scenes/GlideHint.tscn" id="19_hint"]
 [ext_resource type="PackedScene" path="res://scenes/Ghost.tscn" id="20_ghost"]
+[ext_resource type="PackedScene" path="res://scenes/OptionsPanel.tscn" id="21_options"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost")]
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost", "options_panel")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
 pipe_spawner = NodePath("PipeSpawner")
@@ -42,6 +43,7 @@ layout = NodePath("Layout")
 wind = NodePath("Wind")
 glide_hint = NodePath("GlideHint")
 ghost = NodePath("Ghost")
+options_panel = NodePath("OptionsPanel")
 death_lines = ExtResource("14_lines")
 
 [node name="Sky" type="ColorRect" parent="." unique_id=1166350777]
@@ -95,6 +97,8 @@ script = ExtResource("12_effects")
 [node name="FruitSpawner" parent="." instance=ExtResource("13_fruits")]
 
 [node name="MenuPanel" parent="." instance=ExtResource("15_menu")]
+
+[node name="OptionsPanel" parent="." instance=ExtResource("21_options")]
 
 [node name="StatsPanel" parent="." instance=ExtResource("16_stats")]
 

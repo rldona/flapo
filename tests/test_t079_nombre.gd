@@ -117,8 +117,8 @@ func _el_menu_y_el_compartir_lo_usan() -> void:
 	)
 
 	# Escribir en el campo del menú llega hasta el guardado.
-	main.menu_panel._name.text = "Raúl\n"
-	main.menu_panel._on_name_changed("Raúl\n")
+	main.options_panel._name.text = "Raúl\n"
+	main.options_panel._on_name_changed("Raúl\n")
 	await h.ticks(1)
 	h.check(
 		"lo escrito llega saneado a Main",
@@ -132,8 +132,8 @@ func _el_menu_y_el_compartir_lo_usan() -> void:
 	)
 	h.check(
 		"y el campo del menú enseña lo saneado, no lo tecleado",
-		main.menu_panel.player_name() == "Raúl",
-		"'%s'" % main.menu_panel.player_name()
+		main.options_panel.player_name() == "Raúl",
+		"'%s'" % main.options_panel.player_name()
 	)
 
 	# Y sin nombre se puede jugar igual: es lo que no puede romperse.

@@ -62,9 +62,16 @@ func on_game_state_changed(to: GameState.State) -> void:
 		GameState.State.PLAYING:
 			_frame = 0
 			_activo = true
-			# Solo sale si el vuelo grabado es de ESTAS tuberías. Con otra
+			# Dos condiciones. La del jugador manda: si lo ha escondido en
+			# opciones (T-087), no sale y no hay más que hablar.
+			#
+			# Y solo sale si el vuelo grabado es de ESTAS tuberías: con otra
 			# semilla el fantasma volaría por un hueco que hoy no existe.
-			_reproduciendo = _registro != null and _registro.semilla == _semilla
+			_reproduciendo = (
+				not Settings.is_ghost_hidden()
+				and _registro != null
+				and _registro.semilla == _semilla
+			)
 			visible = _reproduciendo
 			if _reproduciendo and bird != null:
 				position.x = bird.position.x

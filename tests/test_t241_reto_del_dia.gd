@@ -144,7 +144,7 @@ func _el_reto_no_cambia_las_reglas() -> void:
 	SaveManager.clear()
 	SaveManager.forget_cache()
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
-	main.menu_panel.difficulty_selected.emit(GameConfig.Difficulty.DIFICIL)
+	main.options_panel.difficulty_selected.emit(GameConfig.Difficulty.DIFICIL)
 	var chance_antes: float = main.fruit_spawner.chance
 	main.start_daily([2026, 9, 8])
 	await h.ticks(2)
