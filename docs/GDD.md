@@ -115,6 +115,14 @@ central**.
 impulso completo.** Flapo nunca se queda sin poder aletear: el castigo es
 perder una herramienta, no el control. Ver ADR-0020.
 
+### Fatiga (T-049)
+Más de **4 aleteos en 1,2 s** reduce el impulso del siguiente un **30 %**. Se
+quita planeando una vez o dejando pasar la ventana.
+
+El ritmo normal de juego son 3,4 aleteos por hueco en el punto más duro de la
+curva, así que **jugar bien nunca fatiga**: solo machacar el botón. Y el
+impulso reducido sigue subiendo, nunca deja a Flapo sin control.
+
 ## Frutas (T-047)
 Aparecen flotando entre tuberías, en la franja central. Un solo efecto activo a
 la vez, 6 s de duración; el escudo va aparte y no caduca.

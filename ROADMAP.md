@@ -93,8 +93,8 @@ Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 
 - ✅ Frutas con efectos: inmunidad, pesado, ligero, grande y lento, con castigos que pagan en puntos. → T-047 (ADR-0019)
 - ✅ Aliento: mantener pulsado planea, gastando un recurso que se recupera cruzando huecos por el centro. → T-048 (ADR-0020)
-- 🔲 Fatiga: aletear sin pausa ni planeo reduce el impulso una temporada. → T-049 (ADR-0020)
-- 🔲 Reacciones variables al morir, coherentes con el tono (nunca burla). → T-050
+- ✅ Fatiga: aletear sin pausa ni planeo reduce el impulso un 30 %. Se quita planeando. → T-049 (ADR-0020)
+- 🔲 Reacciones variables al morir, coherentes con el tono (nunca burla). → T-056
 - ✅ Curva de dificultad: velocidad sube y hueco se estrecha con la puntuación, con tope a los 30 puntos. Hueco de salida ancho (118 px) como rampa de entrada. → T-045 y T-046 (ADR-0018)
 - 🔲 Ajustar constantes hasta que el salto sea legible (documentar valores finales en el GDD). → T-040, aplazado a petición de Raúl
 - ✅ Animación de aleteo (3 frames) con `AnimatedSprite2D`. → T-041

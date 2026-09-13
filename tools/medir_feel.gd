@@ -25,6 +25,7 @@ func _init() -> void:
 	await _altura_del_aleteo()
 	await _ventana_de_reaccion()
 	await _margen_del_hueco()
+	await _aleteo_fatigado()
 	await _dificultad_de_una_partida()
 	_curva_de_dificultad()
 	print("\nLas constantes están en scripts/bird.gd (@export) y")
@@ -95,6 +96,40 @@ func _altura_del_aleteo() -> void:
 	print("  tarda en subir      %7.3f s" % (t_pico / 60.0))
 	print("  ida y vuelta        %7.3f s" % (t / 60.0))
 	print("  eso son             %7.1f alturas de Flapo" % ((y0 - pico) / 24.0))
+
+
+## Lo mismo que `_altura_del_aleteo`, pero con Flapo fatigado (T-049).
+##
+## La comparación es lo que importa: si la diferencia no se ve en píxeles, la
+## penalización no se nota jugando y no sirve de nada.
+func _aleteo_fatigado() -> void:
+	var b: Node = _main.bird
+	_cab("Un aleteo fatigado")
+	var mult: float = GameConfig.fatigue_impulse_mult(GameConfig.FATIGUE_FLAP_COUNT + 1)
+	var y0: float = 256.0
+	b.position.y = y0
+	b.velocity = Vector2.ZERO
+	b.on_game_state_changed(GameState.State.PLAYING)
+	b.velocity.y = b.flap_impulse * mult
+	var pico: float = y0
+	var t: int = 0
+	while t < 240:
+		await physics_frame
+		t += 1
+		pico = minf(pico, b.position.y)
+		if b.position.y >= y0 and t > 10:
+			break
+	print(
+		(
+			"  umbral               %5d aleteos en %.1f s"
+			% [GameConfig.FATIGUE_FLAP_COUNT, GameConfig.FATIGUE_WINDOW]
+		)
+	)
+	print("  penalización         %5.0f %%" % (GameConfig.FATIGUE_PENALTY * 100.0))
+	print("  sube                 %5.1f px  (sano: ver arriba)" % (y0 - pico))
+	print("  ratio de altura      %5.2f  (el impulso baja x%.2f)" % [mult * mult, mult])
+	print("  la altura cae con el CUADRADO del impulso: media penalización de")
+	print("  impulso es bastante menos de media altura")
 
 
 ## Cuánto tiempo pasa entre que ves una tubería y la cruzas.

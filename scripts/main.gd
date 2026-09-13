@@ -220,6 +220,7 @@ func _connect_children() -> void:
 	pipe_spawner.scored.connect(_on_scored)
 	pipe_spawner.centered.connect(_on_centered)
 	bird.breath_changed.connect(hud.set_breath)
+	bird.fatigue_changed.connect(hud.set_fatigued)
 	score_changed.connect(hud.set_score)
 	score_changed.connect(game_over_panel.set_score)
 	game_over_panel.restart_pressed.connect(_on_restart_pressed)

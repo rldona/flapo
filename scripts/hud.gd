@@ -11,6 +11,10 @@ extends CanvasLayer
 ##
 ## Sí se ocupa de no meterse debajo del notch: ver `_aplicar_margen_seguro()`.
 
+## Color de la barra de aliento en reposo y fatigado.
+const COLOR_ALIENTO := Color(0.949, 0.851, 0.655)
+const COLOR_FATIGA := Color(0.851, 0.537, 0.447)
+
 ## Separación mínima del borde superior, px de juego. Se suma al margen que
 ## reporte el sistema, para que el marcador no quede pegado al borde ni
 ## siquiera en una pantalla sin notch.
@@ -100,3 +104,9 @@ func set_breath(actual: float, maximo: float) -> void:
 	# Godot recalcula `size` después de `_ready()` y avisa de que lo va a
 	# pisar. El ancho lo define el offset.
 	_breath_fill.offset_right = _breath_back.size.x * ratio
+
+
+## Fatiga (T-049): tiñe la barra de aliento en vez de ocupar sitio propio.
+## Arriba ya no cabe nada más y son dos caras del mismo cansancio.
+func set_fatigued(fatigado: bool, _aleteos: int) -> void:
+	_breath_fill.color = COLOR_FATIGA if fatigado else COLOR_ALIENTO

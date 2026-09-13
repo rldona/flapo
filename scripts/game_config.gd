@@ -84,6 +84,19 @@ const BREATH_RECOVER_ON_GAP: float = 25.0
 ## dejaría de existir.
 const BREATH_BAND_RATIO: float = 0.5
 
+# --- Fatiga (T-049) -----------------------------------------------------
+## Cuántos aleteos caben en la ventana antes de que empiece a notarse. A los
+## 3,4 aleteos por hueco que da la curva de dificultad en su tope (ADR-0018),
+## jugar bien nunca llega aquí: solo llega quien machaca el botón.
+const FATIGUE_FLAP_COUNT: int = 4
+
+## Ventana que se mira hacia atrás, s.
+const FATIGUE_WINDOW: float = 1.2
+
+## Cuánto se reduce el impulso del aleteo estando fatigado, en tanto por uno.
+## 0,3 se nota sin quitar el control: Flapo sube menos, no deja de subir.
+const FATIGUE_PENALTY: float = 0.3
+
 # --- Puntuación ---------------------------------------------------------
 const MEDAL_BRONZE: int = 10
 const MEDAL_SILVER: int = 20
@@ -140,6 +153,21 @@ static func pipe_spawn_interval() -> float:
 ## suelo. Derivado por el mismo motivo que el intervalo de spawn.
 static func playable_height() -> float:
 	return float(VIEWPORT_SIZE.y) - GROUND_HEIGHT
+
+
+## Multiplicador del impulso de aleteo según cuántos aleteos ha habido en la
+## ventana reciente (T-049).
+##
+## Es una **función pura del historial**: no hay estado de fatiga escondido en
+## `bird.gd` que haya que reiniciar, sincronizar o depurar. Flapo guarda las
+## marcas de tiempo de sus aleteos y pregunta.
+static func fatigue_impulse_mult(aleteos_en_ventana: int) -> float:
+	return 1.0 - FATIGUE_PENALTY if aleteos_en_ventana > FATIGUE_FLAP_COUNT else 1.0
+
+
+## Si ese número de aleteos cuenta como fatiga. Lo usa el HUD y los tests.
+static func is_fatigued(aleteos_en_ventana: int) -> bool:
+	return aleteos_en_ventana > FATIGUE_FLAP_COUNT
 
 
 ## Qué medalla corresponde a una puntuación. Los umbrales viven aquí y no en

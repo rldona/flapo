@@ -11,6 +11,9 @@ extends CharacterBody2D
 ## significa (pasar a GAME_OVER) es `Main`: "signal up".
 signal died
 
+## La fatiga ha cambiado (T-049). `aleteos` es cuántos hay en la ventana.
+signal fatigue_changed(fatigado: bool, aleteos: int)
+
 ## El aliento ha cambiado. La emite Flapo porque es suyo; quien lo enseña es
 ## el HUD, a través de Main.
 signal breath_changed(actual: float, maximo: float)
@@ -103,6 +106,17 @@ var _breath: float = GameConfig.MAX_BREATH
 ## Cuánto lleva pulsado el botón, s. Distingue toque de mantener.
 var _held: float = 0.0
 var _gliding: bool = false
+## Marcas de tiempo de los últimos aleteos, s. Es el historial del que
+## `GameConfig.fatigue_impulse_mult()` deriva la fatiga: aquí no hay estado de
+## fatiga, solo datos (T-049).
+var _flap_times: Array[float] = []
+## Reloj propio, acumulado en `_physics_process`.
+##
+## No se usa `Time.get_ticks_msec()`, que es tiempo REAL: la ventana de fatiga
+## seguiría corriendo con el juego en pausa (T-072) y se descuadraría con el
+## hit-stop de la muerte (T-042), que pone `Engine.time_scale` a 0. El reloj
+## del juego es el único que se para cuando el juego se para.
+var _tiempo: float = 0.0
 ## Segundos que le quedan de no colisionar tras gastar un escudo.
 var _invulnerable_left: float = 0.0
 
@@ -121,6 +135,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_tiempo += delta
 	match _state:
 		GameState.State.READY:
 			# Flota: ni gravedad ni entrada. El aleteo que arranca la partida
@@ -133,7 +148,7 @@ func _physics_process(delta: float) -> void:
 			# frame de física o de dibujo, así que aquí no se pierde ni se
 			# duplica ninguna pulsación aunque los fps bailen.
 			if Input.is_action_just_pressed("flap"):
-				velocity.y = flap_impulse
+				velocity.y = flap_impulse * _registrar_aleteo()
 				_burst_left = flap_burst_time
 				_gastar_aliento(GameConfig.BREATH_DRAIN_FLAP)
 				flapped.emit()
@@ -181,6 +196,8 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_gliding = false
 		_breath = GameConfig.MAX_BREATH
 		breath_changed.emit(_breath, GameConfig.MAX_BREATH)
+		_flap_times.clear()
+		fatigue_changed.emit(false, 0)
 		gravity_mult = 1.0
 		size_mult = 1.0
 		hitbox_mult = 1.0
@@ -237,9 +254,43 @@ func _actualizar_planeo(delta: float) -> void:
 	else:
 		_held = 0.0
 	var quiere: bool = _held >= glide_hold_time
+	var antes: bool = _gliding
 	_gliding = quiere and _breath > 0.0
 	if _gliding:
 		_gastar_aliento(GameConfig.BREATH_DRAIN_GLIDE * delta)
+		# Planear descansa: es la salida deliberada a la fatiga, y lo que
+		# convierte "deja de machacar" en una acción y no en una espera.
+		if not antes and not _flap_times.is_empty():
+			_flap_times.clear()
+			fatigue_changed.emit(false, 0)
+
+
+## Anota el aleteo y devuelve el multiplicador de impulso que le toca.
+##
+## El historial se poda a la ventana antes de contar, así que "hace rato que
+## no aleteo" y "he dejado de aletear" son lo mismo sin código extra.
+func _registrar_aleteo() -> float:
+	_flap_times.append(_tiempo)
+	_podar_aleteos(_tiempo)
+	var mult: float = GameConfig.fatigue_impulse_mult(_flap_times.size())
+	fatigue_changed.emit(GameConfig.is_fatigued(_flap_times.size()), _flap_times.size())
+	return mult
+
+
+func _podar_aleteos(ahora: float) -> void:
+	while not _flap_times.is_empty() and ahora - _flap_times[0] > GameConfig.FATIGUE_WINDOW:
+		_flap_times.remove_at(0)
+
+
+## Cuántos aleteos cuentan ahora mismo para la fatiga.
+func recent_flaps() -> int:
+	_podar_aleteos(_tiempo)
+	return _flap_times.size()
+
+
+## Si Flapo está fatigado ahora mismo.
+func is_fatigued() -> bool:
+	return GameConfig.is_fatigued(recent_flaps())
 
 
 func _gastar_aliento(cantidad: float) -> void:

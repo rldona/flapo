@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="DeathLines" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/death_lines.gd" id="1_lines"]
+
+[resource]
+script = ExtResource("1_lines")
+lines = PackedStringArray("¡Uf!", "Casi.", "Ya casi lo tenías.", "El aire estaba raro hoy.", "Vuelve a intentarlo, va.", "Esa tubería salió de la nada.", "Flapo lo ha dado todo.", "Un poco más arriba y pasa.", "La gravedad no perdona.", "Otra vez, que ahora sí.", "Buen intento, de verdad.", "Se te ha ido un pelín.")

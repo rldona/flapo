@@ -80,4 +80,46 @@ castigo por quedarse sin aliento es perder una herramienta, no el control.
   violeta ralentiza el mundo, así que los huecos llegan más espaciados y el
   aliento se recupera **menos por segundo**. Es coherente —ir despacio da más
   margen pero menos aliento— pero no estaba diseñado, ha salido solo.
-- **T-049** (fatiga por aleteo sin pausa) se apoya en esto y comparte ADR.
+## Fatiga por aleteo sin pausa (T-049)
+
+El aliento castiga el gasto total, pero no distingue **volar** de **machacar
+el botón**. La fatiga sí: más de `FATIGUE_FLAP_COUNT` (4) aleteos en
+`FATIGUE_WINDOW` (1,2 s) reduce el impulso del siguiente un
+`FATIGUE_PENALTY` (30 %).
+
+### Es una función pura del historial, no un estado
+`GameConfig.fatigue_impulse_mult(aleteos_en_ventana)` no tiene memoria. Flapo
+guarda las marcas de tiempo de sus aleteos —eso son datos— y pregunta. No hay
+un `_fatigado` que sincronizar, reiniciar o depurar, y podar el historial a la
+ventana hace que "hace rato que no aleteo" y "he dejado de aletear" sean lo
+mismo sin código extra.
+
+### El umbral está calibrado contra la curva de dificultad
+En su punto más duro, la curva de la ADR-0018 da **3,39 aleteos por hueco**.
+El umbral está en 4: **jugar bien nunca fatiga**. Solo llega quien martillea.
+Hay test que lo comprueba contra la propia curva, así que si algún día se
+retoca una, la otra se entera.
+
+### Dos salidas, y una es una acción
+La fatiga se quita **planeando** (borra el historial de golpe) o dejando pasar
+la ventana. Que planear descanse no es un detalle: convierte "deja de
+machacar" en algo que **haces**, no en algo que esperas, y ata las dos
+mecánicas de esta ADR en un solo bucle — machacas, te cansas, planeas,
+recuperas aliento cruzando centrado.
+
+### El reloj es el del juego, no el del sistema
+La primera versión usaba `Time.get_ticks_msec()`. Es tiempo real, así que la
+ventana de fatiga habría seguido corriendo **con el juego en pausa** (T-072) y
+se habría descuadrado con el hit-stop de la muerte (T-042), que pone
+`Engine.time_scale` a 0. Flapo acumula su propio `delta` en
+`_physics_process`: el único reloj que se para cuando el juego se para.
+
+### Nunca deja a Flapo sin control
+Fatigado el impulso baja un 30 %, pero **sigue siendo un impulso hacia
+arriba**. Igual que con el aliento a cero: el castigo es que cuesta más, no
+que deje de responder.
+
+Ojo a un efecto que no es obvio: la altura de un salto va con el **cuadrado**
+de la velocidad inicial, así que un 30 % menos de impulso es un 51 % menos de
+altura. Se nota más de lo que el número sugiere. `tools/medir_feel.gd` lo
+imprime.

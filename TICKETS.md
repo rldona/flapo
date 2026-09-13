@@ -194,7 +194,11 @@ Depende de T-048. Aletear muchas veces seguidas sin planear ni recuperar aliento
 - `tools/medir_feel.gd` reporta también el caso de aleteo fatigado.
 - Recogido en ADR-0020 (junto con T-048).
 
-### T-050 · Reacciones variables al morir
+<!-- Renumerado: este ticket entró como T-050, número que ya usaba
+     "Sprite de Flapo" en la Fase 4 y que está referenciado en ADR-0015 y en
+     el historial de commits. Pasa a T-056, el primero libre. -->
+
+### T-056 · Reacciones variables al morir
 labels: fase:3, area:code|docs · estimate: 2
 Cada Game Over elige al azar (sin repetir la última) una frase corta de una lista, coherente con "Concepto y tono" del GDD: ánimo torpe, nunca burla. Sustituye el texto fijo actual de la pantalla de Game Over.
 **Criterios de aceptación**
