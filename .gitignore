@@ -1,0 +1,16 @@
+# Caché de importación de Godot: se regenera sola al abrir el proyecto
+# o con `godot --headless --import`. Nunca se versiona.
+.godot/
+
+# Builds. Se rehacen con `--export-release`; pesan cientos de megas.
+export/
+
+# Herramientas de Python (gdlint, gdformat, pre-commit). Se instalan
+# con los pasos de docs/environment.md.
+.venv/
+
+# Configuración local de Trunk.
+.trunk/
+
+# Basura de macOS.
+.DS_Store
