@@ -25,6 +25,10 @@
 | Naranja | `#E6B84A` (mostaza, ya en paleta) | el doble de tamaño |
 | Violeta | `#8A6FA8` | el mundo va más lento |
 
+Las frutas miden **16×16**. Empezaron en 12×12 y se subieron tras verlas en
+pantalla: a 12 px se perdían contra el fondo mientras el jugador está pendiente
+de las tuberías.
+
 Rompen los 16 colores a propósito: son **tonos que el escenario no usa**, y eso
 es justo lo que hace que se lean como objetos ajenos al mundo y no como
 decorado. Un rojo o un violeta en un fondo de azules y arenas se ve de

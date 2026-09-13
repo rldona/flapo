@@ -25,7 +25,7 @@ const CASTIGOS: Array = [Effects.Kind.PESADO, Effects.Kind.GRANDE]
 ## Texturas por efecto, en el orden del enum a partir de INMUNIDAD.
 @export var textures: Array[Texture2D] = []
 ## Probabilidad de que salga fruta en cada hueco entre tuberías.
-@export_range(0.0, 1.0) var chance: float = 0.45
+@export_range(0.0, 1.0) var chance: float = 0.6
 ## X donde nacen, px. Fuera de pantalla por la derecha.
 @export var spawn_x: float = 320.0
 ## Franja de altura donde pueden aparecer, como fracción de la altura jugable.
@@ -42,7 +42,6 @@ const CASTIGOS: Array = [Effects.Kind.PESADO, Effects.Kind.GRANDE]
 var scroll_speed: float = GameConfig.SCROLL_SPEED
 var _gap_actual: float = GameConfig.PIPE_GAP
 var _separacion: float = GameConfig.PIPE_SPACING
-var _jugando: bool = false
 var _rng := RandomNumberGenerator.new()
 
 @onready var _timer: Timer = $Timer
@@ -56,9 +55,16 @@ func _ready() -> void:
 
 
 ## Main conecta aquí la señal de PipeSpawner.
+##
+## NO se comprueba si se está jugando, y es deliberado: `pipe_spawned` solo
+## puede ocurrir jugando, porque las tuberías solo nacen en PLAYING. Una
+## guarda aquí parecía inocente y era un bug: `Main` conecta `state_changed`
+## en el orden de su tabla de piezas, PipeSpawner va antes que FruitSpawner,
+## y la primera tubería se creaba —emitiendo esta señal— antes de que este
+## nodo se hubiera enterado de que la partida había empezado. Se perdía la
+## primera oportunidad de fruta y, sobre todo, el código dependía de un orden
+## que nadie había decidido.
 func on_pipe_spawned() -> void:
-	if not _jugando:
-		return
 	_timer.start(_medio_intervalo())
 
 
@@ -66,14 +72,12 @@ func on_pipe_spawned() -> void:
 func on_game_state_changed(to: GameState.State) -> void:
 	match to:
 		GameState.State.READY:
-			_jugando = false
 			_timer.stop()
 			_liberar_todas()
 			_reiniciar_rng()
 		GameState.State.PLAYING:
-			_jugando = true
+			pass
 		GameState.State.GAME_OVER:
-			_jugando = false
 			_timer.stop()
 			_congelar_todas()
 

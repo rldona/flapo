@@ -27,7 +27,7 @@ test -s "$SALIDA/index.wasm" || { echo "El export no ha producido wasm" >&2; exi
 
 echo "==> Build recién hecho: $(ls -lh "$SALIDA/index.pck" | awk '{print $5}') de datos"
 echo "==> http://localhost:$PUERTO"
-echo "    Recarga FORZADA en el navegador (Cmd+Shift+R): el .wasm y el .pck"
-echo "    se cachean, y una recarga normal puede seguir sirviendo el anterior."
-cd "$SALIDA"
-exec python3 -m http.server "$PUERTO"
+# Se sirve con tools/servidor.py y no con `python3 -m http.server` porque ese
+# deja que el navegador cachee el .pck y el .wasm. Recargabas y seguías
+# jugando al build anterior, sin ningún aviso.
+exec python3 "$RAIZ/tools/servidor.py" "$PUERTO" "$SALIDA"

@@ -83,8 +83,16 @@ No sirvas `export/Web/` a mano. Servir un build viejo no da ningún error: el
 juego carga, funciona, y le faltan las últimas features. Pasó con las frutas
 de T-047 y costó un rato de diagnóstico.
 
-Y **recarga forzada en el navegador** (⌘⇧R): el `.wasm` y el `.pck` se cachean
-con ganas y una recarga normal puede seguir sirviendo el anterior.
+El script sirve con `tools/servidor.py`, que manda `Cache-Control: no-store`.
+**No uses `python3 -m http.server`**: manda `Last-Modified` y el navegador
+cachea el `.pck` y el `.wasm` por su cuenta, así que exportas, recargas y
+sigues jugando al build anterior sin ningún aviso. Se diagnosticó con las
+frutas de T-047 y el síntoma fue desconcertante: en el editor se veían y en el
+navegador no.
+
+El truco para detectarlo, por si vuelve a pasar con otra cosa: meter un
+`print()` temporal, exportar, y mirar la consola del navegador. Si aparece una
+traza que **ya no está en el código**, estás viendo un build cacheado.
 
 Decisiones del preset:
 

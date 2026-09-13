@@ -17,6 +17,7 @@ func _init() -> void:
 	await _la_naranja_no_sale_con_el_hueco_estrecho()
 	await _las_frutas_no_cruzan_partidas()
 	await _nacen_a_mitad_de_camino()
+	await _la_primera_tuberia_tambien_cuenta()
 	SaveManager.clear()
 	Settings.clear()
 	quit(h.resumen("T-047"))
@@ -265,5 +266,29 @@ func _nacen_a_mitad_de_camino() -> void:
 			"distancia mínima en 90 s: %.1f px (media separación: %.0f-%.0f px)"
 			% [peor, GameConfig.PIPE_SPACING / 2.0, GameConfig.PIPE_SPACING_MAX / 2.0]
 		)
+	)
+	main.free()
+
+
+## Regresión: la primera tubería también da oportunidad de fruta.
+##
+## `Main` conecta `state_changed` en el orden de su tabla de piezas, y
+## `PipeSpawner` va antes que `FruitSpawner`: la primera tubería nace —y emite
+## `pipe_spawned`— antes de que el spawner de frutas se entere de que la
+## partida ha empezado. Una guarda `if not _jugando` se comía esa primera
+## oportunidad, y peor aún, hacía que el comportamiento dependiera de un orden
+## que nadie había decidido.
+func _la_primera_tuberia_tambien_cuenta() -> void:
+	var main: Node = await _partida()
+	main.fruit_spawner.chance = 1.0
+	main.change_state(GameState.State.PLAYING)
+
+	# Medio intervalo es cuando debe salir la primera, más un margen.
+	var ticks: int = int(GameConfig.pipe_spawn_interval_for(0) * 60.0 * 0.5) + 10
+	await h.ticks(ticks)
+	h.check(
+		"la primera tubería también da fruta",
+		main.fruit_spawner.fruit_count() >= 1,
+		"%d frutas tras %d ticks (medio intervalo)" % [main.fruit_spawner.fruit_count(), ticks]
 	)
 	main.free()

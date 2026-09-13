@@ -175,6 +175,34 @@ Frutas flotantes entre tuberías con cinco efectos: inmunidad, pesado, ligero, g
 - Ni las frutas ni sus efectos sobreviven a un reinicio.
 - El HUD enseña qué efecto está activo y cuánto le queda.
 
+### T-048 · Aliento: recurso de vuelo
+labels: fase:3, area:code · estimate: 3
+Reinterpreta el único botón sin añadir inputs: pulsación corta sigue siendo el aleteo actual (impulso fijo, ADR-0006); mantener pulsado activa **planeo** (cae despacio en vez de con gravedad completa). Ambos gastan `breath` (planear más despacio que aletear); `breath` se recupera pasando por la franja central del hueco entre tuberías. A `breath` 0 el planeo deja de frenar la caída, pero el aleteo corto sigue funcionando siempre: nunca se queda sin poder aletear.
+**Criterios de aceptación**
+- `GameConfig` expone `MAX_BREATH`, `BREATH_DRAIN_FLAP`, `BREATH_DRAIN_GLIDE`, `BREATH_RECOVER_ON_GAP`, documentadas como el resto (valor + por qué).
+- Test en `tests/` que simule aletear y planear y compruebe que `breath` sube y baja dentro de `[0, MAX_BREATH]`.
+- HUD muestra el nivel de aliento sin tapar la puntuación.
+- ADR-0020 documenta por qué se reabre el modelo de física de ADR-0006 y cómo convive con `bird.gd`.
+- `docs/GDD.md` actualizado con la regla y sus constantes.
+
+### T-049 · Fatiga por aleteo sin pausa
+labels: fase:3, area:code · estimate: 2
+Depende de T-048. Aletear muchas veces seguidas sin planear ni recuperar aliento (más de `FATIGUE_FLAP_COUNT` aleteos en menos de `FATIGUE_WINDOW` s) reduce el impulso del siguiente aleteo un `FATIGUE_PENALTY` %; se recupera planeando una vez o dejando pasar el tiempo. Nunca deja a Flapo sin control, solo penaliza machacar el botón.
+**Criterios de aceptación**
+- Constantes en `GameConfig` como función pura del historial de aleteos, no estado oculto en `bird.gd`.
+- Test en `tests/` que simule una ráfaga de aleteos y compruebe la reducción de impulso y su recuperación.
+- `tools/medir_feel.gd` reporta también el caso de aleteo fatigado.
+- Recogido en ADR-0020 (junto con T-048).
+
+### T-050 · Reacciones variables al morir
+labels: fase:3, area:code|docs · estimate: 2
+Cada Game Over elige al azar (sin repetir la última) una frase corta de una lista, coherente con "Concepto y tono" del GDD: ánimo torpe, nunca burla. Sustituye el texto fijo actual de la pantalla de Game Over.
+**Criterios de aceptación**
+- ≥8 frases en un recurso de datos propio, no hardcodeadas en la escena, fácil de ampliar.
+- Test en `tests/` que compruebe que no sale la misma frase dos veces seguidas y que el selector no rompe con una lista de un solo elemento.
+- Raúl revisa el tono de las frases: son contenido, no solo código.
+- `docs/GDD.md`, sección "Concepto y tono", enlaza al recurso de frases.
+
 ### T-046 · Hueco de salida más ancho
 labels: fase:3, area:code · estimate: 1
 Subir el hueco inicial de 100 a 118 px para que los primeros puntos perdonen más, manteniendo el mínimo de 82 en el tope de la curva.
@@ -277,6 +305,16 @@ El bus `Music` existe y está a −6 dB por si se retoma.
 ---
 
 ## Fase 6 — Persistencia y pulido
+
+### T-074 · Progresión de confianza
+labels: fase:6, area:code · estimate: 3
+Depende de T-048/T-049 y de `SaveManager` (T-070, ADR-0013). Cada `CONFIDENCE_STEP` partidas jugadas (no puntuación), Flapo gana una mejora pequeña y permanente hasta un tope: más `MAX_BREATH` o menos penalización de fatiga. Es progresión narrativa ("va cogiendo el truco"), no un desbloqueable comprado ni un menú de mejoras: se nota jugando, no se elige.
+**Criterios de aceptación**
+- Persistido en `user://save.cfg` junto al récord (mismo `ConfigFile`, nueva clave); sobrevive a cerrar y reabrir.
+- Tope documentado en `GameConfig` (no crece indefinidamente).
+- Test en `tests/` con fichero de guardado ausente/corrupto, igual que cubre `SaveManager`, que compruebe que la progresión no rompe el arranque.
+- ADR-0021 documenta la decisión y por qué no es meta-progresión visible/comprada (para no contradecir "Fuera de alcance en v1").
+- `docs/GDD.md` actualizado: aclara que esto es distinto de un power-up comprado.
 
 ### T-070 · Guardado de récord
 labels: fase:6, area:code · estimate: 1
