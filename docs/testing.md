@@ -36,6 +36,7 @@ Un solo fichero:
 | Exportar | `godot --headless --path . --export-release "Web" export/Web/index.html` |
 | Métrica de justicia con el bot (T-260, lento) | `godot --headless --fixed-fps 60 --path . -s tools/bot_flapo.gd -- 200` |
 | Reproducir un replay (T-261) | `godot --headless --fixed-fps 60 --path . -s tests/replay.gd -- user://last.replay` |
+| Ver qué versión saldría (T-271) | `godot --headless --path . -s tools/versionar.gd` |
 
 En macOS el binario está dentro del `.app` y no en el `PATH`:
 `/Applications/Godot.app/Contents/MacOS/Godot`. Ver `docs/environment.md`.

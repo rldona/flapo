@@ -89,12 +89,80 @@ jobs:
         with: { python-version: "3.12" }
       - uses: pre-commit/action@v3.0.1
 
+  # Versionado automático (T-271). Solo en push a main: los Conventional
+  # Commits ya llevan la información, así que nadie edita versiones a mano.
+  #
+  # ## La trampa del token, que es la razón de que esto viva aquí
+  #
+  # Un tag empujado con `GITHUB_TOKEN` **no dispara ningún workflow**: GitHub
+  # lo impide a propósito para que un workflow no pueda lanzarse a sí mismo en
+  # bucle. Así que el camino ingenuo —"pongo el tag y ya saltará el job de
+  # release"— no funciona, y falla en silencio: el tag aparece y no pasa nada
+  # más.
+  #
+  # Por eso el versionado, el export y la release están en el MISMO workflow y
+  # encadenados con `needs`. El disparador por tag se conserva para los tags
+  # que pone una persona a mano, que esos sí disparan.
+  version:
+    name: Calcular la versión
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7.2
+    permissions:
+      contents: write
+    outputs:
+      nueva: ${{ steps.calcular.outputs.nueva }}
+    steps:
+      # Historial entero y tags: sin esto no se puede saber desde qué tag
+      # contar los commits, y saldría siempre la misma versión.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Importar assets
+        run: godot --headless --path . --import
+
+      - name: Calcular y escribir
+        id: calcular
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$PWD"
+          SALIDA=$(godot --headless --path . -s tools/versionar.gd)
+          echo "$SALIDA"
+          NUEVA=$(echo "$SALIDA" | sed -n 's/^VERSION=//p')
+          echo "nueva=$NUEVA" >> "$GITHUB_OUTPUT"
+
+      - name: Commitear y poner el tag
+        if: steps.calcular.outputs.nueva != ''
+        env:
+          NUEVA: ${{ steps.calcular.outputs.nueva }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add project.godot CHANGELOG.md assets/data/changelog.tres
+          git commit -m "chore(release): v${NUEVA}
+
+          Versión, changelog y novedades generados por tools/versionar.gd
+          a partir de los Conventional Commits. No editar a mano (T-271)."
+          git tag "v${NUEVA}"
+          git push origin HEAD:main
+          git push origin "v${NUEVA}"
+
   # Solo en tags. Android queda fuera hasta T-092: su export de release
   # necesita un keystore que vive como secreto de GitHub, nunca en el repo.
   export:
     name: Exportar release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: test
+    # Dos caminos: un tag puesto a mano, o una versión que acaba de calcular
+    # el job de arriba. `always()` porque `version` se salta en los tags y un
+    # `needs` saltado arrastraría a este si no se dice lo contrario.
+    if: |
+      always() && needs.test.result == 'success' && (
+        startsWith(github.ref, 'refs/tags/v') || needs.version.outputs.nueva != ''
+      )
+    needs: [test, version]
     runs-on: ubuntu-latest
     container:
       image: barichello/godot-ci:4.7.2
@@ -102,7 +170,11 @@ jobs:
       matrix:
         preset: [Web, Linux, Windows]
     steps:
+      # Se saca el tag recién puesto, no el commit que disparó el workflow:
+      # ese todavía no tiene la versión escrita en project.godot.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.nueva != '' && format('v{0}', needs.version.outputs.nueva) || github.ref }}
       - name: Importar assets
         run: godot --headless --path . --import
       # La imagen godot-ci instala las plantillas en /root, pero GitHub
@@ -134,8 +206,11 @@ jobs:
           path: export/${{ matrix.preset }}
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: export
+    if: |
+      always() && needs.export.result == 'success' && (
+        startsWith(github.ref, 'refs/tags/v') || needs.version.outputs.nueva != ''
+      )
+    needs: [export, version]
     runs-on: ubuntu-latest
     # El único job que escribe fuera: crea la release y sube los zips.
     permissions:
@@ -150,5 +225,8 @@ jobs:
       - run: cd artifacts && for d in */; do zip -r "${d%/}.zip" "$d"; done
       - uses: softprops/action-gh-release@v2
         with:
+          # El tag lo pone el job de versión cuando el disparador es un push
+          # a main; en un tag manual, el del propio ref.
+          tag_name: ${{ needs.version.outputs.nueva != '' && format('v{0}', needs.version.outputs.nueva) || github.ref_name }}
           files: artifacts/*.zip
           generate_release_notes: true

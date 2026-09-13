@@ -1,0 +1,170 @@
+name: Pages
+
+# Publica el juego jugable: `main` en la raíz y cada PR en su propia carpeta,
+# para poder probarlo desde el móvil sin clonar nada (T-270).
+#
+# ## Por qué esto funciona en GitHub Pages
+#
+# Un export Web de Godot con hilos necesita `SharedArrayBuffer`, y eso exige
+# las cabeceras COOP/COEP. **Pages no deja poner cabeceras**, así que ese
+# camino está cerrado.
+#
+# La salida es que nuestro preset Web tiene `variant/thread_support=false`:
+# build de un solo hilo, sin `SharedArrayBuffer` y sin cabeceras que pedir.
+# Es la opción documentada del criterio del ticket, y no es un apaño — el
+# juego es de 288×512 y su bucle de física ocupa el 0,45 % del presupuesto de
+# frame (docs/perf.md): no tiene nada que paralelizar.
+#
+# ## Por qué a mano y no con una acción de terceros
+#
+# Publicar es copiar ficheros a una rama. Hacerlo con `git` son quince líneas
+# que se leen; una acción de terceros son quince líneas que hay que creerse,
+# más una dependencia que mantener en un proyecto que ya tiene pocas.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publicar:
+    name: Publicar build jugable
+    # Al cerrar una PR no hay nada que construir: solo hay que barrer.
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Importar assets
+        run: godot --headless --path . --import
+
+      # La imagen godot-ci instala las plantillas en /root, pero GitHub
+      # Actions ejecuta el contenedor con HOME=/github/home. Ver export.yml.
+      - name: Colocar las export templates
+        run: |
+          DEST="$HOME/.local/share/godot/export_templates"
+          mkdir -p "$DEST"
+          for SRC in /root/.local/share/godot/export_templates/*/; do
+            [ -d "$SRC" ] || continue
+            cp -r "$SRC" "$DEST/"
+          done
+
+      - name: Export Web
+        run: |
+          mkdir -p export/Web
+          godot --headless --path . --export-release "Web" export/Web/index.html
+          test -s export/Web/index.wasm
+
+      # `.nojekyll` o Pages se come todo lo que empieza por guion bajo, que
+      # incluye ficheros que Godot genera. Sin esto el juego carga a medias.
+      - name: Preparar la carpeta
+        run: touch export/Web/.nojekyll
+
+      - name: Publicar en gh-pages
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            DESTINO="pr-${{ github.event.number }}"
+          else
+            DESTINO="."
+          fi
+          git config --global --add safe.directory "$PWD"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          rm -rf /tmp/pages
+          # La rama puede no existir todavía: la primera vez se crea huérfana.
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git clone --depth 1 --branch gh-pages \
+              "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" /tmp/pages
+          else
+            git clone --depth 1 \
+              "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" /tmp/pages
+            cd /tmp/pages && git checkout --orphan gh-pages && git rm -rf . >/dev/null && cd -
+          fi
+          # Se borra solo el destino, nunca la rama entera: en la raíz viven
+          # las carpetas pr-NNN de las demás PRs abiertas.
+          mkdir -p "/tmp/pages/$DESTINO"
+          # `! -name .git` no es paranoia: sin él, publicar en la raíz borra el
+          # propio repositorio clonado y el push falla sin decir por qué.
+          # `! -name 'pr-*'` conserva las builds de las otras PRs abiertas.
+          find "/tmp/pages/$DESTINO" -maxdepth 1 -mindepth 1 \
+            ! -name '.git' ! -name 'pr-*' -exec rm -rf {} +
+          cp -r export/Web/. "/tmp/pages/$DESTINO/"
+          cd /tmp/pages
+          git add -A
+          git commit -m "publica ${{ github.sha }} en ${DESTINO}" || {
+            echo "sin cambios que publicar"; exit 0;
+          }
+          git push origin gh-pages
+
+  comentar:
+    name: Comentar el enlace en la PR
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    needs: publicar
+    # Sin contenedor a propósito: `gh` viene instalado en el runner de GitHub,
+    # no dentro de la imagen de Godot. Con el contenedor puesto, este paso
+    # fallaba siempre con "gh: command not found".
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      # Un comentario que se reescribe en vez de acumularse: una PR con ocho
+      # pushes tendría ocho comentarios idénticos y el hilo dejaría de leerse.
+      - name: Escribir o actualizar el comentario
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.number }}
+          URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.number }}/
+        run: |
+          set -euo pipefail
+          MARCA="<!-- build-jugable -->"
+          CUERPO="$MARCA
+          🎮 **Build jugable de esta PR:** $URL
+
+          Tarda un momento en estar disponible tras publicarse. Se borra sola al cerrar la PR.
+          Commit: \`${{ github.sha }}\`"
+          ID=$(gh api "repos/${{ github.repository }}/issues/$PR/comments" \
+                --jq "[.[] | select(.body | contains(\"$MARCA\"))] | first | .id // empty")
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$ID" -f body="$CUERPO" >/dev/null
+          else
+            gh api -X POST "repos/${{ github.repository }}/issues/$PR/comments" -f body="$CUERPO" >/dev/null
+          fi
+
+
+  limpiar:
+    name: Borrar la build de la PR cerrada
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Quitar la carpeta de la PR
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch gh-pages \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" /tmp/pages || exit 0
+          cd /tmp/pages
+          DESTINO="pr-${{ github.event.number }}"
+          [ -d "$DESTINO" ] || { echo "no había nada que borrar"; exit 0; }
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git rm -rq "$DESTINO"
+          git commit -m "retira la build de la PR #${{ github.event.number }}"
+          git push origin gh-pages
