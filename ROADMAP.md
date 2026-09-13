@@ -15,9 +15,9 @@ Estado: 🔲 pendiente · 🔄 en curso · ✅ hecho
 
 Objetivo: entorno listo y repo con estructura profesional desde el día uno.
 
-- 🔲 Instalar Godot 4.x (versión estable) y verificar que arranca.
+- ✅ Instalar Godot 4.x (versión estable) y verificar que arranca. → 4.7.2.stable
 - 🔲 Instalar Pixelorama (arte), Audacity (audio), Tiled/LDtk no hace falta para este juego.
-- 🔲 Crear el repo público con esta estructura:
+- ✅ Crear el repo público con esta estructura:
 
 ```
 flapo/
@@ -39,9 +39,9 @@ flapo/
 └─ LICENSE
 ```
 
-- 🔲 `.gitignore` de Godot 4 (`.godot/`, `export/`, `*.import` NO se ignora).
-- 🔲 README con: qué es, captura, cómo ejecutar, cómo contribuir, licencias.
-- 🔲 ADR-0001: elección de motor y lenguaje (por qué Godot/GDScript).
+- ✅ `.gitignore` de Godot 4 (`.godot/`, `export/`, `*.import` NO se ignora).
+- ✅ README con: qué es, captura, cómo ejecutar, cómo contribuir, licencias.
+- ✅ ADR-0001: elección de motor y lenguaje (por qué Godot/GDScript).
 
 Entregable: repo con proyecto vacío que abre en Godot y `README.md` legible.
 
@@ -51,7 +51,7 @@ Entregable: repo con proyecto vacío que abre en Godot y `README.md` legible.
 
 Objetivo: GDD de una página. Si no cabe en una página, el alcance es demasiado grande.
 
-- 🔲 `docs/GDD.md` con:
+- ✅ `docs/GDD.md` con:
   - Pitch en una frase.
   - Bucle central: tocar → aletear → cruzar huecos → morir → reintentar.
   - Reglas: gravedad, fuerza de salto, velocidad de scroll, separación y hueco de tuberías, condición de muerte, puntuación.
@@ -69,17 +69,21 @@ Entregable: GDD cerrado y paleta elegida.
 
 Objetivo: el bucle completo funciona con rectángulos de colores. Nada de arte todavía.
 
-- 🔲 Escena `Main` con estados `Ready / Playing / GameOver` (máquina de estados simple).
-- 🔲 `Bird` (`CharacterBody2D`): gravedad, impulso al pulsar, rotación según velocidad, límite superior.
-- 🔲 `Pipe` (`Area2D`): par de tuberías con hueco aleatorio; se mueve a la izquierda y se libera al salir de pantalla.
-- 🔲 `PipeSpawner`: `Timer` que instancia tuberías a intervalo fijo.
-- 🔲 Zona de puntuación entre las tuberías → +1 al atravesar.
-- 🔲 Suelo con scroll infinito y colisión.
-- 🔲 Muerte por contacto con tubería o suelo; pantalla de Game Over con reinicio.
-- 🔲 HUD: puntuación en pantalla.
-- 🔲 Input unificado en `InputMap` (acción `flap`: click, toque, espacio).
+- ✅ Escena `Main` con estados `Ready / Playing / GameOver` (máquina de estados simple). → T-022
+- ✅ `Bird` (`CharacterBody2D`): gravedad, impulso al pulsar, rotación según velocidad, límite superior. → T-023
+- ✅ `Pipe`: par de tuberías con hueco aleatorio; se mueve a la izquierda y se libera al salir de pantalla. → T-024 (con `StaticBody2D`, no `Area2D`: ver ADR-0008)
+- ✅ `PipeSpawner`: `Timer` que instancia tuberías a intervalo fijo. → T-025
+- ✅ Zona de puntuación entre las tuberías → +1 al atravesar. → T-026
+- ✅ Suelo con scroll infinito y colisión. → T-027
+- ✅ Muerte por contacto con tubería o suelo; pantalla de Game Over con reinicio. → T-028
+- ✅ HUD: puntuación en pantalla. → T-029
+- ✅ Input unificado en `InputMap` (acción `flap`: click, toque, espacio). → T-021
 
 Definición de hecho: se puede jugar 5 minutos sin bugs y la partida se reinicia limpiamente.
+
+Estado: código completo y verificado en headless (`./tests/run.sh`, 6 ficheros de test).
+Queda **T-030**: la sesión de prueba jugada, que por definición no puede
+comprobar nadie más que una persona con las manos en el teclado.
 
 ---
 
@@ -198,6 +202,7 @@ A ritmo de tardes y fines de semana: 5-7 semanas.
 - Ramas: `main` siempre exportable; una rama por fase o feature; PR con descripción y GIF cuando cambie algo visible.
 - Issues: una por tarea de este roadmap, etiquetadas por fase; milestone por fase.
 - Decisiones técnicas relevantes → ADR en `docs/decisions/`.
+- Criterios de aceptación comprobables sin ventana → test en `tests/`, un fichero por ticket (`docs/testing.md`, ADR-0007).
 - Este archivo se actualiza al cerrar cada fase.
 
 ## Recursos

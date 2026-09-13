@@ -30,6 +30,9 @@ signal score_changed(score: int)
 ## El panel de Game Over.
 @export var game_over_panel: GameOverPanel
 
+## El marcador de la partida en curso.
+@export var hud: Hud
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -123,6 +126,11 @@ func _connect_children() -> void:
 	state_changed.connect(game_over_panel.on_game_state_changed)
 	score_changed.connect(game_over_panel.set_score)
 	game_over_panel.restart_pressed.connect(restart)
+	if hud == null:
+		push_error("Main no tiene asignado el nodo Hud en el inspector.")
+		return
+	state_changed.connect(hud.on_game_state_changed)
+	score_changed.connect(hud.set_score)
 
 
 func _on_scored() -> void:
