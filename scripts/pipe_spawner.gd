@@ -7,6 +7,10 @@ extends Node2D
 ## libera sola al salir de pantalla (ADR-0008), y el spawner solo tiene que
 ## saber cuándo crear y cuándo parar.
 
+## Flapo ha cruzado una tubería. El spawner solo hace de puente: quien
+## detecta el paso es la tubería y quien lleva la cuenta es Main.
+signal scored
+
 ## Escena de tubería a instanciar. Se asigna en el editor.
 @export var pipe_scene: PackedScene
 
@@ -73,10 +77,15 @@ func _crear_tuberia() -> void:
 		return
 	var pipe: Pipe = pipe_scene.instantiate()
 	pipe.position = Vector2(spawn_x, 0.0)
+	pipe.scored.connect(_on_pipe_scored)
 	add_child(pipe)
 	# Después de add_child: `randomize_gap` toca los nodos internos, que solo
 	# existen una vez ha corrido `_ready()` de la tubería.
 	pipe.randomize_gap(_rng)
+
+
+func _on_pipe_scored() -> void:
+	scored.emit()
 
 
 func _liberar_todas() -> void:

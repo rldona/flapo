@@ -13,6 +13,10 @@ extends Node2D
 ## nodo reacciona, `state` ya devuelve el valor nuevo.
 signal state_changed(to: GameState.State)
 
+## Puntuación nueva. La emite Main porque es quien lleva la cuenta; el HUD
+## (T-029) se cuelga de aquí en vez de preguntar cada frame.
+signal score_changed(score: int)
+
 ## Flapo. Se asigna arrastrando el nodo en el inspector, no con una ruta de
 ## texto: si algún día se mueve o se renombra, Godot actualiza la referencia.
 @export var bird: Bird
@@ -33,6 +37,7 @@ const _TRANSITIONS: Dictionary = {
 }
 
 var _state: GameState.State = GameState.State.READY
+var _score: int = 0
 
 
 func _ready() -> void:
@@ -57,6 +62,11 @@ func get_state() -> GameState.State:
 	return _state
 
 
+## Puntuación de la partida en curso.
+func get_score() -> int:
+	return _score
+
+
 ## Intenta pasar a `to`. Ignora el cambio si no es una transición legal.
 func change_state(to: GameState.State) -> void:
 	if to == _state:
@@ -67,6 +77,11 @@ func change_state(to: GameState.State) -> void:
 		)
 		return
 	_state = to
+	# La puntuación se reinicia al volver a READY, no al morir: el panel de
+	# Game Over (T-071) tiene que poder seguir enseñándola.
+	if to == GameState.State.READY:
+		_score = 0
+		score_changed.emit(_score)
 	state_changed.emit(to)
 
 
@@ -81,6 +96,12 @@ func _connect_children() -> void:
 		push_error("Main no tiene asignado el nodo PipeSpawner en el inspector.")
 		return
 	state_changed.connect(pipe_spawner.on_game_state_changed)
+	pipe_spawner.scored.connect(_on_scored)
+
+
+func _on_scored() -> void:
+	_score += 1
+	score_changed.emit(_score)
 
 
 func _on_bird_died() -> void:

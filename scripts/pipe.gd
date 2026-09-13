@@ -9,6 +9,9 @@ extends Node2D
 ## Se mueve solo, hacia la izquierda, y se libera al salir de pantalla. Quién
 ## lo crea y cuándo es asunto de `PipeSpawner` (T-025).
 
+## Flapo ha cruzado el hueco. Se emite UNA sola vez por tubería.
+signal scored
+
 @export_group("Hueco")
 ## Alto del hueco, px. Es la constante que más cambia la dificultad.
 @export var gap: float = 100.0:
@@ -35,8 +38,10 @@ extends Node2D
 
 @onready var _top: StaticBody2D = $Top
 @onready var _bottom: StaticBody2D = $Bottom
+@onready var _score_zone: Area2D = $ScoreZone
 
 var _gap_center: float = 256.0
+var _ya_puntuada: bool = false
 
 
 func _ready() -> void:
@@ -45,6 +50,8 @@ func _ready() -> void:
 	# una las cambiaría todas. Es la trampa clásica de los sub-recursos.
 	_asignar_forma(_top)
 	_asignar_forma(_bottom)
+	_asignar_forma_zona()
+	_score_zone.body_entered.connect(_on_score_zone_body_entered)
 	_apply_layout()
 
 
@@ -79,10 +86,29 @@ func randomize_gap(rng: RandomNumberGenerator) -> void:
 	set_gap_center(ratio * playable_height)
 
 
+## Puntúa una vez y solo una.
+##
+## `body_entered` se dispara cada vez que Flapo entra, y Flapo oscila: sube y
+## baja mientras cruza, y puede salir y volver a entrar por el mismo lado. El
+## flag es lo que cumple el criterio de T-026; sin él, un aleteo dentro del
+## hueco daría dos puntos.
+func _on_score_zone_body_entered(cuerpo: Node2D) -> void:
+	if _ya_puntuada or not cuerpo is Bird:
+		return
+	_ya_puntuada = true
+	scored.emit()
+
+
 func _asignar_forma(cuerpo: StaticBody2D) -> void:
 	var forma := RectangleShape2D.new()
 	forma.size = Vector2(width, body_length)
 	(cuerpo.get_node("CollisionShape2D") as CollisionShape2D).shape = forma
+
+
+func _asignar_forma_zona() -> void:
+	var forma := RectangleShape2D.new()
+	forma.size = Vector2(width, gap)
+	(_score_zone.get_node("CollisionShape2D") as CollisionShape2D).shape = forma
 
 
 func _apply_layout() -> void:
@@ -94,6 +120,11 @@ func _apply_layout() -> void:
 	_bottom.position.y = _gap_center + media_luz + body_length * 0.5
 	_colocar_placeholder(_top)
 	_colocar_placeholder(_bottom)
+	# La zona de puntuación ES el hueco: mismo centro, mismo alto.
+	_score_zone.position.y = _gap_center
+	var forma := (_score_zone.get_node("CollisionShape2D") as CollisionShape2D).shape
+	if forma is RectangleShape2D:
+		(forma as RectangleShape2D).size = Vector2(width, gap)
 
 
 func _colocar_placeholder(cuerpo: StaticBody2D) -> void:
