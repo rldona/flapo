@@ -83,9 +83,11 @@ func _la_semilla_de_la_partida_libre_cabe_en_un_codigo() -> void:
 		var main: Node = await h.montar(MAIN, {"log_transitions": false})
 		main.start_free()
 		await h.ticks(1)
-		var s: int = main.get_seed()
-		if GameConfig.codigo_a_seed(GameConfig.seed_a_codigo(main.get_seed())) != s:
-			fallos.append("semilla %d -> '%s'" % [s, GameConfig.seed_a_codigo(main.get_seed())])
+		var s: int = main.session().seed()
+		if GameConfig.codigo_a_seed(GameConfig.seed_a_codigo(main.session().seed())) != s:
+			fallos.append(
+				"semilla %d -> '%s'" % [s, GameConfig.seed_a_codigo(main.session().seed())]
+			)
 		main.free()
 	h.check(
 		"la semilla de una partida libre siempre cabe en su código",
@@ -103,7 +105,7 @@ func _jugar_un_codigo_da_la_partida_de_ese_codigo() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	main.fruit_spawner.chance = 0.0
 	main.start_free()
-	var codigo: String = GameConfig.seed_a_codigo(main.get_seed())
+	var codigo: String = GameConfig.seed_a_codigo(main.session().seed())
 	var original: Array = await _secuencia(main)
 	main.free()
 

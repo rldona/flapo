@@ -99,7 +99,7 @@ func _reiniciar_repite_la_misma_partida() -> void:
 	SaveManager.clear()
 	SaveManager.forget_cache()
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
-	main.set_seed(777)
+	main.session().set_seed(777)
 	var primera: Array = await _secuencia(main)
 	main.change_state(GameState.State.GAME_OVER)
 	main.restart()
@@ -122,10 +122,10 @@ func _la_partida_libre_sortea_y_recuerda_su_semilla() -> void:
 	var semillas: Array = []
 	for intento in 3:
 		var main: Node = await h.montar(MAIN, {"log_transitions": false})
-		main.set_seed(GameConfig.SEED_ALEATORIA)
+		main.session().set_seed(GameConfig.SEED_ALEATORIA)
 		h.jugar(main)
 		await h.ticks(2)
-		semillas.append(main.get_seed())
+		semillas.append(main.session().seed())
 		main.free()
 	h.check(
 		"la partida libre se queda con una semilla concreta",
@@ -144,7 +144,7 @@ func _grabar(semilla: int) -> Array:
 	SaveManager.clear()
 	SaveManager.forget_cache()
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
-	main.set_seed(semilla)
+	main.session().set_seed(semilla)
 	var huella: Array = await _correr(main)
 	main.free()
 	return huella

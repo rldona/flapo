@@ -144,31 +144,31 @@ func _el_reto_no_cambia_las_reglas() -> void:
 	SaveManager.clear()
 	SaveManager.forget_cache()
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
-	main.set_difficulty(GameConfig.Difficulty.DIFICIL)
+	main.menu_panel.difficulty_selected.emit(GameConfig.Difficulty.DIFICIL)
 	var chance_antes: float = main.fruit_spawner.chance
 	main.start_daily([2026, 9, 8])
 	await h.ticks(2)
 	h.check(
 		"el reto respeta el modo de dificultad elegido",
-		main.get_difficulty() == GameConfig.Difficulty.DIFICIL,
-		"%d" % main.get_difficulty()
+		main.session().difficulty() == GameConfig.Difficulty.DIFICIL,
+		"%d" % main.session().difficulty()
 	)
 	h.check(
 		"y no toca las frutas",
 		is_equal_approx(main.fruit_spawner.chance, chance_antes),
 		"%.2f vs %.2f" % [main.fruit_spawner.chance, chance_antes]
 	)
-	h.check("y se sabe que se está en el reto", main.daily().activo(), "")
+	h.check("y se sabe que se está en el reto", main.session().daily.activo(), "")
 	# Volver al juego normal lo apaga y vuelve a sortear semilla.
 	main.change_state(GameState.State.PLAYING)
 	main.change_state(GameState.State.GAME_OVER)
 	main.start_free()
 	await h.ticks(2)
-	h.check("volver a Jugar sale del reto", not main.daily().activo(), "")
+	h.check("volver a Jugar sale del reto", not main.session().daily.activo(), "")
 	h.check(
 		"y con semilla propia, no la de la fecha",
-		main.get_seed() != GameConfig.daily_seed(2026, 9, 8),
-		"%d" % main.get_seed()
+		main.session().seed() != GameConfig.daily_seed(2026, 9, 8),
+		"%d" % main.session().seed()
 	)
 	main.free()
 

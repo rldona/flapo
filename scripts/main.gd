@@ -92,33 +92,16 @@ const _TRANSITIONS: Dictionary = {
 
 ## El juego arranca en el menú (T-078), no en READY: la dificultad se elige
 ## antes de la primera partida, no después.
+## Todo lo que la partida sabe de sí misma: semilla, reto, nombre, modo y
+## confianza. Vive aparte porque no tiene nada que ver con el bucle de juego.
+var _session := GameSession.new()
+
 var _state: GameState.State = GameState.State.MENU
 var _score: int = 0
 var _high_score: int = 0
-## El reto del día en curso, si lo hay (T-241).
-var _daily := DailyChallenge.new()
-
-## El generador de TODA la aleatoriedad de la partida (T-240).
-##
-## Uno solo, y lo reparte Main. Huecos, tuberías móviles, giratorias, frutas
-## y viento salen de aquí; con la misma semilla y los mismos inputs la
-## partida es idéntica. Lo que NO sale de aquí, a propósito, es lo cosmético
-## (sacudida de cámara, frases al morir): ver ADR-0030.
-var _rng := RandomNumberGenerator.new()
-## Semilla de la partida en curso. 0 hasta que se siembra.
-var _seed: int = 0
-
-## Si el jugador ya sabe planear (T-200). Del guardado, no se calcula aquí.
-var _has_glided: bool = false
 ## Huecos cruzados en esta partida sin haber planeado nunca (T-200).
 var _huecos_sin_planear: int = 0
 
-## Escalón de confianza (T-074). Se lee del guardado, no se calcula aquí.
-var _confidence: int = 0
-## Nombre del jugador (T-079). Vacío significa "no ha puesto ninguno".
-var _player_name: String = ""
-## Modo elegido en el menú (T-078). También del guardado.
-var _difficulty: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 ## La última frase que salió, para no repetirla dos veces seguidas.
 var _ultima_frase: String = ""
 ## De qué murió Flapo la última vez y si llegó sin aliento (T-075). Se
@@ -135,10 +118,7 @@ var _is_new_high_score: bool = false
 func _ready() -> void:
 	_rng_cosmetico.randomize()
 	_high_score = SaveManager.get_high_score()
-	_confidence = SaveManager.get_confidence()
-	_has_glided = SaveManager.get_has_glided()
-	_difficulty = SaveManager.get_difficulty()
-	_player_name = SaveManager.get_player_name()
+	_session.cargar()
 	if log_transitions:
 		state_changed.connect(_on_state_changed_log)
 	_connect_children()
@@ -223,27 +203,34 @@ func is_new_high_score() -> bool:
 	return _is_new_high_score
 
 
-## Escalón de confianza acumulado (T-074).
-func get_confidence() -> int:
-	return _confidence
-
-
 ## Arranca el reto del día (T-241). Sin argumentos, el de hoy.
 ##
 ## Solo cambia la SEMILLA: modo de dificultad, frutas y todo lo demás siguen
 ## siendo los del juego normal. Un reto que además cambiara las reglas no
 ## sería el mismo juego para todos, que es justo lo que lo hace comparable.
 func start_daily(fecha: Array = []) -> void:
-	_daily.empezar(fecha)
-	set_seed(_daily.semilla())
+	_session.preparar_reto(fecha)
 	change_state(GameState.State.READY)
 
 
 ## Vuelve al juego normal, con semilla sorteada (T-241).
 func start_free() -> void:
-	_daily.parar()
-	set_seed(GameConfig.SEED_ALEATORIA)
+	_session.preparar_libre()
 	change_state(GameState.State.READY)
+
+
+## Arranca la partida de un código. `false` si el código no vale (T-242).
+func start_code(codigo_texto: String) -> bool:
+	if not _session.preparar_codigo(codigo_texto):
+		return false
+	change_state(GameState.State.READY)
+	return true
+
+
+## Lo que esta partida sabe de sí misma: semilla, código, reto, nombre, modo
+## y confianza. Ver `GameSession`.
+func session() -> GameSession:
+	return _session
 
 
 ## Intenta jugar el código que se ha escrito en el menú (T-242).
@@ -257,105 +244,17 @@ func _on_code_pressed(texto: String) -> void:
 		menu_panel.set_aviso("Ese código no vale")
 
 
-## El código corto de la partida en curso (T-242).
-func _codigo() -> String:
-	return GameConfig.seed_a_codigo(_seed)
-
-
-## Arranca una partida con ese código. `false` si el código no vale (T-242).
+## El jugador ha elegido modo en el menú (T-078).
 ##
-## No lanza ni rompe: un código mal tecleado es lo más normal del mundo, así
-## que se responde con un `false` y quien llama enseña el aviso.
-func start_code(codigo_texto: String) -> bool:
-	var semilla: int = GameConfig.codigo_a_seed(codigo_texto)
-	if semilla < 0:
-		return false
-	_daily.parar()
-	set_seed(semilla)
-	change_state(GameState.State.READY)
-	return true
-
-
-## El reto del día, para quien necesite su clave o su nombre (T-241).
-func daily() -> DailyChallenge:
-	return _daily
-
-
-## La semilla de la partida en curso (T-240). La usan T-242 y T-243.
-func get_seed() -> int:
-	return _seed
-
-
-## Fija la semilla de la SIGUIENTE partida (T-240).
-##
-## No siembra ya: el generador se resiembra al entrar en READY, que es cuando
-## empieza una partida. Si se sembrara aquí, jugar y reiniciar daría partidas
-## distintas y el determinismo no serviría de nada.
-func set_seed(semilla: int) -> void:
-	_seed = semilla
-
-
-## Reparte el generador y lo siembra (T-240).
-##
-## Se llama al entrar en READY. Con semilla 0 se sortea una y se guarda: la
-## partida libre sigue siendo distinta cada vez, pero se puede saber cuál
-## tocó y volver a jugarla.
-func _sembrar() -> void:
-	if _seed == GameConfig.SEED_ALEATORIA:
-		_rng.randomize()
-		# Dentro del espacio del código (T-242): si la semilla sorteada fuera
-		# mayor de lo que caben 5 caracteres, el código que se enseña al
-		# morir llevaría a OTRA partida, y la promesa de "jugad los dos las
-		# mismas tuberías" se rompería sin dar ningún error.
-		_seed = posmod(int(_rng.seed), GameConfig.codigo_modulo())
-	# Solo `seed`: asignarlo ya reinicia el estado del generador. Poner
-	# `state = 0` a mano lo dejaba en un estado degenerado que daba LA MISMA
-	# secuencia con cualquier semilla — y el test de "misma semilla, misma
-	# partida" pasaba trivialmente porque todas las partidas eran iguales.
-	_rng.seed = _seed
-	for pieza in [pipe_spawner, fruit_spawner, wind]:
-		if pieza != null:
-			pieza.set_rng(_rng)
-
-
-## Modo de dificultad activo (T-078).
-func get_difficulty() -> GameConfig.Difficulty:
-	return _difficulty
-
-
-## Cambia el modo y lo recuerda. Se guarda al elegir, no al morir: si el
-## jugador cierra el juego desde el menú, la elección no se pierde.
-##
-## Solo tiene efecto fuera de una partida: cambiar la dificultad a mitad de
-## vuelo movería las tuberías que ya están en pantalla.
-func set_difficulty(modo: GameConfig.Difficulty) -> void:
+## Solo tiene efecto fuera de una partida: cambiarlo a mitad de vuelo movería
+## las tuberías que ya están en pantalla.
+func _on_difficulty_selected(modo: GameConfig.Difficulty) -> void:
 	if _state == GameState.State.PLAYING:
 		push_warning("La dificultad no se cambia en mitad de una partida.")
 		return
-	_difficulty = modo
-	SaveManager.set_difficulty(modo)
+	_session.set_difficulty(modo)
 	_apply_difficulty()
 	_refrescar_menu()
-
-
-## El nombre del jugador tal y como se guarda: vacío si no puso ninguno.
-func get_player_name() -> String:
-	return _player_name
-
-
-## El nombre a enseñar. Nunca vacío: sin nombre, el de siempre.
-func _display_player_name() -> String:
-	return GameConfig.display_player_name(_player_name)
-
-
-## Guarda el nombre. Se llama en cada tecla, así que se sale pronto si no ha
-## cambiado nada: escribir no debería tocar el disco doce veces.
-func set_player_name(nombre: String) -> void:
-	var limpio: String = GameConfig.sanitize_player_name(nombre)
-	if limpio == _player_name:
-		return
-	_player_name = limpio
-	SaveManager.set_player_name(limpio)
 
 
 ## Vuelve al menú desde el Game Over o desde READY.
@@ -389,8 +288,8 @@ func _abrir_estadisticas() -> void:
 func _refrescar_menu() -> void:
 	if menu_panel == null:
 		return
-	menu_panel.set_difficulty(_difficulty)
-	menu_panel.set_player_name(_player_name)
+	menu_panel.set_difficulty(_session.difficulty())
+	menu_panel.set_player_name(_session.player_name())
 	menu_panel.set_high_score(_high_score)
 
 
@@ -400,7 +299,7 @@ func _refrescar_menu() -> void:
 ## partida: el jugador la nota en una barra de aliento más larga, no en un
 ## menú ni en un mensaje. Ver ADR-0021.
 func _aplicar_confianza() -> void:
-	bird.max_breath = GameConfig.max_breath_for(_confidence)
+	bird.max_breath = _session.max_breath()
 
 
 ## Intenta pasar a `to`. Ignora el cambio si no es una transición legal.
@@ -428,7 +327,7 @@ func change_state(to: GameState.State) -> void:
 		# Antes que nada: los sistemas tienen que recibir el generador ya
 		# sembrado antes de que su propio `on_game_state_changed` los
 		# reinicie y empiece a pedirle números.
-		_sembrar()
+		_session.sembrar([pipe_spawner, fruit_spawner, wind])
 		_huecos_sin_planear = 0
 		bird.gravity_mult = 1.0
 		bird.size_mult = 1.0
@@ -492,12 +391,12 @@ func _connect_children() -> void:
 	game_over_panel.menu_pressed.connect(to_menu)
 	if menu_panel != null:
 		menu_panel.play_pressed.connect(start_free)
-		menu_panel.difficulty_selected.connect(set_difficulty)
+		menu_panel.difficulty_selected.connect(_on_difficulty_selected)
 		menu_panel.stats_pressed.connect(_abrir_estadisticas)
 		# Jugar normal sortea semilla; el reto usa la de hoy (T-241).
 		menu_panel.daily_pressed.connect(start_daily.bind([]))
 		menu_panel.code_pressed.connect(_on_code_pressed)
-		menu_panel.name_changed.connect(set_player_name)
+		menu_panel.name_changed.connect(_session.set_player_name)
 	if stats_panel != null:
 		stats_panel.back_pressed.connect(func() -> void: stats_panel.set_open(false))
 	pipe_spawner.scored.connect(_on_scored)
@@ -526,9 +425,9 @@ func _notification(what: int) -> void:
 
 func _on_state_changed_results(to: GameState.State) -> void:
 	if to == GameState.State.GAME_OVER:
-		game_over_panel.set_player_name(_player_name)
-		game_over_panel.set_challenge(_daily.nombre())
-		game_over_panel.set_code("" if _daily.activo() else _codigo())
+		game_over_panel.set_player_name(_session.player_name())
+		game_over_panel.set_challenge(_session.daily.nombre())
+		game_over_panel.set_code("" if _session.daily.activo() else _session.codigo())
 		game_over_panel.show_results(_score, _high_score, _is_new_high_score)
 		game_over_panel.set_line(_siguiente_frase())
 
@@ -555,7 +454,7 @@ func _on_share_pressed(texto: String) -> void:
 
 func _on_scored() -> void:
 	_score += 1
-	if not _has_glided:
+	if not _session.has_glided():
 		_huecos_sin_planear += 1
 		_actualizar_aviso_planeo()
 	if wind != null:
@@ -590,9 +489,7 @@ func _on_wind_ended() -> void:
 ## Flapo ha planeado (T-200). La primera vez es la que importa: se guarda y
 ## el aviso no vuelve a salir jamás.
 func _on_glided() -> void:
-	if not _has_glided:
-		_has_glided = true
-		SaveManager.set_has_glided()
+	_session.marcar_planeo()
 	_actualizar_aviso_planeo()
 
 
@@ -605,11 +502,13 @@ func _actualizar_aviso_planeo() -> void:
 		return
 	var partidas: int = SaveManager.get_games_played()
 	if _state == GameState.State.READY:
-		var pict: bool = GameConfig.show_glide_pictogram(_has_glided, partidas)
+		var pict: bool = GameConfig.show_glide_pictogram(_session.has_glided(), partidas)
 		glide_hint.mostrar("pictograma" if pict else "")
 		return
 	if _state == GameState.State.PLAYING:
-		var aviso: bool = GameConfig.show_glide_hint(_has_glided, partidas, _huecos_sin_planear)
+		var aviso: bool = GameConfig.show_glide_hint(
+			_session.has_glided(), partidas, _huecos_sin_planear
+		)
 		glide_hint.mostrar("aviso" if aviso else "")
 		return
 	glide_hint.mostrar("")
@@ -647,7 +546,7 @@ func _on_soft_hit() -> void:
 func _wind_factor() -> float:
 	if wind == null or not wind.is_blowing():
 		return 1.0
-	return GameConfig.wind_factor_for(_score, _difficulty, wind.is_tailwind())
+	return GameConfig.wind_factor_for(_score, _session.difficulty(), wind.is_tailwind())
 
 
 ## Empuja la dificultad de la puntuación actual a quien la necesita.
@@ -660,10 +559,10 @@ func _apply_difficulty() -> void:
 	# la curva (T-064), y solo al final el modificador de la fruta violeta,
 	# que sí puede bajar del mínimo: ese es su efecto, y el criterio del
 	# viento no debía llevárselo por delante.
-	var velocidad: float = GameConfig.wind_speed_for(_score, _difficulty, _wind_factor())
+	var velocidad: float = GameConfig.wind_speed_for(_score, _session.difficulty(), _wind_factor())
 	velocidad *= effects.speed_mult()
-	var hueco: float = GameConfig.pipe_gap_for(_score, _difficulty)
-	var separacion: float = GameConfig.pipe_spacing_for(_score, _difficulty)
+	var hueco: float = GameConfig.pipe_gap_for(_score, _session.difficulty())
+	var separacion: float = GameConfig.pipe_spacing_for(_score, _session.difficulty())
 	if pipe_spawner != null:
 		pipe_spawner.set_difficulty(velocidad, hueco, separacion)
 		# La probabilidad de tubería móvil es una función pura de la
@@ -740,15 +639,8 @@ func _on_bird_died(cause: Bird.DeathCause, sin_aliento: bool) -> void:
 	# recibir GAME_OVER y tiene que ver ya el dato de esta partida.
 	# En el reto, la marca va a SU clave. El récord general no se toca: son
 	# dos cosas que se comparan con gente distinta (T-241).
-	if _daily.activo():
-		_is_new_high_score = SaveManager.record_daily(_daily.clave(), _score)
-		# La partida cuenta igual —suma confianza y tuberías cruzadas—, pero
-		# su marca no toca el récord general.
-		SaveManager.record_game(_score, false)
-	else:
-		_is_new_high_score = SaveManager.record_game(_score)
+	_is_new_high_score = _session.registrar_partida(_score)
 	_high_score = SaveManager.get_high_score()
-	_confidence = SaveManager.get_confidence()
 	change_state(GameState.State.GAME_OVER)
 
 

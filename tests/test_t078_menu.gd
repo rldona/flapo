@@ -232,7 +232,7 @@ func _elegir_modo_cambia_el_mundo() -> void:
 	SaveManager.forget_cache()
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 
-	main.set_difficulty(GameConfig.Difficulty.DIFICIL)
+	main.menu_panel.difficulty_selected.emit(GameConfig.Difficulty.DIFICIL)
 	h.check(
 		"el spawner recibe el hueco del modo difícil",
 		is_equal_approx(
@@ -258,19 +258,19 @@ func _elegir_modo_cambia_el_mundo() -> void:
 	for toque in 3:
 		main.menu_panel._on_difficulty_pressed()
 		await h.ticks(1)
-		vistos[int(main.get_difficulty())] = true
+		vistos[int(main.session().difficulty())] = true
 	h.check(
 		"el botón recorre los tres modos", vistos.size() == 3, "%d modos distintos" % vistos.size()
 	)
 
 	# Y no se puede cambiar en mitad de una partida: movería las tuberías que
 	# ya están en pantalla.
-	main.set_difficulty(GameConfig.Difficulty.NORMAL)
+	main.menu_panel.difficulty_selected.emit(GameConfig.Difficulty.NORMAL)
 	h.jugar(main)
-	main.set_difficulty(GameConfig.Difficulty.DIFICIL)
+	main.menu_panel.difficulty_selected.emit(GameConfig.Difficulty.DIFICIL)
 	h.check(
 		"jugando, el modo no cambia",
-		main.get_difficulty() == GameConfig.Difficulty.NORMAL,
-		"modo: %d" % main.get_difficulty()
+		main.session().difficulty() == GameConfig.Difficulty.NORMAL,
+		"modo: %d" % main.session().difficulty()
 	)
 	main.free()
