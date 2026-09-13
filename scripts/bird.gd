@@ -33,6 +33,15 @@ signal died
 ## que tenga en la escena, así que se mueve arrastrándolo en el editor.
 @export var start_position: Vector2 = Vector2(72.0, 256.0)
 
+@export_group("Animación")
+## Frames por segundo del aleteo en reposo (cayendo, planeando).
+@export var flap_fps_idle: float = 6.0
+## Frames por segundo justo después de aletear. Más rápido = más esfuerzo
+## visible, que es el chiste de Flapo (GDD, "Concepto y tono").
+@export var flap_fps_burst: float = 20.0
+## Cuánto dura el acelerón de la animación tras un aleteo, s.
+@export var flap_burst_time: float = 0.18
+
 @export_group("Rotación")
 ## Ángulo con el impulso de aleteo a tope (morro arriba).
 @export var rotation_up_degrees: float = -25.0
@@ -41,12 +50,17 @@ signal died
 ## Cuánto tarda en alcanzar el ángulo objetivo. Más bajo, más perezoso.
 @export_range(1.0, 30.0) var rotation_speed: float = 9.0
 
+@onready var _sprite: AnimatedSprite2D = $Sprite
+
 var _state: GameState.State = GameState.State.READY
 var _dead: bool = false
+## Segundos que le quedan al acelerón de la animación.
+var _burst_left: float = 0.0
 
 
 func _ready() -> void:
 	start_position = position
+	_sprite.play("flap")
 
 
 func _physics_process(delta: float) -> void:
@@ -62,6 +76,7 @@ func _physics_process(delta: float) -> void:
 			# duplica ninguna pulsación aunque los fps bailen.
 			if Input.is_action_just_pressed("flap"):
 				velocity.y = flap_impulse
+				_burst_left = flap_burst_time
 		GameState.State.GAME_OVER:
 			# Sigue cayendo, pero ya no responde: el batacazo se ve entero.
 			_apply_gravity(delta)
@@ -73,6 +88,8 @@ func _physics_process(delta: float) -> void:
 	# impulso..caída máxima), y Flapo iría cabeceando mientras espera.
 	if _state != GameState.State.READY:
 		_update_rotation(delta)
+
+	_update_animation(delta)
 
 	if _state == GameState.State.PLAYING:
 		_check_death()
@@ -88,6 +105,28 @@ func on_game_state_changed(to: GameState.State) -> void:
 		velocity = Vector2.ZERO
 		rotation = 0.0
 		position = start_position
+		_burst_left = 0.0
+		_sprite.play("flap")
+
+
+## La animación va más rápida justo después de aletear y se PARA al morir.
+##
+## Parar es `pause()` y no `stop()`: `stop()` rebobinaría al primer frame, y
+## lo que se quiere es que Flapo se quede congelado en la postura que tenía
+## en el momento del golpe.
+func _update_animation(delta: float) -> void:
+	if _state == GameState.State.GAME_OVER:
+		if _sprite.is_playing():
+			_sprite.pause()
+		return
+	if not _sprite.is_playing():
+		_sprite.play("flap")
+	_burst_left = maxf(_burst_left - delta, 0.0)
+	var fps: float = flap_fps_burst if _burst_left > 0.0 else flap_fps_idle
+	# `speed_scale` multiplica la velocidad base de la animación (10 fps en
+	# el SpriteFrames), así que se divide para que el @export esté en fps
+	# reales y se pueda razonar sobre él.
+	_sprite.speed_scale = fps / 10.0
 
 
 func _apply_gravity(delta: float) -> void:
