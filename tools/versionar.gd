@@ -104,10 +104,11 @@ func _escribir_changelog(nueva: String, mensajes: PackedStringArray) -> void:
 	var ruta: String = ProjectSettings.globalize_path(CHANGELOG)
 	var anterior: String = ""
 	if FileAccess.file_exists(ruta):
-		anterior = FileAccess.get_file_as_string(ruta).trim_prefix("# Changelog\n")
+		# Se pasa el fichero entero: `changelog_completo` ya le quita el título.
+		anterior = FileAccess.get_file_as_string(ruta)
 	var f: FileAccess = FileAccess.open(ruta, FileAccess.WRITE)
 	# Lo nuevo arriba: un changelog se lee por el principio.
-	f.store_string("# Changelog\n\n%s\n%s" % [bloque, anterior.strip_edges()])
+	f.store_string(Version.changelog_completo(bloque, anterior))
 	f.close()
 
 
