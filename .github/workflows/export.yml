@@ -5,6 +5,24 @@ on:
     branches: [main]
     tags: ["v*"]
   pull_request:
+  # Para poder lanzarlo a mano sin inventarse un commit vacío.
+  workflow_dispatch:
+
+# El repositorio da permisos de solo lectura por defecto, así que el token
+# no puede crear releases a menos que se le pida. Sin esto, el job de
+# release falla con un 403 **solo el día que se pone un tag**, que es el peor
+# momento posible para descubrirlo.
+#
+# Se declara el mínimo arriba y la escritura solo en el job que la necesita.
+permissions:
+  contents: read
+
+# Dos pushes seguidos a main lanzaban dos workflows enteros. Se cancela el
+# anterior... salvo en tags: cancelar una release a medias dejaría artefactos
+# a medio subir.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 env:
   # Debe coincidir con docs/environment.md y con la imagen de godot-ci.
@@ -51,10 +69,13 @@ jobs:
           godot --headless --path . --export-release "Web" export/Web/index.html
           test -s export/Web/index.wasm
 
+      # Nombre con sufijo `-ci` a propósito: este build es para mirar una PR,
+      # no para publicar. El job de release descarga por patrón y sin esta
+      # distinción se colaba en la release un segundo zip del mismo Web.
       - name: Guardar el build web
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.PROJECT_NAME }}-web
+          name: ${{ env.PROJECT_NAME }}-web-ci
           path: export/Web
           retention-days: 7
 
@@ -109,16 +130,23 @@ jobs:
           godot --headless --path . --export-release "${{ matrix.preset }}" "$out"
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.PROJECT_NAME }}-${{ matrix.preset }}
+          name: ${{ env.PROJECT_NAME }}-release-${{ matrix.preset }}
           path: export/${{ matrix.preset }}
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: export
     runs-on: ubuntu-latest
+    # El único job que escribe fuera: crea la release y sube los zips.
+    permissions:
+      contents: write
     steps:
+      # Por patrón, no todo: sin filtro se descargaba también el build de CI
+      # y la release salía con dos Web, uno de ellos el de mirar la PR.
       - uses: actions/download-artifact@v4
-        with: { path: artifacts }
+        with:
+          path: artifacts
+          pattern: ${{ env.PROJECT_NAME }}-release-*
       - run: cd artifacts && for d in */; do zip -r "${d%/}.zip" "$d"; done
       - uses: softprops/action-gh-release@v2
         with:
