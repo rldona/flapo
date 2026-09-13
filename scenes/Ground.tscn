@@ -22,6 +22,10 @@ centered = false
 region_enabled = true
 texture = ExtResource("2_tile")
 
+[node name="Relleno" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.8157, 0.6824, 0.3843, 1)
+
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
 collision_layer = 4
 collision_mask = 0

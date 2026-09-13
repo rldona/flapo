@@ -529,6 +529,17 @@ static func is_special_soft(restantes: int) -> bool:
 	return restantes == SPECIAL_STRETCH_PIPES / 2
 
 
+## Relleno liso que hace falta DEBAJO del suelo para llegar al borde.
+##
+## Desde ADR-0042 el viewport es más alto que los 512 del diseño y el suelo
+## dejaba cielo por debajo. Color plano y no el tile repetido: el tile lleva
+## una línea oscura arriba y al repetirlo salía otra vez a media pantalla,
+## como una costura. **Solo cambia el dibujo**; la colisión sigue igual, o
+## morir contra el suelo dependería del móvil.
+static func ground_fill_height(alto_viewport: float, superficie: float) -> float:
+	return maxf(0.0, alto_viewport - superficie - GROUND_HEIGHT)
+
+
 ## Qué escenario le toca a una semilla (T-057).
 ##
 ## Sale de la semilla con una cuenta, **no de pedirle un número al
