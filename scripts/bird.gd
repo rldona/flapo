@@ -11,6 +11,10 @@ extends CharacterBody2D
 ## significa (pasar a GAME_OVER) es `Main`: "signal up".
 signal died
 
+## El aliento ha cambiado. La emite Flapo porque es suyo; quien lo enseña es
+## el HUD, a través de Main.
+signal breath_changed(actual: float, maximo: float)
+
 ## Flapo ha aleteado. La emite él porque es quien lee la entrada; quien
 ## decide que eso suena es Main.
 signal flapped
@@ -47,6 +51,17 @@ const OBSTACULOS: int = 4
 ## Giro de aturdimiento mientras cae muerto, rad/s.
 @export var stun_spin: float = 9.0
 
+@export_group("Planeo")
+## Cuánto hay que mantener pulsado para que la pulsación cuente como planeo,
+## s. El aleteo NO espera a esto: sale en el mismo frame de la pulsación, o el
+## control dejaría de sentirse inmediato. Ver ADR-0020.
+@export var glide_hold_time: float = 0.18
+## Qué fracción de la gravedad se aplica planeando. 0.25 = cae a un cuarto.
+@export_range(0.0, 1.0) var glide_gravity_mult: float = 0.25
+## Tope de caída planeando, px/s. Muy por debajo del tope normal: planear es
+## descender despacio, no flotar.
+@export var glide_max_fall_speed: float = 90.0
+
 @export_group("Animación")
 ## Frames por segundo del aleteo en reposo (cayendo, planeando).
 @export var flap_fps_idle: float = 6.0
@@ -82,6 +97,12 @@ var _dead: bool = false
 var _burst_left: float = 0.0
 ## Radio original de la hitbox, para poder escalarla y devolverla.
 var _radio_base: float = 8.0
+## Aliento actual. Vive en Flapo porque es suyo y lo gastan sus acciones; las
+## constantes están en GameConfig (T-048).
+var _breath: float = GameConfig.MAX_BREATH
+## Cuánto lleva pulsado el botón, s. Distingue toque de mantener.
+var _held: float = 0.0
+var _gliding: bool = false
 ## Segundos que le quedan de no colisionar tras gastar un escudo.
 var _invulnerable_left: float = 0.0
 
@@ -106,6 +127,7 @@ func _physics_process(delta: float) -> void:
 			# lo consume Main; Flapo solo empieza a caer cuando ya es PLAYING.
 			velocity = Vector2.ZERO
 		GameState.State.PLAYING:
+			_actualizar_planeo(delta)
 			_apply_gravity(delta)
 			# `is_action_just_pressed` es consciente de si lo llamas desde un
 			# frame de física o de dibujo, así que aquí no se pierde ni se
@@ -113,6 +135,7 @@ func _physics_process(delta: float) -> void:
 			if Input.is_action_just_pressed("flap"):
 				velocity.y = flap_impulse
 				_burst_left = flap_burst_time
+				_gastar_aliento(GameConfig.BREATH_DRAIN_FLAP)
 				flapped.emit()
 		GameState.State.GAME_OVER:
 			# Sigue cayendo, pero ya no responde: el batacazo se ve entero.
@@ -154,6 +177,10 @@ func on_game_state_changed(to: GameState.State) -> void:
 		rotation = 0.0
 		position = start_position
 		_burst_left = 0.0
+		_held = 0.0
+		_gliding = false
+		_breath = GameConfig.MAX_BREATH
+		breath_changed.emit(_breath, GameConfig.MAX_BREATH)
 		gravity_mult = 1.0
 		size_mult = 1.0
 		hitbox_mult = 1.0
@@ -199,7 +226,56 @@ func _aplicar_tamano() -> void:
 		(_shape.shape as CircleShape2D).radius = _radio_base * hitbox_mult
 
 
+## Decide si Flapo está planeando y cobra el aliento correspondiente.
+##
+## El planeo se activa manteniendo pulsado el MISMO botón del aleteo: no hay
+## input nuevo. Y con el aliento a 0 deja de frenar, pero el aleteo corto
+## sigue funcionando siempre: Flapo nunca se queda sin poder aletear.
+func _actualizar_planeo(delta: float) -> void:
+	if Input.is_action_pressed("flap"):
+		_held += delta
+	else:
+		_held = 0.0
+	var quiere: bool = _held >= glide_hold_time
+	_gliding = quiere and _breath > 0.0
+	if _gliding:
+		_gastar_aliento(GameConfig.BREATH_DRAIN_GLIDE * delta)
+
+
+func _gastar_aliento(cantidad: float) -> void:
+	_ajustar_aliento(-cantidad)
+
+
+func _ajustar_aliento(delta_aliento: float) -> void:
+	var antes: float = _breath
+	_breath = clampf(_breath + delta_aliento, 0.0, GameConfig.MAX_BREATH)
+	if not is_equal_approx(antes, _breath):
+		breath_changed.emit(_breath, GameConfig.MAX_BREATH)
+
+
+## Recupera aliento. Lo llama Main al cruzar el centro de un hueco.
+func recover_breath(cantidad: float) -> void:
+	_ajustar_aliento(cantidad)
+
+
+## Aliento actual, en las unidades de GameConfig.MAX_BREATH.
+func breath() -> float:
+	return _breath
+
+
+## Si Flapo está planeando ahora mismo.
+func is_gliding() -> bool:
+	return _gliding
+
+
 func _apply_gravity(delta: float) -> void:
+	# Planeando cae a una fracción de la gravedad y con un tope mucho más
+	# bajo: es descender despacio, no flotar.
+	if _gliding:
+		velocity.y = minf(
+			velocity.y + gravity * gravity_mult * glide_gravity_mult * delta, glide_max_fall_speed
+		)
+		return
 	velocity.y = minf(velocity.y + gravity * gravity_mult * delta, max_fall_speed)
 
 

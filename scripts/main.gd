@@ -218,6 +218,8 @@ func _connect_children() -> void:
 
 	bird.died.connect(_on_bird_died)
 	pipe_spawner.scored.connect(_on_scored)
+	pipe_spawner.centered.connect(_on_centered)
+	bird.breath_changed.connect(hud.set_breath)
 	score_changed.connect(hud.set_score)
 	score_changed.connect(game_over_panel.set_score)
 	game_over_panel.restart_pressed.connect(_on_restart_pressed)
@@ -317,6 +319,11 @@ func _on_effects_changed(kind: Effects.Kind, restante: float) -> void:
 	bird.size_mult = effects.size_mult()
 	bird.hitbox_mult = effects.hitbox_mult()
 	_apply_difficulty()
+
+
+## Flapo ha cruzado por el centro de un hueco: recupera aliento (T-048).
+func _on_centered() -> void:
+	bird.recover_breath(GameConfig.BREATH_RECOVER_ON_GAP)
 
 
 func _on_bird_died() -> void:

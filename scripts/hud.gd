@@ -19,6 +19,8 @@ extends CanvasLayer
 @onready var _score_label: Label = $Score
 @onready var _effect_label: Label = $Effect
 @onready var _shield_label: Label = $Shield
+@onready var _breath_back: ColorRect = $Breath/Back
+@onready var _breath_fill: ColorRect = $Breath/Fill
 
 
 func _ready() -> void:
@@ -82,3 +84,19 @@ func set_effect(nombre: String, restante: float) -> void:
 
 func set_shield(activo: bool) -> void:
 	_shield_label.visible = activo
+
+
+## Nivel de aliento (T-048).
+##
+## La barra va abajo, sobre la franja del suelo, y no arriba: el criterio del
+## ticket es que no tape la puntuación, y arriba ya están el marcador, el
+## efecto activo y el escudo.
+func set_breath(actual: float, maximo: float) -> void:
+	if maximo <= 0.0:
+		return
+	var ratio: float = clampf(actual / maximo, 0.0, 1.0)
+	# Se mueve `offset_right`, no `size`: el relleno tiene anclas verticales
+	# opuestas (0 arriba, 1 abajo) para ocupar todo el alto, y en ese caso
+	# Godot recalcula `size` después de `_ready()` y avisa de que lo va a
+	# pisar. El ancho lo define el offset.
+	_breath_fill.offset_right = _breath_back.size.x * ratio

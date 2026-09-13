@@ -92,7 +92,7 @@ comprobar nadie más que una persona con las manos en el teclado.
 Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 
 - ✅ Frutas con efectos: inmunidad, pesado, ligero, grande y lento, con castigos que pagan en puntos. → T-047 (ADR-0019)
-- 🔲 Aliento: mantener pulsado planea en vez de aletear, gastando un recurso que se recupera cruzando huecos. → T-048 (ADR-0020)
+- ✅ Aliento: mantener pulsado planea, gastando un recurso que se recupera cruzando huecos por el centro. → T-048 (ADR-0020)
 - 🔲 Fatiga: aletear sin pausa ni planeo reduce el impulso una temporada. → T-049 (ADR-0020)
 - 🔲 Reacciones variables al morir, coherentes con el tono (nunca burla). → T-050
 - ✅ Curva de dificultad: velocidad sube y hueco se estrecha con la puntuación, con tope a los 30 puntos. Hueco de salida ancho (118 px) como rampa de entrada. → T-045 y T-046 (ADR-0018)

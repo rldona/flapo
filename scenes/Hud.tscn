@@ -33,3 +33,26 @@ mouse_filter = 2
 text = "Escudo"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Breath" type="Control" parent="."]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -56.0
+offset_right = -24.0
+offset_bottom = -48.0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Back" type="ColorRect" parent="Breath"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.149, 0.231, 0.275, 0.65)
+
+[node name="Fill" type="ColorRect" parent="Breath"]
+anchor_bottom = 1.0
+offset_right = 240.0
+mouse_filter = 2
+color = Color(0.949, 0.851, 0.655, 1)

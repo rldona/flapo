@@ -93,6 +93,28 @@ Sonidos: aleteo, punto, golpe, caída, botón. Al morir: flash blanco, sacudida 
 ## Estilo
 288×512 vertical, pixel art, paleta propia de 16 colores (ver `docs/art-guide.md`). Flapo 24×24 px (hitbox: círculo de radio 8, más generosa que el dibujo).
 
+## Aliento (T-048)
+El mismo botón hace dos cosas según cuánto lo mantengas:
+
+- **Toque corto** → aleteo de siempre, impulso fijo.
+- **Mantener** (más de 0,18 s) → **planeo**: cae al 25 % de la gravedad, con
+  tope de 90 px/s en vez de 500.
+
+Las dos gastan **aliento**, y se recupera cruzando el hueco **por su mitad
+central**.
+
+| Constante | Valor | Por qué |
+|---|---|---|
+| `MAX_BREATH` | 100 | escala arbitraria; 100 se lee como porcentaje |
+| `BREATH_DRAIN_FLAP` | 10 por aleteo | ~25/s a ritmo normal |
+| `BREATH_DRAIN_GLIDE` | 15 por segundo | menos que aletear: planear es lo barato |
+| `BREATH_RECOVER_ON_GAP` | +25 por hueco centrado | ~15,6/s: sostiene el planeo, no el aleteo |
+| `BREATH_BAND_RATIO` | 0,5 | solo la mitad central del hueco cuenta |
+
+**A 0 de aliento el planeo deja de frenar, pero el aleteo corto sigue dando el
+impulso completo.** Flapo nunca se queda sin poder aletear: el castigo es
+perder una herramienta, no el control. Ver ADR-0020.
+
 ## Frutas (T-047)
 Aparecen flotando entre tuberías, en la franja central. Un solo efecto activo a
 la vez, 6 s de duración; el escudo va aparte y no caduca.

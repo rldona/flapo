@@ -12,6 +12,11 @@ extends Node2D
 ## Flapo ha cruzado el hueco. Se emite UNA sola vez por tubería.
 signal scored
 
+## Flapo ha cruzado por la franja central del hueco (T-048). Va aparte de
+## `scored` porque son dos cosas distintas: puntuar es pasar, esto es pasar
+## bien.
+signal centered
+
 @export_group("Hueco")
 ## Alto del hueco, px. Es la constante que más cambia la dificultad.
 @export var gap: float = GameConfig.PIPE_GAP:
@@ -101,6 +106,11 @@ func _on_score_zone_body_entered(cuerpo: Node2D) -> void:
 		return
 	_ya_puntuada = true
 	scored.emit()
+	# Solo la mitad central del hueco recupera aliento. Si valiera pasar por
+	# cualquier sitio, recuperar sería automático y el recurso no existiría.
+	var margen: float = gap * GameConfig.BREATH_BAND_RATIO * 0.5
+	if absf(cuerpo.global_position.y - global_position.y - _gap_center) <= margen:
+		centered.emit()
 
 
 func _asignar_forma(cuerpo: StaticBody2D) -> void:

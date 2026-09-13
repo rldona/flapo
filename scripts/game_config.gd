@@ -59,6 +59,31 @@ const FLAP_CYCLE: float = 0.35
 ## sigue. Se estrecha hasta PIPE_GAP_MIN con la puntuación (ADR-0018).
 const PIPE_GAP: float = 118.0
 
+# --- Aliento (T-048) ----------------------------------------------------
+## Aliento máximo. La escala es arbitraria —lo que importa son las
+## proporciones entre gasto y recuperación—, pero 100 se lee como porcentaje
+## y hace las cuentas evidentes al tunear.
+const MAX_BREATH: float = 100.0
+
+## Lo que cuesta un aleteo. A un ritmo normal de ~2,5 aleteos por segundo son
+## 25 de gasto por segundo, algo por encima de lo que se recupera cruzando
+## huecos: machacar el botón se paga.
+const BREATH_DRAIN_FLAP: float = 10.0
+
+## Lo que cuesta planear, por segundo. Menos que aletear sostenido, que es lo
+## que hace del planeo la opción "barata" y le da sentido al recurso.
+const BREATH_DRAIN_GLIDE: float = 15.0
+
+## Lo que se recupera al cruzar el hueco **por el centro**. Con un hueco cada
+## 1,6 s son ~15,6 por segundo: sostiene el planeo continuo, pero no el
+## aleteo continuo. Volar bien se premia; martillear, no.
+const BREATH_RECOVER_ON_GAP: float = 25.0
+
+## Qué fracción central del hueco cuenta como "por el centro". Solo la mitad
+## central: si valiera todo el hueco, recuperar sería automático y el recurso
+## dejaría de existir.
+const BREATH_BAND_RATIO: float = 0.5
+
 # --- Puntuación ---------------------------------------------------------
 const MEDAL_BRONZE: int = 10
 const MEDAL_SILVER: int = 20
