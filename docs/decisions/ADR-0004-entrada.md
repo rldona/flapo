@@ -27,8 +27,10 @@ Tres acciones en `project.godot`:
 | `restart` | R · Intro |
 | `pause` | Escape · P |
 
-`input_devices/pointing/emulate_mouse_from_touch = true` (valor por defecto,
-lo dejamos escrito explícitamente porque de él depende que la UI funcione).
+`input_devices/pointing/emulate_mouse_from_touch` se deja en `true`. Es el
+valor por defecto del motor, así que Godot lo borra del fichero al reescribirlo
+(ver la última consecuencia); no aparece en `project.godot` pero es el que
+está activo, y de él depende que la UI responda al dedo.
 
 Se usan **`physical_keycode`** y no `keycode`: el físico va por posición en el
 teclado, así que la tecla bajo el pulgar sigue siendo la misma en QWERTY,
@@ -51,7 +53,8 @@ aquí, y el retardo de 0,5 s antes del panel de Game Over (**T-044**).
   primer frame. Se deja la emulación encendida porque los nodos `Control`
   (el botón "Otra vez" de **T-071**) la necesitan para responder al dedo.
   Si alguna vez se observara doble disparo, la solución es quitar el evento de
-  touch de la acción, no apagar la emulación.
+  touch de la acción, no apagar la emulación: apagarla dejaría los botones de
+  la UI muertos en Android.
 - `restart` y `pause` son solo de teclado: en Android no hay teclas. En móvil
   el reinicio se hace con el botón de la pantalla de Game Over (**T-071**) y
   la pausa la dispara el sistema al perder el foco (**T-072**). Las acciones
@@ -60,4 +63,9 @@ aquí, y el retardo de 0,5 s antes del panel de Game Over (**T-044**).
   defecto del motor. Por eso `window/stretch/aspect="keep"` y
   `physics/common/physics_ticks_per_second=60` no aparecen en el fichero
   aunque sean los valores que queremos (ver ADR-0002): son ya los del motor.
-  Si alguna vez cambiaran de default, habría que fijarlos a mano.
+  Lo mismo le pasa a `pointing/emulate_mouse_from_touch=true`. Si alguna vez
+  cambiaran de default, habría que fijarlos a mano.
+
+  Corolario práctico: **el editor es el dueño de `project.godot`**. Editarlo a
+  mano vale para escribir la intención, pero la forma final la impone Godot al
+  reabrir el proyecto, y esa es la que se commitea.
