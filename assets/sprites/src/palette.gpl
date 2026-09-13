@@ -1,0 +1,21 @@
+GIMP Palette
+Name: Flapo
+Columns: 4
+# Paleta de Flapo. 16 colores. Ver docs/art-guide.md.
+# Los 7 primeros son los únicos permitidos en el sprite de Flapo.
+ 38  59  70	Outline
+ 63 113 136	Cuerpo
+ 49  89 108	Cuerpo sombra
+ 79 130 152	Ala
+242 217 167	Tripa
+213 184 125	Tripa sombra
+230 184  74	Pico y patas
+184 134  50	Pico sombra
+212 154  58	Patas sombra
+ 24  38  45	Ojo
+255 244 214	Brillo del ojo
+217 137 114	Mejillas
+124 179 215	Cielo
+191 217 236	Nubes
+ 80 105 130	Edificios
+208 174  98	Suelo
