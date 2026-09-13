@@ -40,8 +40,11 @@ var _score: int = 0
 var _player_name: String = ""
 ## "Reto del 8 de septiembre" si esta partida era un reto (T-241).
 var _challenge: String = ""
+## El código corto de esta partida (T-242).
+var _code: String = ""
 
 @onready var _title: Label = $Root/Box/Title
+@onready var _code_label: Label = $Root/Box/Code
 @onready var _root: Control = $Root
 @onready var _box: VBoxContainer = $Root/Box
 @onready var _medal_rect: TextureRect = $Root/Box/Medal
@@ -88,6 +91,13 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_delay_left = delay
 	else:
 		_ocultar()
+
+
+## El código de la partida, para enseñarlo y compartirlo (T-242).
+func set_code(codigo: String) -> void:
+	_code = codigo
+	if _code_label != null:
+		_code_label.text = "Código: %s" % codigo if codigo != "" else ""
 
 
 ## Prefijo del reto para el texto de compartir (T-241). "" en juego normal.
@@ -165,6 +175,12 @@ func _on_share_pressed() -> void:
 			share_pressed.emit("%s: %d." % [_challenge, _score])
 			return
 		share_pressed.emit("%s: %d (%s)." % [_challenge, _score, _player_name])
+		return
+	# Fuera del reto va el código: sin él, decir "he hecho 14" no se puede
+	# comprobar porque cada uno habría jugado tuberías distintas (T-242).
+	var firma: String = "He" if _player_name == "" else "%s ha" % _player_name
+	if _code != "":
+		share_pressed.emit("%s cruzado %s con Flapo. Código: %s" % [firma, pieza, _code])
 		return
 	# Sin nombre se comparte en primera persona. Firmar con el nombre por
 	# defecto daría "Flapo ha cruzado 3 tuberías con Flapo", que es ridículo.

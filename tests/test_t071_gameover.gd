@@ -193,9 +193,12 @@ func _el_boton_de_compartir_solo_en_android() -> void:
 	main._on_scored()
 	await _morir(main)
 	main.game_over_panel._on_share_pressed()
+	# Desde T-242 el texto lleva además el código de la partida, así que se
+	# comprueba lo que este ticket promete —la puntuación— y no la frase
+	# entera, que ya no le pertenece.
 	h.check(
 		"compartir lleva la puntuación de la partida",
-		not recibido.is_empty() and recibido[0] == "He cruzado 1 tubería con Flapo.",
+		not recibido.is_empty() and recibido[0].begins_with("He cruzado 1 tubería con Flapo."),
 		"texto: '%s'" % ("" if recibido.is_empty() else recibido[0])
 	)
 	main.free()

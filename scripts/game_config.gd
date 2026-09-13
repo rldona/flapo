@@ -229,6 +229,17 @@ const CONFIDENCE_BREATH_BONUS: float = 8.0
 ## le tocó se puede leer y volver a jugar (T-242).
 const SEED_ALEATORIA: int = 0
 
+# --- Semilla compartible (T-242) ----------------------------------------
+## Alfabeto del código. Base 36 sin distinguir mayúsculas: se dicta por
+## teléfono y se teclea en un móvil, así que cuanto menos haya que precisar,
+## mejor.
+const CODIGO_ALFABETO: String = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+## Cuántos caracteres tiene un código. 5 en base 36 son 60 millones de
+## partidas distintas: de sobra para que dos amigos no repitan, y corto para
+## caber en el Game Over a 288 px.
+const CODIGO_LARGO: int = 5
+
 # --- Reto del día (T-241) -----------------------------------------------
 ## Nombres de los meses para el texto de compartir. Aquí y no en el panel:
 ## es contenido de las reglas del reto, no de la pantalla que lo enseña.
@@ -394,6 +405,48 @@ static func moving_pipe_chance(score: int) -> float:
 	var recorrido: int = maxi(DIFFICULTY_CAP - MOVING_PIPE_MIN_SCORE, 1)
 	var t: float = clampf(float(score - MOVING_PIPE_MIN_SCORE) / float(recorrido), 0.0, 1.0)
 	return lerpf(MOVING_PIPE_CHANCE_MIN, MOVING_PIPE_CHANCE_MAX, t)
+
+
+## El espacio de semillas que caben en un código (T-242).
+static func codigo_modulo() -> int:
+	var n: int = 1
+	for i in CODIGO_LARGO:
+		n *= CODIGO_ALFABETO.length()
+	return n
+
+
+## La semilla como código corto en base 36 (T-242).
+##
+## Se reduce al espacio del código antes de escribirlo. Es lo que hace que el
+## código sea **de ida y vuelta**: escribir 5 caracteres y leerlos tiene que
+## devolver la misma semilla, y para eso la semilla que se enseña no puede
+## ser mayor que lo que cabe.
+static func seed_a_codigo(semilla: int) -> String:
+	var n: int = posmod(semilla, codigo_modulo())
+	var base: int = CODIGO_ALFABETO.length()
+	var texto: String = ""
+	for i in CODIGO_LARGO:
+		texto = CODIGO_ALFABETO[n % base] + texto
+		n /= base
+	return texto
+
+
+## De código a semilla, o -1 si el código no vale (T-242).
+##
+## Devuelve -1 y no lanza nada: un código mal tecleado es lo más normal del
+## mundo, y el juego tiene que responder con un aviso, no con un error.
+static func codigo_a_seed(codigo: String) -> int:
+	var limpio: String = codigo.strip_edges().to_lower()
+	if limpio.length() != CODIGO_LARGO:
+		return -1
+	var base: int = CODIGO_ALFABETO.length()
+	var n: int = 0
+	for c in limpio:
+		var d: int = CODIGO_ALFABETO.find(c)
+		if d < 0:
+			return -1
+		n = n * base + d
+	return n
 
 
 ## La semilla del reto de un día concreto (T-241).

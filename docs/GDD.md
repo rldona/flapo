@@ -267,6 +267,18 @@ la vez, 6 s de duración; el escudo va aparte y no caduca.
 Las de castigo pagan en puntos: es lo que las convierte en una apuesta en vez
 de en una trampa. Ver ADR-0019.
 
+## Semilla compartible (T-242)
+Cada partida libre enseña en el Game Over un **código de 5 caracteres** en
+base 36, y el menú tiene "Jugar un código". Dos amigos escriben el mismo y
+juegan exactamente las mismas tuberías, sin ranking online ni servidor.
+
+La semilla de una partida libre se sortea **dentro del espacio del código**:
+si fuera mayor, el código enseñado llevaría a otra partida y nadie se
+enteraría. Da igual mayúsculas y espacios, porque se dicta por teléfono. Un
+código inválido no rompe nada: aviso corto y se sigue en el menú.
+
+En el reto del día no hay código: ya se identifica por su fecha.
+
 ## Reto del día (T-241)
 Botón en el menú. La semilla es **la fecha local en AAAAMMDD**, así que todo
 el mundo juega las mismas tuberías ese día **sin servidor**. Cambia a

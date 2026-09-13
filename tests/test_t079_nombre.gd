@@ -109,8 +109,8 @@ func _el_menu_y_el_compartir_lo_usan() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	h.check(
 		"sin nombre puesto, se enseña el de siempre",
-		main.display_player_name() == GameConfig.PLAYER_NAME_DEFAULT,
-		"'%s'" % main.display_player_name()
+		GameConfig.display_player_name(main.get_player_name()) == GameConfig.PLAYER_NAME_DEFAULT,
+		"'%s'" % GameConfig.display_player_name(main.get_player_name())
 	)
 
 	# Escribir en el campo del menú llega hasta el guardado.

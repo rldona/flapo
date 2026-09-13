@@ -63,6 +63,10 @@ visible = false
 text = "¡Nuevo récord!"
 horizontal_alignment = 1
 
+[node name="Code" type="Label" parent="Root/Box"]
+text = ""
+horizontal_alignment = 1
+
 [node name="Button" type="Button" parent="Root/Box"]
 custom_minimum_size = Vector2(0, 48)
 text = "Otra vez"

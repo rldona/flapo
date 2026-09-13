@@ -246,6 +246,36 @@ func start_free() -> void:
 	change_state(GameState.State.READY)
 
 
+## Intenta jugar el código que se ha escrito en el menú (T-242).
+##
+## Un código malo **no rompe nada y no saca del menú**: se enseña un aviso
+## corto y ahí se queda, que es lo que dice el criterio del ticket.
+func _on_code_pressed(texto: String) -> void:
+	if start_code(texto):
+		return
+	if menu_panel != null:
+		menu_panel.set_aviso("Ese código no vale")
+
+
+## El código corto de la partida en curso (T-242).
+func _codigo() -> String:
+	return GameConfig.seed_a_codigo(_seed)
+
+
+## Arranca una partida con ese código. `false` si el código no vale (T-242).
+##
+## No lanza ni rompe: un código mal tecleado es lo más normal del mundo, así
+## que se responde con un `false` y quien llama enseña el aviso.
+func start_code(codigo_texto: String) -> bool:
+	var semilla: int = GameConfig.codigo_a_seed(codigo_texto)
+	if semilla < 0:
+		return false
+	_daily.parar()
+	set_seed(semilla)
+	change_state(GameState.State.READY)
+	return true
+
+
 ## El reto del día, para quien necesite su clave o su nombre (T-241).
 func daily() -> DailyChallenge:
 	return _daily
@@ -273,7 +303,11 @@ func set_seed(semilla: int) -> void:
 func _sembrar() -> void:
 	if _seed == GameConfig.SEED_ALEATORIA:
 		_rng.randomize()
-		_seed = int(_rng.seed)
+		# Dentro del espacio del código (T-242): si la semilla sorteada fuera
+		# mayor de lo que caben 5 caracteres, el código que se enseña al
+		# morir llevaría a OTRA partida, y la promesa de "jugad los dos las
+		# mismas tuberías" se rompería sin dar ningún error.
+		_seed = posmod(int(_rng.seed), GameConfig.codigo_modulo())
 	# Solo `seed`: asignarlo ya reinicia el estado del generador. Poner
 	# `state = 0` a mano lo dejaba en un estado degenerado que daba LA MISMA
 	# secuencia con cualquier semilla — y el test de "misma semilla, misma
@@ -310,7 +344,7 @@ func get_player_name() -> String:
 
 
 ## El nombre a enseñar. Nunca vacío: sin nombre, el de siempre.
-func display_player_name() -> String:
+func _display_player_name() -> String:
 	return GameConfig.display_player_name(_player_name)
 
 
@@ -462,6 +496,7 @@ func _connect_children() -> void:
 		menu_panel.stats_pressed.connect(_abrir_estadisticas)
 		# Jugar normal sortea semilla; el reto usa la de hoy (T-241).
 		menu_panel.daily_pressed.connect(start_daily.bind([]))
+		menu_panel.code_pressed.connect(_on_code_pressed)
 		menu_panel.name_changed.connect(set_player_name)
 	if stats_panel != null:
 		stats_panel.back_pressed.connect(func() -> void: stats_panel.set_open(false))
@@ -493,6 +528,7 @@ func _on_state_changed_results(to: GameState.State) -> void:
 	if to == GameState.State.GAME_OVER:
 		game_over_panel.set_player_name(_player_name)
 		game_over_panel.set_challenge(_daily.nombre())
+		game_over_panel.set_code("" if _daily.activo() else _codigo())
 		game_over_panel.show_results(_score, _high_score, _is_new_high_score)
 		game_over_panel.set_line(_siguiente_frase())
 

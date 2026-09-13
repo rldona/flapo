@@ -202,7 +202,7 @@ que por ser la mascota debe dibujarlo una persona.
 
 - ✅ Semilla determinista: un solo RNG inyectado, sin azar global. → T-240 (ADR-0030)
 - ✅ Reto del día: semilla = fecha local, marca en clave propia. → T-241
-- 🔲 Semilla compartible: código corto para jugar las mismas tuberías. → T-242
+- ✅ Semilla compartible: código de 5 caracteres en base 36. → T-242
 - 🔲 Fantasma del récord: replay translúcido de tu mejor vuelo. → T-243
 - 🔲 Logros con nombre de tapa. → T-244
 - 🔲 Soplar para aletear: entrada por micrófono, opcional. → T-245 (ADR-0031)

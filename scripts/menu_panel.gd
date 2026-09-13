@@ -15,6 +15,9 @@ signal play_pressed
 ## El jugador ha escrito su nombre (T-079). Ya viene saneado.
 signal name_changed(nombre: String)
 
+## El jugador quiere jugar un código concreto (T-242).
+signal code_pressed(codigo: String)
+
 ## El jugador quiere jugar el reto del día (T-241).
 signal daily_pressed
 
@@ -31,6 +34,9 @@ var _modo: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 @onready var _record: Label = $Root/Box/Record
 @onready var _stats: Button = $Root/Box/Stats
 @onready var _daily: Button = $Root/Box/Daily
+@onready var _code: LineEdit = $Root/Box/Code
+@onready var _code_play: Button = $Root/Box/CodePlay
+@onready var _aviso: Label = $Root/Box/Aviso
 @onready var _name: LineEdit = $Root/Box/Name
 
 
@@ -41,6 +47,12 @@ func _ready() -> void:
 	_difficulty.pressed.connect(_on_difficulty_pressed)
 	_stats.pressed.connect(func() -> void: stats_pressed.emit())
 	_daily.pressed.connect(func() -> void: daily_pressed.emit())
+	_code.max_length = GameConfig.CODIGO_LARGO
+	_code_play.pressed.connect(func() -> void: code_pressed.emit(_code.text))
+	# Escribir borra el aviso anterior: dejarlo puesto mientras el jugador
+	# corrige haría pensar que el código nuevo también está mal.
+	_code.text_changed.connect(func(_t: String) -> void: set_aviso(""))
+	_aviso.text = ""
 	_name.max_length = GameConfig.PLAYER_NAME_MAX_LEN
 	_name.placeholder_text = GameConfig.PLAYER_NAME_DEFAULT
 	# `text_changed` y no `text_submitted`: en móvil mucha gente cierra el
@@ -59,6 +71,16 @@ func on_game_state_changed(to: GameState.State) -> void:
 func set_difficulty(modo: GameConfig.Difficulty) -> void:
 	_modo = modo
 	_refrescar()
+
+
+## Enseña un aviso corto bajo el código, o lo quita (T-242).
+func set_aviso(texto: String) -> void:
+	_aviso.text = texto
+
+
+## Lo que dice el aviso ahora mismo. Lo usan los tests.
+func aviso() -> String:
+	return _aviso.text if _aviso != null else ""
 
 
 ## Enseña el nombre guardado, sin emitir nada.
