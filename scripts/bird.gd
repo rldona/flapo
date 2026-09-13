@@ -23,7 +23,9 @@ signal died
 ## Altura mínima alcanzable, px. Flapo no se sale por arriba.
 @export var ceiling_y: float = 0.0
 ## Altura a la que se da por muerto si nada lo ha parado antes, px.
-## Red de seguridad provisional hasta que exista el suelo real (T-027).
+## Desde T-027 el suelo llega antes que esto: queda como red de seguridad
+## por si Flapo acabara fuera del mundo (un hueco en la colisión, un tuneo
+## que lo lance muy rápido). No debería dispararse nunca en una partida.
 @export var fall_death_y: float = 512.0
 
 @export_group("Rotación")

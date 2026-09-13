@@ -44,8 +44,8 @@ func _hueco_aleatorio_dentro_del_rango() -> void:
 		pipe.randomize_gap(rng)
 		minimo = minf(minimo, pipe.get_gap_center())
 		maximo = maxf(maximo, pipe.get_gap_center())
-	var limite_bajo: float = pipe.gap_center_min_ratio * pipe.playable_height
-	var limite_alto: float = pipe.gap_center_max_ratio * pipe.playable_height
+	var limite_bajo: float = pipe.gap_center_min_ratio * GameConfig.playable_height()
+	var limite_alto: float = pipe.gap_center_max_ratio * GameConfig.playable_height()
 	h.check(
 		"el hueco cae dentro del rango",
 		minimo >= limite_bajo and maximo <= limite_alto,

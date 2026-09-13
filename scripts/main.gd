@@ -24,6 +24,9 @@ signal score_changed(score: int)
 ## El generador de tuberías.
 @export var pipe_spawner: PipeSpawner
 
+## El suelo.
+@export var ground: Ground
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -97,6 +100,10 @@ func _connect_children() -> void:
 		return
 	state_changed.connect(pipe_spawner.on_game_state_changed)
 	pipe_spawner.scored.connect(_on_scored)
+	if ground == null:
+		push_error("Main no tiene asignado el nodo Ground en el inspector.")
+		return
+	state_changed.connect(ground.on_game_state_changed)
 
 
 func _on_scored() -> void:

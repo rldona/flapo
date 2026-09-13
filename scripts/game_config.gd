@@ -24,6 +24,10 @@ const VIEWPORT_SIZE := Vector2i(288, 512)
 # `@export` en `scripts/bird.gd` porque es lo que se tunea a ojo en T-040.
 # Ver ADR-0003.
 
+## Alto del suelo, px. Se lo restan las tuberías para saber por dónde pueden
+## sortear su hueco, y lo usa Ground para su propia colisión.
+const GROUND_HEIGHT: float = 64.0
+
 # --- Mundo --------------------------------------------------------------
 ## Velocidad a la que el mundo se desplaza hacia la izquierda, px/s.
 ## La usan tuberías, suelo y parallax.
@@ -46,3 +50,9 @@ const MEDAL_GOLD: int = 40
 ## velocidad de scroll sin tocar esto, la separación real cambiaría.
 static func pipe_spawn_interval() -> float:
 	return PIPE_SPACING / SCROLL_SPEED
+
+
+## Alto de la zona por la que Flapo puede volar, px: la pantalla menos el
+## suelo. Derivado por el mismo motivo que el intervalo de spawn.
+static func playable_height() -> float:
+	return float(VIEWPORT_SIZE.y) - GROUND_HEIGHT

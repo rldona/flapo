@@ -26,9 +26,6 @@ signal scored
 @export_group("Geometría")
 ## Ancho del tubo, px. Ver docs/art-guide.md.
 @export var width: float = 26.0
-## Alto de la zona por la que Flapo puede volar, px. Cuando exista el suelo
-## (T-027) será la altura del viewport menos la del suelo.
-@export var playable_height: float = 512.0
 ## Largo de cada tubo, px. Basta con que llegue a salirse de pantalla.
 @export var body_length: float = 512.0
 
@@ -83,7 +80,9 @@ func get_gap_center() -> float:
 ## sembrarlo y una partida es reproducible en un test (T-080).
 func randomize_gap(rng: RandomNumberGenerator) -> void:
 	var ratio: float = rng.randf_range(gap_center_min_ratio, gap_center_max_ratio)
-	set_gap_center(ratio * playable_height)
+	# La altura jugable la comparten suelo y tuberías, así que sale de
+	# GameConfig y no es un ajuste propio de la tubería (ADR-0003).
+	set_gap_center(ratio * GameConfig.playable_height())
 
 
 ## Puntúa una vez y solo una.
