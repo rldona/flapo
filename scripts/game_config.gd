@@ -376,6 +376,16 @@ const JOURNEY_SCENE_TIME: float = 3.0
 ## Lo que dice. Es la única frase del juego que no se burla de Flapo.
 const JOURNEY_LINE: String = "Ha llegado. Gordo, pero ha llegado."
 
+## --- Escudo acumulable ---
+
+## Cuántos escudos se pueden llevar a la vez.
+##
+## Tres, y el tope existe por dos motivos. Uno es de lectura: "Escudo x12" no
+## se entiende de un vistazo en una pantalla de 288 px. El otro es de juego —
+## con escudos infinitos, quien encadena azules deja de jugar al juego del
+## aliento y pasa a jugar a otro donde chocar no importa.
+const SHIELD_MAX: int = 3
+
 ## --- Captura del mejor salto (T-077) ---
 
 ## Cuántos segundos de vuelo entran en la captura.

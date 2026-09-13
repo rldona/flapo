@@ -16,8 +16,9 @@ extends Node
 
 ## El efecto activo ha cambiado. `restante` es 0 si no hay ninguno.
 signal changed(kind: Kind, restante: float)
-## El escudo se ha ganado o se ha gastado.
-signal shield_changed(activo: bool)
+## El escudo se ha ganado o se ha gastado. Lleva **cuántos quedan**, no un
+## sí/no: los escudos se acumulan y el HUD tiene que poder decir cuántos.
+signal shield_changed(cantidad: int)
 
 enum Kind { NINGUNO, INMUNIDAD, PESADO, LIGERO, GRANDE, LENTO }
 
@@ -36,7 +37,9 @@ enum Kind { NINGUNO, INMUNIDAD, PESADO, LIGERO, GRANDE, LENTO }
 
 var _kind: Kind = Kind.NINGUNO
 var _left: float = 0.0
-var _shield: bool = false
+## Cuántos escudos lleva encima. Un contador y no un `bool`: coger una azul
+## teniendo otra ya no desperdicia la segunda.
+var _shield: int = 0
 
 
 func _process(delta: float) -> void:
@@ -53,8 +56,11 @@ func _process(delta: float) -> void:
 ## Activa lo que da una fruta.
 func apply(kind: Kind) -> void:
 	if kind == Kind.INMUNIDAD:
-		_shield = true
-		shield_changed.emit(true)
+		# Se apilan hasta el tope. Pasado el tope la fruta no se pierde en
+		# silencio para el jugador —ya lleva los que caben— pero tampoco
+		# suma: es preferible a un contador que crece sin sentido.
+		_shield = mini(_shield + 1, GameConfig.SHIELD_MAX)
+		shield_changed.emit(_shield)
 		return
 	_kind = kind
 	_left = duration
@@ -63,14 +69,19 @@ func apply(kind: Kind) -> void:
 
 ## Gasta el escudo. Devuelve `true` si había uno y ha absorbido el golpe.
 func consume_shield() -> bool:
-	if not _shield:
+	if _shield <= 0:
 		return false
-	_shield = false
-	shield_changed.emit(false)
+	_shield -= 1
+	shield_changed.emit(_shield)
 	return true
 
 
 func has_shield() -> bool:
+	return _shield > 0
+
+
+## Cuántos escudos quedan. Lo usan el HUD y los tests.
+func shield_count() -> int:
 	return _shield
 
 
@@ -123,6 +134,6 @@ func kind_name(kind: Kind) -> String:
 func clear() -> void:
 	_kind = Kind.NINGUNO
 	_left = 0.0
-	_shield = false
+	_shield = 0
 	changed.emit(_kind, 0.0)
-	shield_changed.emit(false)
+	shield_changed.emit(0)

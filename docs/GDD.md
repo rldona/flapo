@@ -256,6 +256,13 @@ impulso reducido sigue subiendo, nunca deja a Flapo sin control.
 Aparecen flotando entre tuberías, en la franja central. Un solo efecto activo a
 la vez, 6 s de duración; el escudo va aparte y no caduca.
 
+El **escudo se acumula** hasta 3 (`SHIELD_MAX`). Coger una azul llevando otra
+ya no desperdicia la segunda: se apilan, el HUD dice cuántos quedan
+("Escudo x3") y cada golpe gasta uno. El tope existe por dos motivos: a 288 px
+de ancho "Escudo x12" no se lee de un vistazo, y con escudos infinitos quien
+encadena azules deja de jugar al juego del aliento y pasa a jugar a otro
+donde chocar no importa.
+
 | Fruta | Efecto | Puntos |
 |---|---|---|
 | Azul | Inmunidad a un toque | — |

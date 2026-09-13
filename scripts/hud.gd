@@ -20,6 +20,11 @@ const COLOR_FATIGA := Color(0.851, 0.537, 0.447)
 ## Separación mínima del borde superior, px de juego. Se suma al margen que
 ## reporte el sistema, para que el marcador no quede pegado al borde ni
 ## siquiera en una pantalla sin notch.
+## Cómo se llama el escudo en pantalla. En `@export` y no escrito dentro del
+## código porque es texto que se ve: cambiarlo no debería obligar a tocar la
+## lógica que decide cuándo sale.
+@export var texto_escudo: String = "Escudo"
+
 @export var margen_superior: float = 24.0
 
 @onready var _score_label: Label = $Score
@@ -127,8 +132,17 @@ func journey_line() -> String:
 	return _journey_label.text if _journey_label != null and _journey_label.visible else ""
 
 
-func set_shield(activo: bool) -> void:
-	_shield_label.visible = activo
+## Cuántos escudos lleva Flapo.
+##
+## Con uno se escribe "Escudo" a secas y con varios "Escudo x3". El "x1" se
+## calla a propósito: es ruido, y a 288 px de ancho cada carácter que no dice
+## nada le quita sitio a uno que sí.
+func set_shield(cantidad: int) -> void:
+	_shield_label.visible = cantidad > 0
+	if cantidad > 1:
+		_shield_label.text = "%s x%d" % [texto_escudo, cantidad]
+	else:
+		_shield_label.text = texto_escudo
 
 
 ## Nivel de aliento (T-048).
