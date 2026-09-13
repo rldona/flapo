@@ -13,6 +13,8 @@ extends CanvasLayer
 
 ## Color de la barra de aliento en reposo y fatigado.
 const COLOR_ALIENTO := Color(0.949, 0.851, 0.655)
+## Color del aviso de viento. Ámbar: advertencia, no información.
+const COLOR_AVISO: Color = Color("#E6B84A")
 const COLOR_FATIGA := Color(0.851, 0.537, 0.447)
 
 ## Separación mínima del borde superior, px de juego. Se suma al margen que
@@ -23,6 +25,7 @@ const COLOR_FATIGA := Color(0.851, 0.537, 0.447)
 @onready var _score_label: Label = $Score
 @onready var _effect_label: Label = $Effect
 @onready var _shield_label: Label = $Shield
+@onready var _wind_label: Label = $Wind
 @onready var _breath_back: ColorRect = $Breath/Back
 @onready var _breath_fill: ColorRect = $Breath/Fill
 
@@ -30,6 +33,7 @@ const COLOR_FATIGA := Color(0.851, 0.537, 0.447)
 func _ready() -> void:
 	visible = false
 	_effect_label.visible = false
+	_wind_label.visible = false
 	_shield_label.visible = false
 	_aplicar_margen_seguro()
 	# En móvil el área segura puede cambiar al rotar o al aparecer barras.
@@ -84,6 +88,25 @@ func set_effect(nombre: String, restante: float) -> void:
 	_effect_label.visible = nombre != ""
 	if _effect_label.visible:
 		_effect_label.text = "%s %.0f" % [nombre, ceilf(restante)]
+
+
+## Anuncia o niega el viento (T-064).
+##
+## El aviso y la ráfaga se distinguen en el texto **y** en el color: durante
+## el aviso es una advertencia (ámbar, "se acerca"), soplando es un hecho
+## (blanco). Si fueran el mismo cartel, el jugador no sabría si tiene dos
+## segundos para colocarse o si ya está pasando.
+func set_wind(fase: String, a_favor: bool) -> void:
+	_wind_label.visible = fase != ""
+	if not _wind_label.visible:
+		return
+	var flecha: String = "»»" if a_favor else "««"
+	if fase == "aviso":
+		_wind_label.text = "%s viento %s" % [flecha, flecha]
+		_wind_label.modulate = COLOR_AVISO
+	else:
+		_wind_label.text = "%s %s %s" % [flecha, flecha, flecha]
+		_wind_label.modulate = Color.WHITE
 
 
 func set_shield(activo: bool) -> void:
