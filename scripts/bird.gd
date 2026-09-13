@@ -161,6 +161,10 @@ var _termicas: int = 0
 ## Cuántas estelas de rebufo lo están tocando (T-204). Contador por lo mismo
 ## que las térmicas: dos solapadas y un `bool` mentiría al salir de una.
 var _estelas: int = 0
+## Si está en la escena del nido (T-209): ni input ni muerte, solo flotar.
+var _en_escena: bool = false
+## La máscara de colisión de antes de la escena, para devolverla al acabar.
+var _mascara_antes: int = OBSTACULOS
 ## Marcas de tiempo de los últimos aleteos, s. Es el historial del que
 ## `GameConfig.fatigue_impulse_mult()` deriva la fatiga: aquí no hay estado de
 ## fatiga, solo datos (T-049).
@@ -204,6 +208,15 @@ func _physics_process(delta: float) -> void:
 			# lo consume Main; Flapo solo empieza a caer cuando ya es PLAYING.
 			velocity = Vector2.ZERO
 		GameState.State.PLAYING:
+			# En la escena del nido Flapo flota: ni gravedad ni entrada, igual
+			# que en READY. No es un estado nuevo, es este mismo con el
+			# control apagado tres segundos (T-209, ADR-0027).
+			if _en_escena:
+				velocity = Vector2.ZERO
+				_gliding = false
+				move_and_slide()
+				_update_animation(delta)
+				return
 			_actualizar_planeo(delta)
 			_apply_gravity(delta)
 			# `is_action_just_pressed` es consciente de si lo llamas desde un
@@ -266,6 +279,7 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_gliding = false
 		_termicas = 0
 		_estelas = 0
+		_en_escena = false
 		_breath = max_breath
 		breath_changed.emit(_breath, max_breath)
 		_flap_times.clear()
@@ -445,6 +459,31 @@ func breath() -> float:
 	return _breath
 
 
+## Main enciende y apaga la escena del nido (T-209).
+##
+## Mientras está encendida Flapo no responde y **no puede morir**: es el
+## criterio del ticket, y sin él la escena sería una trampa — tres segundos
+## sin control con las tuberías todavía en pantalla.
+func set_escena(activa: bool) -> void:
+	_en_escena = activa
+	if activa:
+		velocity = Vector2.ZERO
+		# Sin colisiones tampoco: no basta con no morir. Las tuberías que
+		# quedaban en pantalla siguen avanzando y, al atravesarlo, la física
+		# lo desplaza al resolver la penetración — medido: 3,3 px hacia
+		# arriba en tres segundos de escena. Flotar quieto tiene que ser
+		# quieto de verdad.
+		_mascara_antes = collision_mask
+		collision_mask = 0
+	else:
+		collision_mask = _mascara_antes
+
+
+## Si está en la escena del nido. Lo usan los tests.
+func en_escena() -> bool:
+	return _en_escena
+
+
 ## Main le dice que ha entrado o salido de una térmica (T-203).
 ##
 ## Se cuentan las entradas en vez de guardar un `sí/no`: con dos columnas
@@ -497,8 +536,8 @@ func _apply_gravity(delta: float) -> void:
 		# la térmica le da un segundo uso al planeo, no un control nuevo.
 		if _termicas > 0:
 			velocity.y = maxf(
-				velocity.y - GameConfig.THERMAL_LIFT * delta * signo,
-				-GameConfig.THERMAL_MAX_RISE * signo
+				velocity.y - AirConfig.THERMAL_LIFT * delta * signo,
+				-AirConfig.THERMAL_MAX_RISE * signo
 			)
 			return
 		velocity.y = _limitar(

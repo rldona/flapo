@@ -99,9 +99,9 @@ func on_pipe_spawned() -> void:
 ## coincidir de vez en cuando está bien, pero atarlas las haría previsibles
 ## juntas y el chiste dejaría de sorprender.
 func _quiza_hermano() -> void:
-	if _score < GameConfig.BROTHER_MIN_SCORE:
+	if _score < AirConfig.BROTHER_MIN_SCORE:
 		return
-	if GameConfig.BROTHER_INTERVAL <= 0 or _contador % GameConfig.BROTHER_INTERVAL != 0:
+	if AirConfig.BROTHER_INTERVAL <= 0 or _contador % AirConfig.BROTHER_INTERVAL != 0:
 		return
 	if brother_scene == null or slipstream_scene == null:
 		return
@@ -136,8 +136,8 @@ func _altura_libre() -> float:
 	# El hueco está arriba: cruza por abajo, y al revés. Así, además de no
 	# tapar nada, pasa por donde el jugador no está mirando.
 	if centro < alto * 0.5:
-		return alto - GameConfig.BROTHER_EDGE_MARGIN
-	return GameConfig.BROTHER_EDGE_MARGIN
+		return alto - AirConfig.BROTHER_EDGE_MARGIN
+	return AirConfig.BROTHER_EDGE_MARGIN
 
 
 ## Cuántos hermanos hay cruzando. Lo usan los tests.
@@ -167,11 +167,11 @@ func _on_slipstream_cambiado(dentro: bool) -> void:
 ## Función del contador y de la puntuación, sin azar: la térmica es un
 ## elemento que se aprende, y algo que se aprende tiene que ser predecible.
 func _toca_termica() -> bool:
-	if _score < GameConfig.THERMAL_MIN_SCORE:
+	if _score < AirConfig.THERMAL_MIN_SCORE:
 		return false
-	if GameConfig.THERMAL_INTERVAL <= 0:
+	if AirConfig.THERMAL_INTERVAL <= 0:
 		return false
-	return _contador % GameConfig.THERMAL_INTERVAL == 0
+	return _contador % AirConfig.THERMAL_INTERVAL == 0
 
 
 func _crear_termica() -> void:

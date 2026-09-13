@@ -344,76 +344,18 @@ const SCENERY_TINT: Array[Color] = [
 ## que haya una variante más, esto sigue diciendo la verdad.
 const SCENERY_LLUEVE: Array[bool] = [false, false, false, true]
 
-## --- Térmicas: columnas de aire ascendente (T-203) ---
+## --- Fin del viaje: el nido (T-209) ---
 
-## Cada cuántas tuberías sale una térmica. 5: sale a menudo para que se
-## aprenda a usarla, no tanto como para que sea el modo normal de volar.
-const THERMAL_INTERVAL: int = 5
+## A qué puntuación llega Flapo al nido. 50: por encima de la medalla de oro
+## (40), o sea alcanzable pero no de casualidad.
+const JOURNEY_END_SCORE: int = 50
 
-## A qué puntuación empiezan a salir. Antes de eso el jugador todavía está
-## aprendiendo que el planeo existe (T-200); darle un segundo uso al planeo
-## antes del primero es enseñar dos cosas a la vez.
-const THERMAL_MIN_SCORE: int = 8
+## Cuánto dura la escena, s. Tres: lo que se tarda en leer una línea y
+## respirar. Más y el jugador quiere seguir jugando; menos y no se entera.
+const JOURNEY_SCENE_TIME: float = 3.0
 
-## Aceleración hacia arriba dentro de la térmica, px/s². Es una aceleración y
-## no una velocidad fija: así entrar en la columna se **siente** —tarda un
-## momento en tirar— en vez de teletransportar a Flapo hacia arriba.
-const THERMAL_LIFT: float = 900.0
-
-## Tope de subida dentro de la térmica, px/s.
-##
-## Sin tope, planear dentro sube cada vez más rápido y Flapo se estampa contra
-## el techo sin poder hacer nada. 170 es menos de la mitad de lo que sube un
-## aleteo: la térmica ayuda, no vuela por ti.
-const THERMAL_MAX_RISE: float = 170.0
-
-## Tamaño de la columna, px. Estrecha y alta: es una columna, y tiene que
-## poder esquivarse.
-const THERMAL_SIZE := Vector2(26.0, 220.0)
-
-## --- El hermano pasa: rebufo (T-204) ---
-
-## Cada cuántas tuberías cruza el hermano. 9 y no 5 como las térmicas: es un
-## chiste, y un chiste repetido deja de serlo.
-const BROTHER_INTERVAL: int = 9
-
-## A qué puntuación empieza a aparecer.
-const BROTHER_MIN_SCORE: int = 12
-
-## A cuánto cruza, en múltiplos de la velocidad del mundo. 2,4x: pasa
-## claramente más rápido que todo lo demás, que es el chiste — él no se
-## esfuerza.
-const BROTHER_SPEED_MULT: float = 2.4
-
-## Cuánto dura la estela, s.
-##
-## 2,0 y no más, y el número sale de la geometría, no del gusto: la estela
-## mide una pantalla de ancho y se mueve con el mundo, así que tarda unos 2,4 s
-## en salirse por la izquierda. Con los 3,5 s de la primera versión, el
-## temporizador **no llegaba a notarse nunca** — la estela ya estaba fuera de
-## pantalla cuando le tocaba caducar, y su desvanecido no lo veía nadie.
-##
-## Lo destapó el test al preguntar algo que parecía una tontería: no *cuándo*
-## muere la estela, sino **dónde**.
-const SLIPSTREAM_TIME: float = 2.0
-
-## Alto de la estela, px. Estrecha: hay que meterse en ella a propósito.
-const SLIPSTREAM_HEIGHT: float = 22.0
-
-## A qué distancia del borde de la pantalla cruza el hermano, px.
-##
-## Cruza **pegado a un borde**, arriba o abajo, y no "a media pantalla lejos
-## del hueco". El motivo es geométrico: los huecos se sortean entre el 20 % y
-## el 80 % de la altura jugable (`Pipe.gap_center_min_ratio`), así que el
-## hueco más alto posible empieza por debajo de este margen y el más bajo
-## acaba por encima del de abajo. Cruzando por el borde, el hermano **nunca**
-## pasa por dentro de ningún hueco — ni del siguiente ni del que venga tres
-## tuberías después, que es por donde también cruza.
-##
-## La primera versión se apartaba del hueco de la última tubería creada y no
-## valía: el hermano atraviesa media pantalla y se encuentra huecos que
-## todavía no existían cuando se decidió su altura. Se midió: 62 invasiones.
-const BROTHER_EDGE_MARGIN: float = 26.0
+## Lo que dice. Es la única frase del juego que no se burla de Flapo.
+const JOURNEY_LINE: String = "Ha llegado. Gordo, pero ha llegado."
 
 ## --- Captura del mejor salto (T-077) ---
 

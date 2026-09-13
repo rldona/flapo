@@ -78,8 +78,11 @@ const _TRANSITIONS: Dictionary = {
 ## La captura del mejor salto (T-077). Solo mira; no toca el juego.
 @export var snapshot: Snapshot
 
-## El aire: térmicas (T-203) y, más adelante, el rebufo del hermano (T-204).
+## El aire: térmicas (T-203) y el rebufo del hermano (T-204).
 @export var air_spawner: AirSpawner
+
+## El final del viaje (T-209). No es un estado: es una pausa con un cartel.
+@export var journey: Journey
 
 ## Las ráfagas de viento (T-064).
 @export var wind: Wind
@@ -366,7 +369,7 @@ func _abrir_estadisticas() -> void:
 
 func _refrescar_menu() -> void:
 	if menu_panel != null:
-		menu_panel.set_high_score(_high_score)
+		menu_panel.set_high_score(_high_score, SaveManager.get_journey_completed())
 	if options_panel != null:
 		options_panel.set_difficulty(_session.difficulty())
 		options_panel.set_player_name(_session.player_name())
@@ -482,6 +485,7 @@ func _connect_children() -> void:
 		"Buddy": buddy,
 		"Snapshot": snapshot,
 		"AirSpawner": air_spawner,
+		"Journey": journey,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
@@ -528,6 +532,9 @@ func _connect_children() -> void:
 		# Jugar normal sortea semilla; el reto usa la de hoy (T-241).
 		menu_panel.daily_pressed.connect(start_daily.bind([]))
 		menu_panel.code_pressed.connect(_on_code_pressed)
+	if journey != null:
+		journey.started.connect(_on_journey_started)
+		journey.ended.connect(_on_journey_ended)
 	if stats_panel != null:
 		stats_panel.back_pressed.connect(func() -> void: stats_panel.set_open(false))
 	if options_panel != null:
@@ -624,9 +631,20 @@ func _score_para_dificultad() -> int:
 
 
 func _on_scored() -> void:
+	# Durante la escena del nido no se puntúa: es el criterio del ticket, y de
+	# todos modos no hay tuberías que cruzar (T-209).
+	if journey != null and journey.activa():
+		return
 	var antes_de_puntuar: int = _score
 	_score += 1
 	_quiza_tramo_especial()
+	# Solo se llega al nido jugando. Parece obvio y no lo es: `_on_scored` se
+	# puede llamar con la partida ya terminada —lo hacen los tests, y bastaría
+	# un efecto futuro que puntúe al morir—, y entonces la escena arrancaba en
+	# GAME_OVER y al acabar reanudaba el generador de tuberías encima del
+	# cadáver. Lo destapó el test de T-047, no este.
+	if journey != null and _state == GameState.State.PLAYING:
+		journey.quiza_empezar(_score)
 	if not _session.has_glided():
 		_huecos_sin_planear += 1
 		_actualizar_aviso_planeo()
@@ -648,6 +666,39 @@ func _quiza_medalla(antes: int) -> void:
 		return
 	if GameConfig.medal_for(_score) != GameConfig.medal_for(antes):
 		buddy.aplaudir()
+
+
+## Flapo ha llegado al nido (T-209).
+##
+## Se para lo que genera mundo y se apaga el control. **No se cambia de
+## estado**: se sigue en PLAYING con casi todo igual, que es lo que permite
+## que al acabar la partida continúe sin reconstruir nada (ADR-0027).
+func _on_journey_started() -> void:
+	if pipe_spawner != null:
+		pipe_spawner.set_pausado(true)
+	if fruit_spawner != null:
+		fruit_spawner.set_pausado(true)
+	if bird != null:
+		bird.set_escena(true)
+	if hud != null:
+		hud.set_journey_line(GameConfig.JOURNEY_LINE)
+	SaveManager.set_journey_completed()
+
+
+## Se acabó la escena: la partida sigue donde estaba.
+func _on_journey_ended() -> void:
+	# Si la partida ha terminado mientras duraba la escena, no se reanuda
+	# nada: el mundo se quedó parado por GAME_OVER y así tiene que seguir.
+	if _state != GameState.State.PLAYING:
+		return
+	if pipe_spawner != null:
+		pipe_spawner.set_pausado(false)
+	if fruit_spawner != null:
+		fruit_spawner.set_pausado(false)
+	if bird != null:
+		bird.set_escena(false)
+	if hud != null:
+		hud.set_journey_line("")
 
 
 ## Empieza el aviso de ráfaga (T-064). Todavía no sopla: esto es el tiempo

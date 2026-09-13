@@ -71,20 +71,20 @@ func _la_subida_tiene_tope() -> void:
 	var planeando: int = 0
 	for i in 300:
 		await physics_frame
-		if not main.bird.is_gliding() or main.bird.velocity.y < -GameConfig.THERMAL_MAX_RISE * 1.5:
+		if not main.bird.is_gliding() or main.bird.velocity.y < -AirConfig.THERMAL_MAX_RISE * 1.5:
 			continue
 		planeando += 1
 		pico = minf(pico, main.bird.velocity.y)
 	h.check("premisa: ha planeado dentro de la térmica", planeando > 60, "%d frames" % planeando)
 	h.check(
 		"la subida dentro de la térmica está topada",
-		pico >= -GameConfig.THERMAL_MAX_RISE - 1.0,
-		"pico %.1f px/s, tope %.1f" % [pico, -GameConfig.THERMAL_MAX_RISE]
+		pico >= -AirConfig.THERMAL_MAX_RISE - 1.0,
+		"pico %.1f px/s, tope %.1f" % [pico, -AirConfig.THERMAL_MAX_RISE]
 	)
 	h.check(
 		"y el tope es menor que lo que sube un aleteo: ayuda, no vuela por ti",
-		GameConfig.THERMAL_MAX_RISE < absf(main.bird.flap_impulse),
-		"%.1f frente a %.1f" % [GameConfig.THERMAL_MAX_RISE, absf(main.bird.flap_impulse)]
+		AirConfig.THERMAL_MAX_RISE < absf(main.bird.flap_impulse),
+		"%.1f frente a %.1f" % [AirConfig.THERMAL_MAX_RISE, absf(main.bird.flap_impulse)]
 	)
 	h.pulsa(KEY_SPACE, false)
 	main.free()
@@ -114,9 +114,9 @@ func _no_salen_antes_de_la_puntuacion_minima() -> void:
 		main.air_spawner.thermal_count() == 0,
 		"%d térmicas" % main.air_spawner.thermal_count()
 	)
-	for i in GameConfig.THERMAL_MIN_SCORE:
+	for i in AirConfig.THERMAL_MIN_SCORE:
 		main._on_scored()
-	for i in GameConfig.THERMAL_INTERVAL:
+	for i in AirConfig.THERMAL_INTERVAL:
 		main.pipe_spawner.pipe_spawned.emit()
 	h.check(
 		"con la puntuación mínima ya salen",
@@ -207,8 +207,8 @@ func _vecina(main: Node, x: float, derecha: bool) -> Pipe:
 ## dos partidas con la misma semilla dejarían de ser la misma según dónde
 ## cayera una térmica.
 func _no_mueven_la_secuencia_de_tuberias() -> void:
-	var con: Array = await _secuencia(GameConfig.THERMAL_MIN_SCORE + 20, true)
-	var sin: Array = await _secuencia(GameConfig.THERMAL_MIN_SCORE + 20, false)
+	var con: Array = await _secuencia(AirConfig.THERMAL_MIN_SCORE + 20, true)
+	var sin: Array = await _secuencia(AirConfig.THERMAL_MIN_SCORE + 20, false)
 	# Suficientes tuberías para que hayan salido varias térmicas: con tres o
 	# cuatro, una tirada de menos puede no llegar a notarse y el test pasaría
 	# sin comprobar nada.

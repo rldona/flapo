@@ -145,6 +145,27 @@ static func set_has_glided() -> void:
 		push_warning("No se ha podido guardar el descubrimiento (error %d)." % err)
 
 
+## Si el jugador ha llegado al nido alguna vez (T-209).
+##
+## Es lo único que el final deja guardado: un sí. No hay porcentaje de
+## completado ni "veces que has llegado" — el viaje se hace una vez y lo demás
+## es seguir jugando.
+static func get_journey_completed() -> bool:
+	return _leer_int("journey_completed") > 0
+
+
+## Lo marca. Se guarda al llegar, no al morir: quien llega al nido y cierra el
+## juego de la emoción no tiene que volver a llegar.
+static func set_journey_completed() -> void:
+	if get_journey_completed():
+		return
+	var cfg: ConfigFile = _datos()
+	cfg.set_value(SECCION, "journey_completed", 1)
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el final del viaje (error %d)." % err)
+
+
 ## Mejor marca conseguida en el reto de ese día (T-241).
 ##
 ## Clave propia por día, separada del récord general: mezclarlos haría que un

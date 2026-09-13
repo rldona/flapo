@@ -27,7 +27,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not moving:
 		return
-	position.x -= scroll_speed * GameConfig.BROTHER_SPEED_MULT * delta
+	position.x -= scroll_speed * AirConfig.BROTHER_SPEED_MULT * delta
 	if position.x < -32.0:
 		queue_free()
 

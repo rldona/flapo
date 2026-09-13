@@ -138,6 +138,27 @@ func reservar_normal() -> bool:
 	return true
 
 
+## Para o reanuda la creación de tuberías (T-209).
+##
+## Pausar **no toca el contador ni el generador**: al reanudar, la partida
+## sigue exactamente donde estaba. Es lo que permite que el final del viaje
+## sea una pausa y no un estado nuevo (ADR-0027).
+func set_pausado(pausado: bool) -> void:
+	if _timer == null:
+		return
+	if pausado:
+		_timer.stop()
+	elif not _timer.is_stopped():
+		return
+	else:
+		_timer.start()
+
+
+## Si está pausado. Lo usan los tests.
+func esta_pausado() -> bool:
+	return _timer != null and _timer.is_stopped()
+
+
 ## Número de tuberías vivas. Lo usan los tests y el criterio de T-028.
 func pipe_count() -> int:
 	var n: int = 0

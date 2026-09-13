@@ -22,7 +22,7 @@ signal cambiado(dentro: bool)
 ## Ancho de la estela, px. Lo fija el spawner: es lo que el hermano recorre.
 var ancho: float = 320.0
 
-var _restante: float = GameConfig.SLIPSTREAM_TIME
+var _restante: float = AirConfig.SLIPSTREAM_TIME
 
 @onready var _forma: CollisionShape2D = $CollisionShape2D
 @onready var _dibujo: ColorRect = $Dibujo
@@ -30,7 +30,7 @@ var _restante: float = GameConfig.SLIPSTREAM_TIME
 
 func _ready() -> void:
 	var rect := RectangleShape2D.new()
-	rect.size = Vector2(ancho, GameConfig.SLIPSTREAM_HEIGHT)
+	rect.size = Vector2(ancho, AirConfig.SLIPSTREAM_HEIGHT)
 	_forma.shape = rect
 	_dibujo.size = rect.size
 	_dibujo.position = -rect.size * 0.5
@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	_restante -= delta
 	# Se apaga desvaneciéndose, no de golpe: una zona que deja de funcionar
 	# sin avisar es un bug desde el asiento del jugador.
-	_dibujo.modulate.a = clampf(_restante / GameConfig.SLIPSTREAM_TIME, 0.0, 1.0) * 0.5
+	_dibujo.modulate.a = clampf(_restante / AirConfig.SLIPSTREAM_TIME, 0.0, 1.0) * 0.5
 	if _restante <= 0.0 or position.x < -ancho:
 		queue_free()
 

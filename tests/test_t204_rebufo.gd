@@ -92,7 +92,7 @@ func _la_estela_se_libera_sola() -> void:
 
 	# A mitad de vida sigue ahí: sin este lado, una estela que muriera al
 	# instante también pasaría el test.
-	await h.ticks(int(GameConfig.SLIPSTREAM_TIME * 30.0))
+	await h.ticks(int(AirConfig.SLIPSTREAM_TIME * 30.0))
 	h.check("a mitad de su tiempo la estela sigue viva", is_instance_valid(estela), "")
 
 	# Lo que separa "caduca" de "se sale de pantalla" no es el reloj: a la
@@ -140,8 +140,8 @@ func _el_carril_del_hermano_esta_fuera_de_todo_hueco() -> void:
 	var centro_bajo: float = pipe.gap_center_max_ratio * alto
 	var borde_superior: float = centro_alto - hueco_max * 0.5
 	var borde_inferior: float = centro_bajo + hueco_max * 0.5
-	var carril_arriba: float = GameConfig.BROTHER_EDGE_MARGIN
-	var carril_abajo: float = alto - GameConfig.BROTHER_EDGE_MARGIN
+	var carril_arriba: float = AirConfig.BROTHER_EDGE_MARGIN
+	var carril_abajo: float = alto - AirConfig.BROTHER_EDGE_MARGIN
 	h.check(
 		"el carril de arriba queda por encima del hueco más alto posible",
 		carril_arriba < borde_superior,
@@ -167,7 +167,7 @@ func _el_hermano_no_tapa_el_hueco() -> void:
 	h.jugar(main)
 	main.bird.collision_mask = 0
 	main.bird.gravity = 0.0
-	for i in GameConfig.BROTHER_MIN_SCORE + 20:
+	for i in AirConfig.BROTHER_MIN_SCORE + 20:
 		main._on_scored()
 	var invasiones: Array = []
 	var comprobaciones: int = 0
@@ -227,7 +227,7 @@ func _partida_larga(con_aire: bool) -> Array:
 	h.jugar(main)
 	main.bird.collision_mask = 0
 	main.bird.gravity = 0.0
-	for i in GameConfig.BROTHER_MIN_SCORE:
+	for i in AirConfig.BROTHER_MIN_SCORE:
 		main._on_scored()
 	var vistas: Dictionary = {}
 	var orden: Array = []
@@ -269,9 +269,9 @@ func _con_hermano() -> Node:
 	h.jugar(main)
 	main.bird.collision_mask = 0
 	main.bird.gravity = 0.0
-	for i in GameConfig.BROTHER_MIN_SCORE:
+	for i in AirConfig.BROTHER_MIN_SCORE:
 		main._on_scored()
-	for i in GameConfig.BROTHER_INTERVAL:
+	for i in AirConfig.BROTHER_INTERVAL:
 		main.pipe_spawner.pipe_spawned.emit()
 	await h.ticks(2)
 	return main

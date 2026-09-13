@@ -69,5 +69,10 @@ func aviso() -> String:
 
 
 ## El récord, para que el menú no sea una pantalla vacía.
-func set_high_score(record: int) -> void:
-	_record.text = "Récord: %d" % record
+##
+## Con el nido delante si el jugador ha completado el viaje (T-209). Un
+## símbolo y no una línea aparte: quien ha llegado ya lo sabe, y a quien no ha
+## llegado no se le anuncia lo que le falta.
+func set_high_score(record: int, viaje_completado: bool = false) -> void:
+	var nido: String = "🪹 " if viaje_completado else ""
+	_record.text = "%sRécord: %d" % [nido, record]

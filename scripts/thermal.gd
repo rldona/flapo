@@ -24,10 +24,10 @@ signal cambiado(dentro: bool)
 
 func _ready() -> void:
 	var rect := RectangleShape2D.new()
-	rect.size = GameConfig.THERMAL_SIZE
+	rect.size = AirConfig.THERMAL_SIZE
 	_forma.shape = rect
 	_particulas.emission_rect_extents = Vector2(
-		GameConfig.THERMAL_SIZE.x * 0.5, GameConfig.THERMAL_SIZE.y * 0.5
+		AirConfig.THERMAL_SIZE.x * 0.5, AirConfig.THERMAL_SIZE.y * 0.5
 	)
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
@@ -39,7 +39,7 @@ func _physics_process(delta: float) -> void:
 	position.x -= scroll_speed * delta
 	# Se libera sola cuando ya no puede verse ni tocarse (ADR-0008): el
 	# spawner no lleva ninguna lista que mantener.
-	if position.x < -GameConfig.THERMAL_SIZE.x:
+	if position.x < -AirConfig.THERMAL_SIZE.x:
 		queue_free()
 
 
