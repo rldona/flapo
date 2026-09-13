@@ -276,12 +276,6 @@ const GLIDE_HINT_MAX_GAMES: int = 5
 ## partida. Tres: uno es casualidad, tres es que no se ha descubierto.
 const GLIDE_HINT_AFTER_GAPS: int = 3
 
-# --- Bocanada (T-202) ---------------------------------------------------
-## Color del brillo que marca la franja que recupera aliento. El mismo crema
-## de la tripa de Flapo (docs/art-guide.md), muy transparente: tiene que
-## leerse como aire, no como una fruta ni como el tramo especial de T-067.
-const BREATH_BAND_TINT: Color = Color(0.949, 0.851, 0.655, 0.16)
-
 # --- Jadeo visible (T-201) ----------------------------------------------
 ## Por debajo de esta fracción del aliento, Flapo jadea: alas temblando,
 ## mejillas rojas y sudor. 0,3 y no 0,5 porque el jadeo tiene que significar
