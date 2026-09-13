@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 — 2026-09-09
+
+### Arreglos
+
+- El suelo llega al borde de la pantalla
+
 ## 0.1.1 — 2026-09-09
 
 ### Arreglos
