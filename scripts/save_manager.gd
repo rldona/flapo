@@ -38,6 +38,36 @@ static func get_confidence() -> int:
 	return _leer_int("confidence")
 
 
+## Modo de dificultad elegido la última vez (T-078).
+##
+## Por defecto NORMAL, que es el juego tal y como se diseñó: un guardado
+## ausente o con un número imposible nunca deja al jugador en un modo raro.
+static func get_difficulty() -> GameConfig.Difficulty:
+	# NO se usa `_leer_int`: ese devuelve 0 para lo que falta, y 0 es FACIL.
+	# El juego habría arrancado en fácil sin que nadie lo eligiera.
+	# El defecto es NORMAL y no 0: 0 es FACIL, y el juego habría arrancado en
+	# fácil sin que nadie lo eligiera. Por eso tampoco se usa `_leer_int`.
+	var valor: Variant = _datos().get_value(
+		SECCION, "difficulty", int(GameConfig.Difficulty.NORMAL)
+	)
+	if typeof(valor) != TYPE_INT and typeof(valor) != TYPE_FLOAT:
+		return GameConfig.Difficulty.NORMAL
+	var modo: int = int(valor)
+	if modo < 0 or modo > int(GameConfig.Difficulty.DIFICIL):
+		return GameConfig.Difficulty.NORMAL
+	return modo as GameConfig.Difficulty
+
+
+## Recuerda el modo elegido. Se guarda al elegirlo, no al morir: si el
+## jugador cierra el juego desde el propio menú, la elección no se pierde.
+static func set_difficulty(modo: GameConfig.Difficulty) -> void:
+	var cfg: ConfigFile = _datos()
+	cfg.set_value(SECCION, "difficulty", int(modo))
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar la dificultad (error %d)." % err)
+
+
 ## Registra una partida terminada. Devuelve `true` si ha sido récord.
 static func record_game(score: int) -> bool:
 	var cfg: ConfigFile = _datos()

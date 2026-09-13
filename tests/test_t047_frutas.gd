@@ -38,7 +38,7 @@ func _partida() -> Node:
 ## Coger una fruta sustituye el efecto anterior: nada de acumular.
 func _un_solo_efecto_a_la_vez() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_fruit_taken(Effects.Kind.LIGERO, 0)
 	h.check(
 		"la verde deja a Flapo ligero",
@@ -62,7 +62,7 @@ func _un_solo_efecto_a_la_vez() -> void:
 func _los_efectos_caducan() -> void:
 	var main: Node = await _partida()
 	main.effects.duration = 0.5
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_fruit_taken(Effects.Kind.PESADO, 0)
 	var ticks: int = 0
 	for i in 120:
@@ -85,7 +85,7 @@ func _los_efectos_caducan() -> void:
 
 func _cada_fruta_hace_lo_suyo() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	var base: float = main.ground.scroll_speed
 
 	main._on_fruit_taken(Effects.Kind.LENTO, 0)
@@ -122,7 +122,7 @@ func _el_escudo_absorbe_un_golpe() -> void:
 	var main: Node = await _partida()
 	main.bird.collision_mask = Bird.OBSTACULOS
 	main.bird.gravity = 1200.0
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_fruit_taken(Effects.Kind.INMUNIDAD, 0)
 	h.check("la azul da escudo", main.effects.has_shield(), "")
 
@@ -155,7 +155,7 @@ func _el_escudo_absorbe_un_golpe() -> void:
 ## Lo que convierte un castigo en una decisión (ADR-0019).
 func _los_castigos_dan_puntos() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	var antes: int = main.get_score()
 	main._on_fruit_taken(Effects.Kind.PESADO, main.fruit_spawner.penalty_points)
 	h.check(
@@ -203,7 +203,7 @@ func _la_naranja_no_sale_con_el_hueco_estrecho() -> void:
 func _las_frutas_no_cruzan_partidas() -> void:
 	var main: Node = await _partida()
 	main.fruit_spawner.chance = 1.0
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_fruit_taken(Effects.Kind.GRANDE, 0)
 	await h.ticks(200)
 	var vivas: int = main.fruit_spawner.fruit_count()
@@ -243,7 +243,7 @@ func _las_frutas_no_cruzan_partidas() -> void:
 func _nacen_a_mitad_de_camino() -> void:
 	var main: Node = await _partida()
 	main.fruit_spawner.chance = 1.0
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 
 	var peor: float = INF
 	for tick in 5400:
@@ -282,7 +282,7 @@ func _nacen_a_mitad_de_camino() -> void:
 func _la_primera_tuberia_tambien_cuenta() -> void:
 	var main: Node = await _partida()
 	main.fruit_spawner.chance = 1.0
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 
 	# Medio intervalo es cuando debe salir la primera, más un margen.
 	var ticks: int = int(GameConfig.pipe_spawn_interval_for(0) * 60.0 * 0.5) + 10

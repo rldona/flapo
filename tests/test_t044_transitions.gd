@@ -33,7 +33,7 @@ func _fundido_al_empezar() -> void:
 	h.check(
 		"en READY no hay velo", is_zero_approx(main.fade.alpha()), "alfa %.3f" % main.fade.alpha()
 	)
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	h.check("al empezar aparece el velo", main.fade.alpha() > 0.0, "alfa %.3f" % main.fade.alpha())
 	var frames: int = 0
 	for i in 120:
@@ -52,7 +52,7 @@ func _fundido_al_empezar() -> void:
 ## GDD: 0,5 s de retardo antes del panel.
 func _retardo_antes_del_panel() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main.bird.gravity = 1200.0
 	for tick in 600:
 		await physics_frame
@@ -80,7 +80,7 @@ func _retardo_antes_del_panel() -> void:
 ## que es cuando el jugador puede volver a actuar.
 func _ninguna_transicion_bloquea_la_entrada() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main.bird.gravity = 1200.0
 	for tick in 600:
 		await physics_frame
@@ -106,7 +106,7 @@ func _ninguna_transicion_bloquea_la_entrada() -> void:
 	# fundido es decorado, no una puerta cerrada.
 	main.restart()
 	await h.ticks(1)
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main.bird.gravity = 1200.0
 	for tick in 600:
 		await physics_frame
@@ -125,7 +125,7 @@ func _ninguna_transicion_bloquea_la_entrada() -> void:
 func _las_transiciones_no_sobreviven_al_reinicio() -> void:
 	var main: Node = await _partida()
 	for vuelta in 5:
-		main.change_state(GameState.State.PLAYING)
+		h.jugar(main)
 		main.bird.gravity = 1200.0
 		for tick in 600:
 			await physics_frame

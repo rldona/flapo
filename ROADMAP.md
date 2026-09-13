@@ -150,10 +150,11 @@ que por ser la mascota debe dibujarlo una persona.
 - ✅ Márgenes seguros y letterbox del color del cielo. → T-073. Falta verlo en un emulador con notch.
 - ✅ Revisión de accesibilidad: contraste WCAG y 48 dp táctiles verificados en `tests/test_a11y.gd`.
 - ✅ Progresión de confianza: +8 de aliento cada 10 partidas, tope a las 50. → T-074 (ADR-0021)
-- 🔲 Pantalla de inicio: título, jugar, selector de dificultad, nombre de jugador y acceso a estadísticas. → T-078, T-079
+- ✅ Pantalla de inicio: título, récord, jugar y selector de dificultad. → T-078 (ADR-0022)
+- 🔲 Nombre de jugador en la pantalla de inicio. → T-079
 - 🔲 Pantalla de estadísticas (partidas jugadas, medalla más alta, etc.). → T-084
 - ✅ Causa de muerte en la frase del Game Over: tubería, suelo, vacío y agotamiento. → T-075
-- 🔲 Modo espejo desbloqueable tras récord, excepción documentada a "fuera de alcance". → T-076 (ADR-0022)
+- 🔲 Modo espejo desbloqueable tras récord, excepción documentada a "fuera de alcance". → T-076 (ADR-0023)
 - 🔲 Captura automática del mejor salto para compartir. → T-077
 
 ---

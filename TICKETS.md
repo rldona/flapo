@@ -340,7 +340,7 @@ Tras alcanzar cierto récord (`MIRROR_UNLOCK_SCORE` en `GameConfig`), se ofrece 
 **Criterios de aceptación**
 - El modo normal no cambia en nada; el espejo es opt-in desde un botón en Game Over o menú, nunca automático.
 - Test en `tests/` que compruebe que la inversión de gravedad/control es consistente y que el desbloqueo depende del récord guardado.
-- ADR-0022 documenta la decisión y por qué no contradice el resto de "fuera de alcance en v1" (skins, ranking online, anuncios, compras).
+- ADR-0023 documenta la decisión y por qué no contradice el resto de "fuera de alcance en v1" (skins, ranking online, anuncios, compras).
 - `docs/GDD.md` actualizado: el modo espejo pasa de "fuera de alcance" a excepción documentada.
 
 ### T-077 · Captura del mejor salto
@@ -355,7 +355,7 @@ Al superar el récord, generar automáticamente una imagen (o GIF corto) de los 
 labels: fase:6, area:code · estimate: 3
 Añade un estado `MENU` antes de `READY`: logo/nombre del juego, botón "Jugar", selector de dificultad (fácil/normal/difícil, escala el punto de partida de la curva de T-045 con un multiplicador en `GameConfig` sobre los valores iniciales, no una tabla paralela) y una entrada a la pantalla de estadísticas (T-084). La dificultad elegida se recuerda entre partidas.
 **Criterios de aceptación**
-- Nuevo estado en la máquina de `Main` (`MENU → READY → PLAYING → GAME_OVER`, y vuelta a `MENU` desde Game Over), documentado junto a ADR-0005.
+- Nuevo estado en la máquina de `Main` (`MENU → READY → PLAYING → GAME_OVER`, y vuelta a `MENU` desde Game Over), documentado junto a ADR-0005 (ver ADR-0022).
 - Constantes de las 3 dificultades en `GameConfig`, derivadas de las funciones existentes (`scroll_speed_for`, `pipe_gap_for`, etc.), no tablas duplicadas.
 - Persistida la última dificultad elegida en `user://save.cfg`.
 - Test en `tests/` que compruebe que cada dificultad produce los valores esperados a puntuación 0 y que el estado inicial del juego es `MENU`.

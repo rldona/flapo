@@ -95,7 +95,7 @@ func _los_eventos_suenan() -> void:
 	var point: AudioStreamPlayer = main.audio.get_node("Point")
 	var hit: AudioStreamPlayer = main.audio.get_node("Hit")
 
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	h.pulsa(KEY_SPACE)
 	await h.ticks(3)
 	h.pulsa(KEY_SPACE, false)
@@ -156,7 +156,7 @@ func _el_silencio_sobrevive_al_reinicio() -> void:
 	Settings.forget_cache()
 	var main: Node = await _partida()
 	main._on_mute_pressed()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:

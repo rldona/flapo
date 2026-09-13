@@ -40,7 +40,7 @@ func _contar(nodo: Node) -> int:
 ## Cinco minutos jugando: el número de nodos tiene que quedarse plano.
 func _nodos_estables_en_partida_larga() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(300)
 	var base: int = _contar(main)
 	var pico: int = base
@@ -60,7 +60,7 @@ func _nodos_estables_en_partida_larga() -> void:
 ## absoluta —la máquina de CI es otra—, sino un aviso si se dispara.
 func _coste_por_frame() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(600)
 	var tuberias: int = main.pipe_spawner.pipe_count()
 	var t0: int = Time.get_ticks_usec()
@@ -81,7 +81,7 @@ func _sin_huerfanos_tras_muchas_partidas() -> void:
 	var huerfanos_base: int = Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)
 	var nodos_base: int = _contar(main)
 	for partida in 30:
-		main.change_state(GameState.State.PLAYING)
+		h.jugar(main)
 		for tick in 600:
 			await physics_frame
 			if main.get_state() == GameState.State.GAME_OVER:

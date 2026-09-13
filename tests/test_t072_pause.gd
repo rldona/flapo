@@ -33,7 +33,7 @@ func _despausar(main: Node) -> void:
 ## Pausar tiene que parar el mundo entero, no solo dejar de dibujar.
 func _pausar_congela_el_mundo() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(20)
 	main.set_paused(true)
 	h.check("al pausar sale el velo", main.pause_panel.visible, "")
@@ -75,7 +75,7 @@ func _pausar_congela_el_mundo() -> void:
 ## el motor acumula el tiempo que la app estuvo fuera y lo aplica de golpe.
 func _volver_del_segundo_plano_no_mata() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(10)
 	var y_antes: float = main.bird.position.y
 
@@ -104,7 +104,7 @@ func _solo_se_pausa_jugando() -> void:
 	main.set_paused(true)
 	h.check("en READY no se puede pausar", not root.get_tree().paused, "")
 
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:
@@ -122,7 +122,7 @@ func _solo_se_pausa_jugando() -> void:
 ## decir sin ninguna salida para el jugador. Se fuerza la pausa a mano.
 func _reiniciar_despausa() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:

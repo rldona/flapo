@@ -58,7 +58,7 @@ func _no_crea_en_ready() -> void:
 func _crea_en_playing_con_la_separacion_del_gdd() -> void:
 	var main: Node = await _partida()
 	var spawner: Node = main.pipe_spawner
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	h.check(
 		"la primera tubería sale al empezar",
 		spawner.pipe_count() == 1,
@@ -98,7 +98,7 @@ func _crea_en_playing_con_la_separacion_del_gdd() -> void:
 func _para_y_congela_en_game_over() -> void:
 	var main: Node = await _partida()
 	var spawner: Node = main.pipe_spawner
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(120)
 	var antes: int = spawner.pipe_count()
 	var x_antes: Array[float] = []
@@ -129,7 +129,7 @@ func _para_y_congela_en_game_over() -> void:
 func _limpia_al_reiniciar() -> void:
 	var main: Node = await _partida()
 	var spawner: Node = main.pipe_spawner
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(200)
 	main.change_state(GameState.State.GAME_OVER)
 	var habia: int = spawner.pipe_count()

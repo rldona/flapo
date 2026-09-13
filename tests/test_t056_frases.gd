@@ -108,7 +108,7 @@ func _el_panel_ensena_una_frase() -> void:
 	var vistas: Dictionary = {}
 
 	for partida in 6:
-		main.change_state(GameState.State.PLAYING)
+		h.jugar(main)
 		for tick in 600:
 			await physics_frame
 			if main.get_state() == GameState.State.GAME_OVER:

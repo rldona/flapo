@@ -40,7 +40,7 @@ func _contar_timers(nodo: Node) -> int:
 
 
 func _morir(main: Node) -> void:
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:
@@ -50,7 +50,7 @@ func _morir(main: Node) -> void:
 func _el_panel_aparece_solo_al_morir() -> void:
 	var main: Node = await _partida()
 	h.check("en READY el panel está oculto", not main.game_over_panel.visible, "")
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	h.check("en PLAYING el panel está oculto", not main.game_over_panel.visible, "")
 	await _morir(main)
 	# El panel tarda 0,5 s a propósito (T-044): da tiempo a ver el batacazo.
@@ -73,7 +73,7 @@ func _el_panel_aparece_solo_al_morir() -> void:
 ## El panel enseña la puntuación de la partida que se acaba de perder.
 func _la_accion_restart_reinicia() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_scored()
 	main._on_scored()
 	await _morir(main)
@@ -103,7 +103,7 @@ func _reiniciar_deja_el_mundo_como_al_principio() -> void:
 	var main: Node = await _partida()
 	var bird: Node = main.bird
 	var sitio: Vector2 = bird.position
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_scored()
 	await _morir(main)
 	main.restart()

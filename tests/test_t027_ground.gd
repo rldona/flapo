@@ -79,7 +79,7 @@ func _avanza_a_velocidad_de_scroll() -> void:
 func _flapo_muere_en_el_suelo() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 300:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:
@@ -110,7 +110,7 @@ func _flapo_muere_en_el_suelo() -> void:
 ## En GAME_OVER el mundo se para entero: tuberías (T-025) y suelo.
 func _se_para_en_game_over() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(30)
 	main.change_state(GameState.State.GAME_OVER)
 	var t0: Node2D = main.ground.get_node("Tile0")

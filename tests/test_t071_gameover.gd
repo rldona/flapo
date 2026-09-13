@@ -27,7 +27,7 @@ func _partida() -> Node:
 
 
 func _morir(main: Node) -> void:
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:
@@ -77,7 +77,7 @@ func _umbrales_en_gameconfig() -> void:
 
 func _el_panel_ensena_el_resultado() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for punto in GameConfig.MEDAL_SILVER:
 		main._on_scored()
 	await _morir(main)
@@ -107,7 +107,7 @@ func _el_panel_ensena_el_resultado() -> void:
 func _marca_el_record_nuevo_solo_cuando_toca() -> void:
 	var main: Node = await _partida()
 	var panel: Node = main.game_over_panel
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_scored()
 	main._on_scored()
 	main._on_scored()
@@ -128,7 +128,7 @@ func _marca_el_record_nuevo_solo_cuando_toca() -> void:
 	# Segunda partida, peor: no debe marcar récord.
 	main.restart()
 	await h.ticks(1)
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_scored()
 	await _morir(main)
 	await _esperar_panel(main)
@@ -189,7 +189,7 @@ func _el_boton_de_compartir_solo_en_android() -> void:
 	# Y el texto que compartiría es correcto, se pueda pulsar o no.
 	var recibido: Array[String] = []
 	main.game_over_panel.share_pressed.connect(func(t: String) -> void: recibido.append(t))
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main._on_scored()
 	await _morir(main)
 	main.game_over_panel._on_share_pressed()

@@ -31,7 +31,7 @@ func _idle(n: int) -> void:
 func _dos_capas_a_distinta_velocidad() -> void:
 	var main: Node = await _partida()
 	var bg: Node = main.background
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await _idle(60)
 	var lejos: float = absf(bg.layer_offset(0))
 	var cerca: float = absf(bg.layer_offset(1))
@@ -62,7 +62,7 @@ func _mas_lento_que_el_suelo() -> void:
 	# Sin gravedad: si Flapo muere a mitad de la medición, el suelo se para
 	# (correctamente) y lo que se compara es basura.
 	main.bird.gravity = 0.0
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	var t0: Node2D = main.ground.get_node("Tile0")
 	var x_ini: float = t0.position.x
 	var bg_ini: float = main.background.layer_offset(1)
@@ -80,7 +80,7 @@ func _mas_lento_que_el_suelo() -> void:
 ## Criterio: se detiene en GAME_OVER.
 func _se_para_en_game_over() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await _idle(30)
 	main.change_state(GameState.State.GAME_OVER)
 	await _idle(2)
@@ -102,7 +102,7 @@ func _se_para_en_game_over() -> void:
 
 func _se_reinicia_al_volver_a_ready() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await _idle(120)
 	main.change_state(GameState.State.GAME_OVER)
 	main.restart()

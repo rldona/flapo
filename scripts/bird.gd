@@ -159,7 +159,9 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	_tiempo += delta
 	match _state:
-		GameState.State.READY:
+		# MENU se trata igual que READY: la pantalla de inicio es el mundo
+		# quieto con un panel encima, no un sitio aparte (T-078).
+		GameState.State.MENU, GameState.State.READY:
 			# Flota: ni gravedad ni entrada. El aleteo que arranca la partida
 			# lo consume Main; Flapo solo empieza a caer cuando ya es PLAYING.
 			velocity = Vector2.ZERO
@@ -206,7 +208,7 @@ func _physics_process(delta: float) -> void:
 ## Main llama a esto al emitir `state_changed`: el hijo no busca al padre.
 func on_game_state_changed(to: GameState.State) -> void:
 	_state = to
-	if to == GameState.State.READY:
+	if to == GameState.State.READY or to == GameState.State.MENU:
 		# Reinicio completo: si algo de esto se olvidara, Flapo empezaría la
 		# partida nueva muerto, girado o cayendo. Ver ADR-0011.
 		_dead = false

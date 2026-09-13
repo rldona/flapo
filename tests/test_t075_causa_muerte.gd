@@ -116,7 +116,7 @@ func _chocar_con_una_tuberia_dice_tuberia() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	main.fruit_spawner.chance = 0.0
 	main.pipe_spawner.random_seed = 7
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 
 	# Se espera a que exista una tubería y se mete a Flapo en el tubo de
 	# arriba, bien lejos del suelo para que no haya duda de contra qué chocó.
@@ -166,7 +166,7 @@ func _caer_al_suelo_dice_suelo() -> void:
 	# Sin tuberías no hay más obstáculo que el suelo: aísla la causa.
 	main.pipe_spawner.set_process(false)
 	main.pipe_spawner.set_physics_process(false)
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:

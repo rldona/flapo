@@ -22,7 +22,7 @@ func _partida() -> Node:
 
 
 func _morir(main: Node) -> void:
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.get_state() == GameState.State.GAME_OVER:
@@ -34,7 +34,7 @@ func _morir(main: Node) -> void:
 func _visibilidad_por_estado() -> void:
 	var main: Node = await _partida()
 	h.check("en READY el HUD está oculto", not main.hud.visible, "")
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	h.check("en PLAYING el HUD se ve", main.hud.visible, "")
 	await _morir(main)
 	h.check("en GAME_OVER el HUD se oculta", not main.hud.visible, "")
@@ -52,7 +52,7 @@ func _visibilidad_por_estado() -> void:
 func _sigue_la_puntuacion() -> void:
 	var main: Node = await _partida()
 	var etiqueta: Label = main.hud.get_node("Score")
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for punto in 3:
 		main._on_scored()
 	await h.ticks(1)
@@ -74,14 +74,14 @@ func _sigue_la_puntuacion() -> void:
 func _nunca_coincide_con_el_panel() -> void:
 	var main: Node = await _partida()
 	var solapan: int = 0
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	for tick in 600:
 		await physics_frame
 		if main.hud.visible and main.game_over_panel.visible:
 			solapan += 1
 		if main.get_state() == GameState.State.GAME_OVER and tick % 120 == 0:
 			main.restart()
-			main.change_state(GameState.State.PLAYING)
+			h.jugar(main)
 	h.check(
 		"HUD y panel nunca se ven a la vez", solapan == 0, "frames solapados: %d de 600" % solapan
 	)

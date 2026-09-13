@@ -28,6 +28,9 @@ func _partida() -> Node:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	main.pipe_spawner.random_seed = 55
 	main.fruit_spawner.chance = 0.0  # Las frutas son otro ticket.
+	# Se sale del menú antes de quitarle la máscara: entrar en READY se la
+	# devuelve, así que al revés no serviría de nada (T-078).
+	main.change_state(GameState.State.READY)
 	main.bird.collision_mask = 0
 	return main
 
@@ -61,7 +64,7 @@ func _constantes_en_gameconfig() -> void:
 
 func _aletear_gasta_aliento() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	var antes: float = main.bird.breath()
 	h.pulsa(KEY_SPACE)
 	await h.ticks(3)
@@ -79,7 +82,7 @@ func _aletear_gasta_aliento() -> void:
 func _mantener_pulsado_planea_y_gasta_menos() -> void:
 	var main: Node = await _partida()
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 
 	# Un segundo pulsado: un aleteo inicial y el resto planeando.
 	h.pulsa(KEY_SPACE)
@@ -111,7 +114,7 @@ func _mantener_pulsado_planea_y_gasta_menos() -> void:
 func _el_aliento_nunca_se_sale_del_rango() -> void:
 	var main: Node = await _partida()
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	# Sin gravedad, para que Flapo no se estrelle a mitad de la medida: al
 	# morir se sale de PLAYING y el planeo deja de gastar, así que el mínimo
 	# observado era 16 y no 0.
@@ -154,7 +157,7 @@ func _el_aliento_nunca_se_sale_del_rango() -> void:
 func _sin_aliento_el_planeo_no_frena_pero_el_aleteo_sigue() -> void:
 	var main: Node = await _partida()
 	var bird: Node = main.bird
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	bird.recover_breath(-GameConfig.MAX_BREATH)
 	h.check("se puede llegar a 0 de aliento", is_zero_approx(bird.breath()), "%.2f" % bird.breath())
 
@@ -229,7 +232,7 @@ func _el_hud_no_tapa_la_puntuacion() -> void:
 	var main: Node = await _partida()
 	var marcador: Control = main.hud.get_node("Score")
 	var barra: Control = main.hud.get_node("Breath")
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	await h.ticks(2)
 
 	var r_marcador := Rect2(marcador.global_position, marcador.size)
@@ -254,7 +257,7 @@ func _el_hud_no_tapa_la_puntuacion() -> void:
 
 func _reiniciar_devuelve_el_aliento_lleno() -> void:
 	var main: Node = await _partida()
-	main.change_state(GameState.State.PLAYING)
+	h.jugar(main)
 	main.bird.recover_breath(-GameConfig.MAX_BREATH)
 	main.bird.collision_mask = Bird.OBSTACULOS
 	for tick in 600:
