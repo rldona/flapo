@@ -91,14 +91,17 @@ comprobar nadie más que una persona con las manos en el teclado.
 
 Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 
-- 🔲 Ajustar constantes hasta que el salto sea legible (documentar valores finales en el GDD).
-- 🔲 Animación de aleteo (3 frames) con `AnimatedSprite2D`.
-- 🔲 Flash blanco + sacudida de cámara al morir.
-- 🔲 Pequeña pausa (hit-stop) de 50-100 ms al morir.
-- 🔲 Parallax de fondo (2 capas: nubes lentas, ciudad media).
-- 🔲 Transiciones: fundido entre `Ready` y `Playing`, retardo antes de mostrar Game Over.
+- 🔲 Ajustar constantes hasta que el salto sea legible (documentar valores finales en el GDD). → T-040, aplazado a petición de Raúl
+- ✅ Animación de aleteo (3 frames) con `AnimatedSprite2D`. → T-041
+- ✅ Flash blanco + sacudida de cámara al morir. → T-042
+- ✅ Pequeña pausa (hit-stop) de 50-100 ms al morir. → T-042 (80 ms)
+- ✅ Parallax de fondo (2 capas: nubes lentas, ciudad media). → T-043
+- ✅ Transiciones: fundido entre `Ready` y `Playing`, retardo antes de mostrar Game Over. → T-044
 
 Entregable: build jugable con vídeo/GIF en `docs/`.
+
+Estado: T-041 a T-044 hechos y verificados en headless. Queda T-040 (tuning),
+aplazado, y el GIF, que necesita a alguien jugando.
 
 ---
 

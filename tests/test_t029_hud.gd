@@ -38,6 +38,10 @@ func _visibilidad_por_estado() -> void:
 	h.check("en PLAYING el HUD se ve", main.hud.visible, "")
 	await _morir(main)
 	h.check("en GAME_OVER el HUD se oculta", not main.hud.visible, "")
+	for i in 120:
+		await process_frame
+		if main.game_over_panel.visible:
+			break
 	h.check("en GAME_OVER lo sustituye el panel", main.game_over_panel.visible, "")
 	main.restart()
 	h.check("tras reiniciar vuelve a estar oculto", not main.hud.visible, "")

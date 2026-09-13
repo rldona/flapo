@@ -53,7 +53,18 @@ func _el_panel_aparece_solo_al_morir() -> void:
 	main.change_state(GameState.State.PLAYING)
 	h.check("en PLAYING el panel está oculto", not main.game_over_panel.visible, "")
 	await _morir(main)
-	h.check("al morir el panel se muestra", main.game_over_panel.visible, "")
+	# El panel tarda 0,5 s a propósito (T-044): da tiempo a ver el batacazo.
+	var frames: int = 0
+	for i in 120:
+		await process_frame
+		frames += 1
+		if main.game_over_panel.visible:
+			break
+	h.check(
+		"al morir el panel se muestra",
+		main.game_over_panel.visible,
+		"aparece tras %d frames (~%.2f s)" % [frames, frames / 60.0]
+	)
 	main.restart()
 	h.check("al reiniciar el panel se oculta", not main.game_over_panel.visible, "")
 	main.free()

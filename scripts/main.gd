@@ -39,6 +39,9 @@ signal score_changed(score: int)
 ## El fondo con parallax.
 @export var background: Background
 
+## El fundido de arranque de partida.
+@export var fade: Fade
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -145,6 +148,10 @@ func _connect_children() -> void:
 		push_error("Main no tiene asignado el nodo Background en el inspector.")
 		return
 	state_changed.connect(background.on_game_state_changed)
+	if fade == null:
+		push_error("Main no tiene asignado el nodo Fade en el inspector.")
+		return
+	state_changed.connect(fade.on_game_state_changed)
 
 
 func _on_scored() -> void:
