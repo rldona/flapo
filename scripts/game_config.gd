@@ -25,6 +25,13 @@ enum Difficulty {
 	DIFICIL,
 }
 
+## Cómo de ahogado está Flapo (T-201).
+enum Pant {
+	NINGUNO,  ## Respira bien: nada que enseñar.
+	JADEO,  ## Va justo: alas temblando, mejillas y sudor.
+	AGOTADO,  ## A cero: además, vaho.
+}
+
 enum Medal { NINGUNA, CROQUETA, TORTILLA, JAMON }
 
 # --- Pantalla -----------------------------------------------------------
@@ -215,6 +222,26 @@ const CONFIDENCE_MAX_LEVEL: int = 5
 ## Aliento extra por escalón. Pequeño a propósito: 8 sobre 100 no se nota en
 ## una partida, pero la barra es visiblemente más larga a las 50.
 const CONFIDENCE_BREATH_BONUS: float = 8.0
+
+# --- Jadeo visible (T-201) ----------------------------------------------
+## Por debajo de esta fracción del aliento, Flapo jadea: alas temblando,
+## mejillas rojas y sudor. 0,3 y no 0,5 porque el jadeo tiene que significar
+## "voy justo", no "he gastado un poco".
+const BREATH_LOW_RATIO: float = 0.30
+
+## Cuánto se acelera el aleteo al jadear. Temblor, no prisa: x1,6 se lee como
+## esfuerzo; más se leería como que Flapo vuela mejor cansado.
+const PANT_FLAP_FPS_MULT: float = 1.6
+
+## Color al que tira Flapo con las mejillas encendidas. Es el mismo
+## `#D98972` de las mejillas de la paleta (docs/art-guide.md), aplicado como
+## modulación: no hay sprites nuevos.
+const PANT_TINT: Color = Color("#F2B3A0")
+
+## Cuánto se mezcla ese color como mucho, con el aliento a 0. Bajo a
+## propósito: teñir del todo a Flapo lo haría irreconocible, y la silueta es
+## lo que lo identifica (docs/art-guide.md).
+const PANT_TINT_MAX: float = 0.55
 
 # --- Fatiga (T-049) -----------------------------------------------------
 ## Cuántos aleteos caben en la ventana antes de que empiece a notarse. A los
@@ -447,6 +474,37 @@ static func spin_pipe_chance(score: int) -> float:
 	var recorrido: int = maxi(DIFFICULTY_CAP - SPIN_PIPE_MIN_SCORE, 1)
 	var t: float = clampf(float(score - SPIN_PIPE_MIN_SCORE) / float(recorrido), 0.0, 1.0)
 	return lerpf(SPIN_PIPE_CHANCE_MIN, SPIN_PIPE_CHANCE_MAX, t)
+
+
+## En qué estado de jadeo está Flapo con ese aliento (T-201).
+##
+## **Función pura, y eso es la decisión del ticket**: el jadeo no se guarda en
+## ningún sitio, se deriva del aliento en cada frame. Así no hay un estado
+## que reiniciar al empezar partida —y por tanto no hay un reinicio que
+## olvidar, que es como se cuelan los bugs de ADR-0011—: al volver el aliento
+## al máximo, el jadeo desaparece solo.
+static func pant_level(aliento: float, maximo: float) -> Pant:
+	if maximo <= 0.0:
+		return Pant.NINGUNO
+	if aliento <= 0.0:
+		return Pant.AGOTADO
+	if aliento / maximo < BREATH_LOW_RATIO:
+		return Pant.JADEO
+	return Pant.NINGUNO
+
+
+## Cuánto se tiñe Flapo con ese aliento, de 0 a `PANT_TINT_MAX` (T-201).
+##
+## Continuo y no por escalones: el rubor sube según se acaba el aire, así que
+## el jugador ve venir el agotamiento en vez de encontrárselo de golpe.
+static func pant_tint_weight(aliento: float, maximo: float) -> float:
+	if maximo <= 0.0 or BREATH_LOW_RATIO <= 0.0:
+		return 0.0
+	var ratio: float = clampf(aliento / maximo, 0.0, 1.0)
+	if ratio >= BREATH_LOW_RATIO:
+		return 0.0
+	var hundido: float = 1.0 - ratio / BREATH_LOW_RATIO
+	return hundido * PANT_TINT_MAX
 
 
 ## Nombre del modo para la interfaz. Vive aquí y no en el menú porque es

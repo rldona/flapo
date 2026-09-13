@@ -216,6 +216,16 @@ días. Por eso la lista de "fuera de alcance en v1" sigue intacta. Mejora
 quien insiste, no quien ya juega bien, y solo mejora el **planeo**: el
 aleteo, que es el control, no cambia nunca. Ver ADR-0021.
 
+### Jadeo visible (T-201)
+La barra de aliento es UI; el aliento **también se ve en Flapo**. Por debajo
+del **30 %** (`BREATH_LOW_RATIO`): alas temblando (aleteo ×1,6), mejillas
+encendidas y gotas de sudor. A 0, además, vaho.
+
+El rubor es una **rampa continua**, no un interruptor: sube según se acaba el
+aire, así que el agotamiento se ve venir. Y todo es función pura del aliento
+—no hay estado de jadeo guardado—, así que al empezar partida se apaga solo.
+La hitbox no cambia en ningún estado.
+
 ### Fatiga (T-049)
 Más de **4 aleteos en 1,2 s** reduce el impulso del siguiente un **30 %**. Se
 quita planeando una vez o dejando pasar la ventana.

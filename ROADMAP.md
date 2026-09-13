@@ -113,7 +113,7 @@ Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 **Ola 2 — innovación**
 
 - 🔲 Descubrir el planeo en un segundo: pictograma en `READY`, se apaga al primer planeo. → T-200
-- 🔲 Jadeo visible: alas temblando, mejillas rojas y sudor con el aliento bajo. → T-201
+- ✅ Jadeo visible: alas temblando, mejillas rojas, sudor y vaho por debajo del 30 %. → T-201
 - 🔲 Bocanada: franja central marcada y feedback al recuperar aliento. → T-202
 - 🔲 Térmicas: columnas de aire donde planear sube. → T-203 (ADR-0026)
 - 🔲 El hermano pasa: estela de rebufo donde planear es gratis. → T-204 (ADR-0026)

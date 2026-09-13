@@ -149,6 +149,8 @@ var _invulnerable_left: float = 0.0
 var _soft_cooldown: float = 0.0
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
+@onready var _sweat: CPUParticles2D = $Sweat
+@onready var _puff: CPUParticles2D = $Puff
 @onready var _shape: CollisionShape2D = $CollisionShape2D
 
 
@@ -253,15 +255,53 @@ func _update_animation(delta: float) -> void:
 	if _state == GameState.State.GAME_OVER:
 		if _sprite.is_playing():
 			_sprite.pause()
+		# Muerto no se jadea: el batacazo es lo que hay que mirar.
+		if _sweat != null:
+			_sweat.emitting = false
+		if _puff != null:
+			_puff.emitting = false
 		return
 	if not _sprite.is_playing():
 		_sprite.play("flap")
 	_burst_left = maxf(_burst_left - delta, 0.0)
 	var fps: float = flap_fps_burst if _burst_left > 0.0 else flap_fps_idle
+	# Jadear acelera el aleteo: es temblor de esfuerzo, no prisa (T-201).
+	if GameConfig.pant_level(_breath, max_breath) != GameConfig.Pant.NINGUNO:
+		fps *= GameConfig.PANT_FLAP_FPS_MULT
 	# `speed_scale` multiplica la velocidad base de la animación (10 fps en
 	# el SpriteFrames), así que se divide para que el @export esté en fps
 	# reales y se pueda razonar sobre él.
 	_sprite.speed_scale = fps / 10.0
+	_actualizar_jadeo()
+
+
+## Enseña el aliento en el cuerpo de Flapo, no solo en la barra (T-201).
+##
+## Todo sale de `GameConfig.pant_level()` y `pant_tint_weight()`, que son
+## funciones puras del aliento. Aquí no se guarda nada: por eso al volver el
+## aliento al máximo —al empezar partida— el jadeo se apaga solo, sin código
+## de reinicio que se pueda olvidar.
+##
+## La modulación NO toca la hitbox: el color va en el `AnimatedSprite2D` y la
+## forma vive en el `CollisionShape2D`, que son hermanos.
+func _actualizar_jadeo() -> void:
+	if _sprite == null:
+		return
+	var nivel: GameConfig.Pant = GameConfig.pant_level(_breath, max_breath)
+	var peso: float = GameConfig.pant_tint_weight(_breath, max_breath)
+	_sprite.modulate = Color.WHITE.lerp(GameConfig.PANT_TINT, peso)
+	if _sweat != null:
+		_sweat.emitting = nivel != GameConfig.Pant.NINGUNO
+	if _puff != null:
+		# Continuo mientras esté a cero, no un estallido al llegar: un
+		# one-shot exigiría recordar el frame anterior, que es justo el
+		# estado que este ticket dice que no debe existir.
+		_puff.emitting = nivel == GameConfig.Pant.AGOTADO
+
+
+## En qué estado de jadeo está ahora mismo. Lo usan los tests.
+func pant_level() -> GameConfig.Pant:
+	return GameConfig.pant_level(_breath, max_breath)
 
 
 ## Sobrevive a un golpe: el escudo de la fruta azul (T-047).
