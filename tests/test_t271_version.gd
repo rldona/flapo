@@ -21,6 +21,7 @@ func _init() -> void:
 	_una_version_rara_no_cuelga_la_publicacion()
 	_el_changelog_se_agrupa_y_se_lee()
 	_las_novedades_son_para_el_jugador()
+	_el_fichero_generado_pasa_las_reglas_del_repo()
 	quit(h.resumen("T-271"))
 
 
@@ -175,4 +176,44 @@ func _las_novedades_son_para_el_jugador() -> void:
 		"sin nada nuevo, ninguna línea",
 		Version.novedades(PackedStringArray(["fix: a", "docs: b"])).is_empty(),
 		""
+	)
+
+
+## El fichero que se genera tiene que pasar los mismos hooks que el resto.
+##
+## Suena a detalle y costó un CI en rojo: el changelog salía con una línea en
+## blanco de más al final, `fix end of files` la quitaba, y el push siguiente
+## a cada release fallaba el lint. Un fichero generado que no cumple las
+## reglas del propio repositorio es una bomba de relojería.
+func _el_fichero_generado_pasa_las_reglas_del_repo() -> void:
+	var bloque: String = Version.changelog_md(
+		"0.4.0", "2026-09-09", PackedStringArray(["feat: algo"])
+	)
+
+	var primero: String = Version.changelog_completo(bloque, "")
+	h.check("empieza por el título", primero.begins_with("# Changelog\n"), "")
+	h.check(
+		"acaba en un solo salto de línea, ni cero ni dos",
+		primero.ends_with("\n") and not primero.ends_with("\n\n"),
+		"acaba en: %s" % primero.substr(primero.length() - 4).replace("\n", "|")
+	)
+	h.check("sin espacios al final de línea", not primero.contains(" \n"), "")
+
+	var con_historia: String = Version.changelog_completo(
+		bloque, "# Changelog\n\n## 0.3.0 — ayer\n"
+	)
+	h.check(
+		"con historial previo, también acaba en un solo salto",
+		con_historia.ends_with("\n") and not con_historia.ends_with("\n\n"),
+		""
+	)
+	h.check(
+		"y lo nuevo va arriba: un changelog se lee por el principio",
+		con_historia.find("0.4.0") < con_historia.find("0.3.0"),
+		""
+	)
+	h.check(
+		"sin repetir el título del changelog viejo",
+		con_historia.count("# Changelog") == 1,
+		"%d veces" % con_historia.count("# Changelog")
 	)

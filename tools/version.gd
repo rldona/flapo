@@ -15,6 +15,9 @@ extends RefCounted
 ## Qué tipo de salto pide un commit. El orden importa: se queda el mayor.
 enum Salto { NINGUNO, PARCHE, MENOR, MAYOR }
 
+## El encabezado del fichero de changelog.
+const TITULO: String = "# Changelog"
+
 ## Tipos que suben la versión. El resto —docs, style, test, chore, ci,
 ## refactor— no publica nada nuevo para el jugador, así que no mueve el
 ## número. Un `docs:` no merece una versión.
@@ -109,6 +112,26 @@ static func changelog_md(version: String, fecha: String, mensajes: PackedStringA
 		texto += "\n### %s\n\n" % titulos[tipo]
 		for d in grupos[tipo]:
 			texto += "- %s\n" % d
+	return texto
+
+
+## Junta el bloque nuevo con el changelog que ya había.
+##
+## Está aquí y no en el script que escribe el fichero **porque aquí se puede
+## probar**. El primer intento dejaba una línea en blanco de más al final, el
+## hook `fix end of files` la quitaba, y CI se ponía en rojo en el push
+## siguiente a cada release: un fichero generado que no pasa las reglas del
+## propio repositorio.
+static func changelog_completo(bloque: String, anterior: String) -> String:
+	# El título se le quita al histórico aquí dentro, no fuera. Quien llama no
+	# tiene por qué acordarse de una regla del formato, y si se le olvida el
+	# fichero sale con dos "# Changelog" — lo pilló el test a la primera.
+	var viejo: String = anterior.strip_edges()
+	if viejo.begins_with(TITULO):
+		viejo = viejo.substr(TITULO.length()).strip_edges()
+	var texto: String = TITULO + "\n\n" + bloque.strip_edges() + "\n"
+	if viejo != "":
+		texto += "\n" + viejo + "\n"
 	return texto
 
 

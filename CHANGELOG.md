@@ -74,4 +74,3 @@
 - Colocar las export templates donde Godot las busca en CI (T-091)
 - Restaurar Main como escena principal
 - Resolver la referencia a Bird en Main.tscn (T-023)
-
