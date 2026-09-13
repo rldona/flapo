@@ -122,6 +122,15 @@ const MOVING_PIPE_AMPLITUDE: float = 22.0
 ## Flapo siempre puede más que la tubería, que es lo que la hace justa.
 const MOVING_PIPE_PERIOD: float = 2.4
 
+# --- Layout adaptativo (T-085) ------------------------------------------
+## Escala mínima. Por debajo de 1 el pixel art se destruiría: antes que
+## encoger el playfield se prefiere que se salga y la ventana lo recorte.
+const MIN_WINDOW_SCALE: int = 1
+
+## Escala máxima. Existe para que en un monitor 4K el juego no ocupe la
+## pantalla entera a 7x, que se ve absurdo en un juego de 288 px de ancho.
+const MAX_WINDOW_SCALE: int = 6
+
 # --- Tubería blandita (T-066) -------------------------------------------
 ## Cada cuántas tuberías sale una blandita. NO es aleatorio a propósito: al
 ## ser predecible se puede contar y buscarla, y eso la convierte en una
@@ -319,6 +328,44 @@ static func is_soft_pipe(indice: int) -> bool:
 	if indice <= 0 or SOFT_PIPE_INTERVAL <= 0:
 		return false
 	return indice % SOFT_PIPE_INTERVAL == 0
+
+
+## La mayor escala ENTERA a la que el playfield de 288×512 cabe en una
+## ventana de `ventana` píxeles (T-085).
+##
+## Entera y nunca fraccionaria: ADR-0002 sigue mandando dentro del playfield,
+## y un 2,37x haría que unos píxeles midieran 2 y otros 3.
+##
+## Es pura y estática a propósito: en headless no hay ventana que consultar,
+## así que el cálculo tiene que poder probarse con tamaños inventados.
+static func window_scale_for(ventana: Vector2i) -> int:
+	if ventana.x <= 0 or ventana.y <= 0:
+		return MIN_WINDOW_SCALE
+	var cabe_ancho: int = ventana.x / VIEWPORT_SIZE.x
+	var cabe_alto: int = ventana.y / VIEWPORT_SIZE.y
+	return clampi(mini(cabe_ancho, cabe_alto), MIN_WINDOW_SCALE, MAX_WINDOW_SCALE)
+
+
+## Dónde queda el playfield dentro de esa ventana, en píxeles reales (T-085).
+##
+## Siempre centrado, en cualquier proporción. Se centra con división entera:
+## medio píxel de desplazamiento volvería a meter el escalado fraccionario
+## por la puerta de atrás.
+static func playfield_rect_for(ventana: Vector2i) -> Rect2i:
+	var escala: int = window_scale_for(ventana)
+	var tamano := Vector2i(VIEWPORT_SIZE.x * escala, VIEWPORT_SIZE.y * escala)
+	var origen := Vector2i((ventana.x - tamano.x) / 2, (ventana.y - tamano.y) / 2)
+	return Rect2i(origen, tamano)
+
+
+## Cuánto sobra alrededor del playfield, en píxeles reales (T-085).
+##
+## `x` es lo que sobra a CADA lado en horizontal e `y` en vertical, no el
+## total: lo que decide si cabe un panel al lado es el hueco de un lado, no
+## la suma de los dos. Nunca negativo: si el playfield no cabe, sobra 0.
+static func layout_margin_for(ventana: Vector2i) -> Vector2i:
+	var caja: Rect2i = playfield_rect_for(ventana)
+	return Vector2i(maxi(caja.position.x, 0), maxi(caja.position.y, 0))
 
 
 ## Nombre del modo para la interfaz. Vive aquí y no en el menú porque es
