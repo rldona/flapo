@@ -51,6 +51,15 @@ signal centered
 		soft = valor
 		_aplicar_tinte()
 
+@export_group("Tramo especial (T-067)")
+## Si esta tubería es del tramo de celebración (T-067). Se tiñe al ponerla,
+## igual que la blandita: el tramo tiene que verse llegar, no descubrirse al
+## chocar.
+@export var special: bool = false:
+	set(valor):
+		special = valor
+		_aplicar_tinte()
+
 @export_group("Giratoria (T-065)")
 ## Si las bocas de esta tubería giran (T-065).
 ##
@@ -138,7 +147,14 @@ func set_gap_center(y: float) -> void:
 ## también teñiría la zona de puntuación si algún día tuviera dibujo, y lo
 ## que tiene que verse distinto es el tubo.
 func _aplicar_tinte() -> void:
-	var color: Color = GameConfig.SOFT_PIPE_TINT if soft else Color.WHITE
+	# El orden importa: una tubería del tramo especial que además sea blandita
+	# se pinta de blandita. Lo que el jugador necesita saber en ese momento no
+	# es que está en un tramo bonito, es que esa no le mata.
+	var color: Color = Color.WHITE
+	if special:
+		color = GameConfig.SPECIAL_PIPE_TINT
+	if soft:
+		color = GameConfig.SOFT_PIPE_TINT
 	for cuerpo in [_top, _bottom]:
 		if cuerpo == null:
 			continue

@@ -21,11 +21,12 @@ var _replay := Replay.new()
 
 
 ## Main dice con qué va a jugarse, ya sembrado (T-240).
-func preparar(semilla: int, modo: GameConfig.Difficulty, confianza: int) -> void:
+func preparar(semilla: int, modo: GameConfig.Difficulty, confianza: int, record: int) -> void:
 	_replay = Replay.new()
 	_replay.semilla = semilla
 	_replay.modo = modo
 	_replay.confianza = confianza
+	_replay.record = record
 	_frame = 0
 	_ultimo = false
 

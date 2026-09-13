@@ -50,6 +50,7 @@ func _un_fichero_roto_no_da_replay() -> void:
 	bueno.semilla = 4242
 	bueno.modo = GameConfig.Difficulty.DIFICIL
 	bueno.confianza = 3
+	bueno.record = 8
 	bueno.score = 11
 	bueno.anotar(5, true)
 	bueno.anotar(9, false)
@@ -58,11 +59,12 @@ func _un_fichero_roto_no_da_replay() -> void:
 	h.check("y se vuelve a leer entero", leido != null, "")
 	if leido != null:
 		h.check(
-			"con semilla, modo, confianza, marca y flancos",
+			"con semilla, modo, confianza, récord, marca y flancos",
 			(
 				leido.semilla == 4242
 				and leido.modo == GameConfig.Difficulty.DIFICIL
 				and leido.confianza == 3
+				and leido.record == 8
 				and leido.score == 11
 				and leido.frames == bueno.frames
 				and leido.pulsado == bueno.pulsado
@@ -178,6 +180,27 @@ func _cambiar_el_fichero_cambia_la_partida() -> void:
 				GameConfig.max_breath_for(base.confianza)
 			]
 		)
+	)
+
+	# El récord: desde T-067 dispara el tramo especial, o sea que cambia el
+	# mundo. Este caso no existía cuando se escribió el fichero de replay, y
+	# lo destapó el bot de T-260 al dejar de dar dos tandas iguales.
+	var otro_record: Replay = Replay.cargar(REFERENCIA)
+	# Un récord bajo, para que el tramo salga PRONTO y le dé tiempo a cambiar
+	# la partida. Con un récord casi igual a la puntuación, el tramo salta en
+	# las últimas tuberías y puede no llegar a notarse: sería el mismo error
+	# que con la confianza, afirmar algo cierto solo a veces.
+	otro_record.record = 3
+	var r5: Dictionary = await _reproducir(otro_record)
+	h.check(
+		"premisa: ese récord se supera pronto, con partida por delante",
+		otro_record.record >= GameConfig.SPECIAL_MIN_RECORD and otro_record.record < base.score / 2,
+		"récord %d, partida de %d" % [otro_record.record, base.score]
+	)
+	h.check(
+		"con otro récord la partida cambia: el tramo especial de T-067 sale",
+		not r5["cuadra"],
+		"esperado %d, obtenido %d" % [base.score, r5["score"]]
 	)
 
 	# Quitar pulsaciones tiene que notarse: si no, el reproductor no las está

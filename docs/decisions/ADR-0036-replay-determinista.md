@@ -16,19 +16,24 @@ Con la semilla determinista (T-240) se puede volcar la partida y volver a
 jugarla en CI.
 
 ## Decisión
-El fichero `.replay` lleva **cuatro cosas**, no dos:
+El fichero `.replay` lleva **cinco cosas**, no dos:
 
 1. La **semilla** (T-240).
 2. Los **flancos del botón**: en qué frame de física se pulsó y en cuál se
    soltó.
 3. El **modo de dificultad** (T-078).
 4. La **confianza** del jugador (T-074).
+5. El **récord** que tenía al empezar (T-067).
 
-Las dos últimas son las que se olvidan, y son las que hacen que un replay
+Las tres últimas son las que se olvidan, y son las que hacen que un replay
 funcione en la máquina de otro.
 
 **El modo cambia el mundo**: hueco, velocidad y separación salen de él. El
 replay de un bug en difícil, reproducido en normal, no enseña el bug.
+
+**El récord cambia el mundo**: desde T-067, superarlo dispara cuatro tuberías
+especiales con la dificultad congelada. La misma semilla y las mismas
+pulsaciones dan partidas distintas según lo bueno que fueras antes.
 
 **La confianza cambia la física de Flapo**: alarga la barra de aliento, o sea
 cuánto se puede planear. El mismo fichero jugado por un perfil nuevo y por uno
@@ -73,6 +78,22 @@ terminaba con 17 puntos en vez de 22. **Un frame de 16 ms cambia la partida
 entera** — que es exactamente lo que hace útil un replay y lo que lo hace
 delicado.
 
+## Cómo apareció la quinta, y por qué importa el método
+El récord no estaba en la lista cuando se escribió esta ADR: T-067 todavía no
+existía. Apareció **una hora después**, y no leyendo el código: lo destapó el
+bot de justicia (T-260) al empezar a dar dos tandas distintas con las mismas
+semillas.
+
+De paso salió un fallo real que no era del replay: `Main` releía el récord
+solo al morir, así que lo arrastraba en memoria de una partida a la siguiente.
+Con T-067 eso significaba que **una partida dependía de la anterior**. Ahora
+se relee al entrar en READY.
+
+La lección para lo que queda de roadmap: cada vez que algo nuevo mire el
+guardado para decidir qué pasa en la partida, entra en el `.replay`. Es la
+pregunta que hay que hacerse al cerrar cada ticket, porque el fichero no
+avisa: simplemente deja de reproducir en la máquina de otro.
+
 ## Límites conocidos
 - Un toque que empiece y acabe **dentro del mismo frame** (menos de 16 ms) no
   deja flanco y se pierde. Con la física a 60 Hz fijos no hay forma de
@@ -80,6 +101,9 @@ delicado.
 - El determinismo **no sobrevive a cambiar `GameConfig`** (ADR-0030). Aquí eso
   es una función, no un defecto: un replay que deja de cuadrar tras un cambio
   de constantes está diciendo que el cambio ha alterado el juego.
+- La versión del formato es la **2**. Un `.replay` de la versión 1 se
+  descarta entero: no dice con qué récord se jugó, así que no se puede
+  reproducir con garantías, y adivinarlo sería peor que rechazarlo.
 - El fichero no lleva versión del juego. Cuando exista (T-271), debería ir
   dentro, para poder decir "esto se grabó con la 0.3.1" en vez de adivinarlo.
 

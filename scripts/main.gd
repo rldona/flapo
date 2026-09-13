@@ -114,6 +114,13 @@ var _score: int = 0
 var _high_score: int = 0
 ## Huecos cruzados en esta partida sin haber planeado nunca (T-200).
 var _huecos_sin_planear: int = 0
+## Si el tramo especial ya ha salido en esta partida (T-067). Una vez y no
+## más: repetirlo cada vez que se sube el récord lo convertiría en el juego
+## normal a partir de cierto punto.
+var _tramo_usado: bool = false
+## Con qué puntuación se congela la dificultad mientras dura el tramo, o -1 si
+## no hay tramo en marcha (T-067).
+var _tramo_score: int = -1
 
 ## La última frase que salió, para no repetirla dos veces seguidas.
 var _ultima_frase: String = ""
@@ -385,6 +392,12 @@ func change_state(to: GameState.State) -> void:
 			options_panel.set_open(false)
 	if to == GameState.State.READY:
 		_score = 0
+		# El récord se relee del guardado al empezar cada partida, no solo al
+		# morir. Desde T-067 el récord CAMBIA la partida —dispara el tramo
+		# especial—, así que arrastrarlo en memoria hacía que una partida
+		# dependiera de la anterior. Lo destapó el bot de T-260: dos tandas
+		# con las mismas semillas dejaron de dar lo mismo.
+		_high_score = SaveManager.get_high_score()
 		_is_new_high_score = false
 		effects.clear()
 		_aplicar_confianza()
@@ -398,8 +411,12 @@ func change_state(to: GameState.State) -> void:
 			ghost.preparar(_session.seed())
 		_aplicar_escenario()
 		if replay_recorder != null:
-			replay_recorder.preparar(_session.seed(), _session.difficulty(), _session.confidence())
+			replay_recorder.preparar(
+				_session.seed(), _session.difficulty(), _session.confidence(), _high_score
+			)
 		_huecos_sin_planear = 0
+		_tramo_usado = false
+		_tramo_score = -1
 		bird.gravity_mult = 1.0
 		bird.size_mult = 1.0
 		bird.hitbox_mult = 1.0
@@ -531,8 +548,41 @@ func _on_share_pressed(texto: String) -> void:
 	DisplayServer.clipboard_set(texto)
 
 
+## Decide si toca el tramo especial de celebración (T-067).
+##
+## "Superar el récord de esa sesión": `_high_score` es el récord con el que
+## se empezó la partida —solo se refresca al morir—, así que la primera
+## puntuación que lo pasa es el momento exacto.
+##
+## Con récord 0 no se dispara (`SPECIAL_MIN_RECORD`): en la primera partida
+## todo es récord, y celebrar la primera tubería de alguien que todavía no
+## sabe cruzar un hueco no celebra nada.
+func _quiza_tramo_especial() -> void:
+	if _tramo_usado or _high_score < GameConfig.SPECIAL_MIN_RECORD:
+		return
+	if _score <= _high_score:
+		return
+	_tramo_usado = true
+	_tramo_score = _score
+	if pipe_spawner != null:
+		pipe_spawner.special_left = GameConfig.SPECIAL_STRETCH_PIPES
+
+
+## La puntuación con la que se calcula la dificultad (T-067).
+##
+## Mientras dura el tramo se congela. Es lo que lo convierte en celebración y
+## no en un muro: las tuberías se mueven, giran y brillan, pero **el hueco no
+## se estrecha ni el mundo acelera**. Sin esto, el premio por batir tu récord
+## sería que el juego se ponga más difícil justo ahí.
+func _score_para_dificultad() -> int:
+	if _tramo_score >= 0 and pipe_spawner != null and pipe_spawner.special_left > 0:
+		return _tramo_score
+	return _score
+
+
 func _on_scored() -> void:
 	_score += 1
+	_quiza_tramo_especial()
 	if not _session.has_glided():
 		_huecos_sin_planear += 1
 		_actualizar_aviso_planeo()
@@ -618,6 +668,11 @@ func _on_soft_hit() -> void:
 	score_changed.emit(_score)
 
 
+## Si el tramo especial está en marcha ahora mismo. Lo usan los tests.
+func in_special_stretch() -> bool:
+	return pipe_spawner != null and pipe_spawner.special_left > 0
+
+
 ## El factor de viento de este instante (T-064).
 ##
 ## Se pregunta a `GameConfig` en vez de guardarlo: la dirección que de verdad
@@ -638,16 +693,17 @@ func _apply_difficulty() -> void:
 	# la curva (T-064), y solo al final el modificador de la fruta violeta,
 	# que sí puede bajar del mínimo: ese es su efecto, y el criterio del
 	# viento no debía llevárselo por delante.
-	var velocidad: float = GameConfig.wind_speed_for(_score, _session.difficulty(), _wind_factor())
+	var puntos: int = _score_para_dificultad()
+	var velocidad: float = GameConfig.wind_speed_for(puntos, _session.difficulty(), _wind_factor())
 	velocidad *= effects.speed_mult()
-	var hueco: float = GameConfig.pipe_gap_for(_score, _session.difficulty())
-	var separacion: float = GameConfig.pipe_spacing_for(_score, _session.difficulty())
+	var hueco: float = GameConfig.pipe_gap_for(puntos, _session.difficulty())
+	var separacion: float = GameConfig.pipe_spacing_for(puntos, _session.difficulty())
 	if pipe_spawner != null:
 		pipe_spawner.set_difficulty(velocidad, hueco, separacion)
 		# La probabilidad de tubería móvil es una función pura de la
 		# puntuación, como el resto de la curva (T-063).
-		pipe_spawner.moving_chance = GameConfig.moving_pipe_chance(_score)
-		pipe_spawner.spin_chance = GameConfig.spin_pipe_chance(_score)
+		pipe_spawner.moving_chance = GameConfig.moving_pipe_chance(puntos)
+		pipe_spawner.spin_chance = GameConfig.spin_pipe_chance(puntos)
 	if ground != null:
 		ground.scroll_speed = velocidad
 	if background != null:

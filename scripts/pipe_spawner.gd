@@ -40,6 +40,9 @@ var spacing: float = GameConfig.PIPE_SPACING
 var moving_chance: float = 0.0
 ## Probabilidad de que el próximo par gire (T-065). También la fija Main.
 var spin_chance: float = 0.0
+## Tuberías que quedan del tramo especial (T-067). La pone Main, que es quien
+## sabe si se ha batido el récord; el spawner solo las va gastando.
+var special_left: int = 0
 ## Cuántas tuberías van en esta partida. Es lo que hace predecible a la
 ## blandita (T-066): se puede contar. Se reinicia en READY.
 var _contador: int = 0
@@ -132,10 +135,13 @@ func _crear_tuberia() -> void:
 	# Después de add_child: `randomize_gap` toca los nodos internos, que solo
 	# existen una vez ha corrido `_ready()` de la tubería.
 	pipe.randomize_gap(_rng)
-	_quiza_oscilante(pipe)
-	# El giro es puramente visual, así que no depende de la altura ni del
-	# hueco: se decide y ya está.
-	pipe.spin = spin_chance > 0.0 and _rng.randf() < spin_chance
+	if special_left > 0:
+		_vestir_de_tramo(pipe)
+	else:
+		_quiza_oscilante(pipe)
+		# El giro es puramente visual, así que no depende de la altura ni del
+		# hueco: se decide y ya está.
+		pipe.spin = spin_chance > 0.0 and _rng.randf() < spin_chance
 	pipe_spawned.emit()
 
 
@@ -152,6 +158,25 @@ func _quiza_oscilante(pipe: Pipe) -> void:
 	# Desfase al azar: si todas arrancaran en el mismo punto del seno, la
 	# pantalla entera temblaría a la vez en vez de parecer tuberías sueltas.
 	pipe.oscillation_phase = _rng.randf_range(0.0, TAU)
+
+
+## Viste una tubería del tramo especial (T-067).
+##
+## Móvil **y** giratoria a la vez, que es lo que el ticket pide combinar, y la
+## del medio blandita. No se sortea nada: el tramo es una celebración con
+## guion, no otra tirada de dados. Por eso tampoco toca el generador — si lo
+## tocara, el tramo movería la secuencia de tuberías y dos partidas con la
+## misma semilla dejarían de ser la misma según quién batiera su récord.
+func _vestir_de_tramo(pipe: Pipe) -> void:
+	pipe.special = true
+	pipe.soft = GameConfig.is_special_soft(special_left)
+	pipe.oscillation_amplitude = GameConfig.moving_pipe_amplitude(pipe.gap, pipe.get_gap_center())
+	# Desfase fijo y no al azar: además de no tocar el generador, hace que las
+	# cuatro del tramo se muevan a la vez y se lea como un tramo y no como
+	# cuatro tuberías raras seguidas.
+	pipe.oscillation_phase = 0.0
+	pipe.spin = true
+	special_left -= 1
 
 
 func _on_pipe_scored() -> void:

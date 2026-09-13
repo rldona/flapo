@@ -25,6 +25,12 @@ func reproducir(tree: SceneTree, main: Node, rep: Replay) -> Dictionary:
 	SaveManager.forget_cache()
 	main.session().set_difficulty(rep.modo)
 	_sembrar_confianza(rep.confianza)
+	# El récord también: desde T-067 dispara el tramo especial de celebración,
+	# o sea que **cambia el mundo**. Sin sembrarlo, el mismo replay daría
+	# partidas distintas según lo bueno que fuera quien lo reproduce
+	# (ADR-0036).
+	if rep.record > 0:
+		SaveManager.record_game(rep.record)
 	main.session().cargar()
 	main.session().set_seed(rep.semilla)
 	main.change_state(GameState.State.READY)

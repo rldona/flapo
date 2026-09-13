@@ -19,10 +19,14 @@ const RUTA_ULTIMA: String = "user://last.replay"
 ## Marca de fichero: "FLRP", de FLapo RePlay.
 const MAGIC: int = 0x464C5250
 
-const VERSION: int = 1
+## Sube a 2 con T-067: el récord entra en el fichero. Un replay de la versión
+## 1 no se puede reproducir con garantías porque no dice con qué récord se
+## jugó, así que se descarta entero en vez de adivinarlo.
+const VERSION: int = 2
 
-## magia(4) + versión(4) + semilla(8) + modo(4) + confianza(4) + marca(4) + nº(4)
-const _CABECERA: int = 32
+## magia(4) + versión(4) + semilla(8) + modo(4) + confianza(4) + récord(4)
+## + marca(4) + nº(4)
+const _CABECERA: int = 36
 
 ## Tope de flancos, por si un fichero manipulado dice que trae millones.
 const MAX_EVENTOS: int = 100000
@@ -43,6 +47,17 @@ var modo: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 ## sea que cambia cuánto se puede planear. El mismo fichero jugado por un
 ## perfil nuevo y por uno veterano da dos partidas distintas.
 var confianza: int = 0
+
+## El récord que tenía el jugador al empezar (T-067).
+##
+## Es el más raro de los cuatro y el que más tarde apareció. Desde T-067 el
+## récord **cambia el mundo**: al superarlo salen cuatro tuberías especiales
+## con la dificultad congelada. O sea que la misma semilla y las mismas
+## pulsaciones dan partidas distintas según lo bueno que fueras antes.
+##
+## Lo destapó el bot de T-260 al dejar de dar dos tandas iguales, no una
+## lectura del código.
+var record: int = 0
 
 ## Los puntos que se hicieron. Es contra lo que se compara al reproducir: sin
 ## un resultado esperado, un replay no verifica nada, solo vuelve a jugar.
@@ -80,6 +95,7 @@ func guardar(ruta: String = RUTA_ULTIMA) -> bool:
 	f.store_64(semilla)
 	f.store_32(int(modo))
 	f.store_32(confianza)
+	f.store_32(record)
 	f.store_32(score)
 	f.store_32(frames.size())
 	for i in frames.size():
@@ -105,6 +121,7 @@ static func cargar(ruta: String = RUTA_ULTIMA) -> Replay:
 		return null
 	rep.modo = m as GameConfig.Difficulty
 	rep.confianza = f.get_32()
+	rep.record = f.get_32()
 	rep.score = f.get_32()
 	var n: int = f.get_32()
 	if n < 0 or n > MAX_EVENTOS:

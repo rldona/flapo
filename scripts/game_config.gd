@@ -344,6 +344,25 @@ const SCENERY_TINT: Array[Color] = [
 ## que haya una variante más, esto sigue diciendo la verdad.
 const SCENERY_LLUEVE: Array[bool] = [false, false, false, true]
 
+## --- Tramo especial al superar el récord (T-067) ---
+
+## Cuántas tuberías dura el tramo. Cuatro: suficiente para que se note que
+## está pasando algo y corto para que no se convierta en un examen. A la
+## velocidad de crucero son unos seis segundos.
+const SPECIAL_STRETCH_PIPES: int = 4
+
+## Récord mínimo para que el tramo exista.
+##
+## Con récord 0, la primera tubería de la primera partida ya sería récord y el
+## tramo saldría antes de que el jugador sepa lo que es un hueco. Celebrar algo
+## que no ha costado nada no celebra nada.
+const SPECIAL_MIN_RECORD: int = 1
+
+## El color del tramo. Dorado apagado: se lee como "esto es tuyo" y no como
+## "cuidado", que es lo contrario de lo que este tramo quiere decir. La
+## blandita (T-066) es verde y la normal no se tiñe, así que no se confunden.
+const SPECIAL_PIPE_TINT: Color = Color("#E6C46A")
+
 ## --- Fantasma del récord (T-243) ---
 
 ## Transparencia del fantasma. 0.45 y no menos: por debajo desaparece sobre
@@ -359,6 +378,15 @@ const GHOST_TINT: Color = Color("#8FB8D8")
 ## diseño sino un seguro: un fichero de fantasma no puede crecer sin fin ni
 ## por una partida eterna ni por un fichero manipulado a mano.
 const GHOST_MAX_FRAMES: int = 36000
+
+
+## Si a esta tubería del tramo le toca ser blandita (T-067).
+##
+## La del medio. Un tramo de celebración con una red debajo: si el jugador se
+## estrella justo en el momento de su récord, el juego le ha tendido una
+## trampa disfrazada de premio.
+static func is_special_soft(restantes: int) -> bool:
+	return restantes == SPECIAL_STRETCH_PIPES / 2
 
 
 ## Qué escenario le toca a una semilla (T-057).
