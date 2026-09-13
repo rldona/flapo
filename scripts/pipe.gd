@@ -51,6 +51,18 @@ signal centered
 		soft = valor
 		_aplicar_tinte()
 
+@export_group("Giratoria (T-065)")
+## Si las bocas de esta tubería giran (T-065).
+##
+## El giro es **solo del dibujo**: gira cada `Cap` sobre su propio centro,
+## nunca el `StaticBody2D` que lo contiene. Girar el cuerpo giraría también
+## su `CollisionShape2D` y el hueco real dejaría de coincidir con el que se
+## ve, que es exactamente lo que el ticket dice que no puede pasar.
+##
+## Y se giran las bocas y no el cuerpo del tubo porque el cuerpo es un
+## rectángulo repetido de 512 px: girarlo se vería roto, no giratorio.
+@export var spin: bool = false
+
 @export_group("Oscilación (T-063)")
 ## Amplitud vertical, px (la mitad del recorrido). 0 = tubería normal, quieta.
 ##
@@ -74,6 +86,8 @@ var _base_gap_center: float = 256.0
 ## lee de `Time`: así se para con la pausa y con el hit-stop, igual que la
 ## ventana de fatiga de T-049.
 var _osc_tiempo: float = 0.0
+## Reloj propio del giro (T-065), por lo mismo que el de la oscilación.
+var _spin_tiempo: float = 0.0
 var _ya_puntuada: bool = false
 
 @onready var _top: StaticBody2D = $Top
@@ -98,6 +112,7 @@ func _physics_process(delta: float) -> void:
 		return
 	position.x -= scroll_speed * delta
 	_oscilar(delta)
+	_girar(delta)
 	# Se libera cuando su borde derecho ha pasado el borde izquierdo de la
 	# pantalla. Sin esto, cada partida acumularía tuberías invisibles para
 	# siempre: el criterio de nodos huérfanos de T-024 es exactamente esto.
@@ -136,6 +151,28 @@ func _aplicar_tinte() -> void:
 func tint() -> Color:
 	var sprite := _top.get_node_or_null("Body") as Sprite2D if _top != null else null
 	return sprite.modulate if sprite != null else Color.WHITE
+
+
+## Gira las bocas, y solo las bocas (T-065).
+func _girar(delta: float) -> void:
+	if not spin:
+		return
+	_spin_tiempo += delta
+	var angulo: float = _spin_tiempo * GameConfig.SPIN_PIPE_TURNS_PER_SECOND * TAU
+	for cuerpo in [_top, _bottom]:
+		if cuerpo == null:
+			continue
+		var cap := (cuerpo as Node).get_node_or_null("Cap") as Sprite2D
+		if cap != null:
+			cap.rotation = angulo
+
+
+## Ángulo actual de las bocas, rad. Lo usan los tests.
+func spin_angle() -> float:
+	if _top == null:
+		return 0.0
+	var cap := _top.get_node_or_null("Cap") as Sprite2D
+	return cap.rotation if cap != null else 0.0
 
 
 ## Si esta tubería oscila. Lo usan los tests y T-067.
