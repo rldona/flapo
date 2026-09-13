@@ -17,6 +17,10 @@ Cómo se traduce al juego:
 
 Lo que NO es: no se ríe del jugador, se ríe con él. Nada de mensajes de burla al morir.
 
+Las frases que salen al morir viven en `assets/data/death_lines.tres` (T-056),
+editables sin tocar código. La regla al escribir una: **ánimo torpe, nunca
+burla**. Si una frase se puede leer como "qué malo eres", sobra.
+
 Nota de tienda: en itch.io y Google Play nunca usar el nombre del juego original ni describir Flapo como spin-off. "Inspirado en el clásico de un solo botón" es suficiente.
 
 ## Bucle central

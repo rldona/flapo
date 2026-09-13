@@ -33,6 +33,7 @@ var _delay_left: float = -1.0
 var _fade_left: float = 0.0
 var _score: int = 0
 
+@onready var _title: Label = $Root/Box/Title
 @onready var _root: Control = $Root
 @onready var _box: VBoxContainer = $Root/Box
 @onready var _medal_rect: TextureRect = $Root/Box/Medal
@@ -77,6 +78,12 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_delay_left = delay
 	else:
 		_ocultar()
+
+
+## Cambia la frase de cabecera (T-056).
+func set_line(texto: String) -> void:
+	if texto != "":
+		_title.text = texto
 
 
 ## Rellena el panel con el resultado de la partida.

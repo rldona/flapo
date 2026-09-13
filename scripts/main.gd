@@ -51,6 +51,10 @@ const _TRANSITIONS: Dictionary = {
 ## El fundido de arranque de partida.
 @export var fade: Fade
 
+## Las frases que salen al morir (T-056). Es contenido: se edita en
+## assets/data/death_lines.tres sin tocar código.
+@export var death_lines: DeathLines
+
 ## El velo de pausa.
 @export var pause_panel: PausePanel
 
@@ -73,10 +77,14 @@ const _TRANSITIONS: Dictionary = {
 var _state: GameState.State = GameState.State.READY
 var _score: int = 0
 var _high_score: int = 0
+## La última frase que salió, para no repetirla dos veces seguidas.
+var _ultima_frase: String = ""
+var _rng_frases := RandomNumberGenerator.new()
 var _is_new_high_score: bool = false
 
 
 func _ready() -> void:
+	_rng_frases.randomize()
 	_high_score = SaveManager.get_high_score()
 	if log_transitions:
 		state_changed.connect(_on_state_changed_log)
@@ -244,6 +252,17 @@ func _notification(what: int) -> void:
 func _on_state_changed_results(to: GameState.State) -> void:
 	if to == GameState.State.GAME_OVER:
 		game_over_panel.show_results(_score, _high_score, _is_new_high_score)
+		game_over_panel.set_line(_siguiente_frase())
+
+
+## Elige la frase de esta muerte, distinta de la anterior (T-056).
+func _siguiente_frase() -> String:
+	if death_lines == null:
+		return ""
+	var frase: String = death_lines.pick(_rng_frases, _ultima_frase)
+	if frase != "":
+		_ultima_frase = frase
+	return frase
 
 
 ## Compartir en Android. El intent nativo de texto necesita un plugin, que

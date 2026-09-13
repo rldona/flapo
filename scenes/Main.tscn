@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" path="res://scenes/Audio.tscn" id="11_audio"]
 [ext_resource type="Script" path="res://scripts/effects.gd" id="12_effects"]
 [ext_resource type="PackedScene" path="res://scenes/FruitSpawner.tscn" id="13_fruits"]
+[ext_resource type="Resource" path="res://assets/data/death_lines.tres" id="14_lines"]
 
 [node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner")]
 script = ExtResource("1_main")
@@ -28,6 +29,7 @@ pause_panel = NodePath("PausePanel")
 audio = NodePath("Audio")
 effects = NodePath("Effects")
 fruit_spawner = NodePath("FruitSpawner")
+death_lines = ExtResource("14_lines")
 
 [node name="Sky" type="ColorRect" parent="." unique_id=1166350777]
 offset_right = 288.0
