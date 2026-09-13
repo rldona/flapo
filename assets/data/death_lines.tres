@@ -5,3 +5,7 @@
 [resource]
 script = ExtResource("1_lines")
 lines = PackedStringArray("¡Uf!", "Casi.", "Ya casi lo tenías.", "El aire estaba raro hoy.", "Vuelve a intentarlo, va.", "Esa tubería salió de la nada.", "Flapo lo ha dado todo.", "Un poco más arriba y pasa.", "La gravedad no perdona.", "Otra vez, que ahora sí.", "Buen intento, de verdad.", "Se te ha ido un pelín.")
+lines_pipe = PackedStringArray("Esa tubería salió de la nada.", "De morros contra el tubo.", "Un poco más arriba y pasa.", "La tubería no se ha movido, eh.", "Ahí había hueco, de verdad.")
+lines_ground = PackedStringArray("Aterrizaje mejorable.", "El suelo sigue ahí, sí.", "Se te ha ido hacia abajo.", "Un aleteo más y no pasa.", "La gravedad no perdona.")
+lines_void = PackedStringArray("Se ha ido por abajo del todo.", "Ahí abajo no hay nada, Flapo.", "Eso ha sido un picado con ganas.")
+lines_breathless = PackedStringArray("Se quedó sin fuelle.", "Ya no le quedaba aire.", "Aletear cansa, resulta.", "Flapo pedía un descanso.")

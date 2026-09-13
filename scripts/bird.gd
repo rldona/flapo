@@ -9,7 +9,10 @@ extends CharacterBody2D
 
 ## Flapo ha chocado. La emite él porque es quien lo detecta; quien decide qué
 ## significa (pasar a GAME_OVER) es `Main`: "signal up".
-signal died
+##
+## Lleva la causa y si llegó sin aliento (T-075): eso lo sabe Flapo en el
+## momento del golpe y nadie más puede reconstruirlo después.
+signal died(cause: DeathCause, sin_aliento: bool)
 
 ## La fatiga ha cambiado (T-049). `aleteos` es cuántos hay en la ventana.
 signal fatigue_changed(fatigado: bool, aleteos: int)
@@ -21,6 +24,17 @@ signal breath_changed(actual: float, maximo: float)
 ## Flapo ha aleteado. La emite él porque es quien lee la entrada; quien
 ## decide que eso suena es Main.
 signal flapped
+
+## De qué se ha muerto Flapo (T-075).
+##
+## Son las causas que el juego tiene **de verdad**. Quedarse sin aliento no
+## está aquí porque no mata: a 0 se pierde el planeo, nunca el aleteo
+## (ADR-0020). Va como agravante en `died`, no como causa.
+enum DeathCause {
+	TUBERIA,  ## Se estampó contra una tubería.
+	SUELO,  ## Se dio con el suelo.
+	VACIO,  ## Se salió por abajo sin llegar a tocar nada.
+}
 
 ## Capa de obstáculos (tuberías y suelo). Se guarda porque la inmunidad la
 ## apaga temporalmente y hay que saber a qué volver.
@@ -359,9 +373,34 @@ func _update_rotation(delta: float) -> void:
 func _check_death() -> void:
 	if _dead:
 		return
-	if get_slide_collision_count() > 0 or position.y >= fall_death_y:
-		_dead = true
-		# El rebote se aplica aquí y no en Juice: es física de Flapo, y así
-		# ocurre en el mismo tick del golpe, sin un frame de retraso.
-		velocity.y = bounce_impulse
-		died.emit()
+	var choque: bool = get_slide_collision_count() > 0
+	if not choque and position.y < fall_death_y:
+		return
+	_dead = true
+	# El rebote se aplica aquí y no en Juice: es física de Flapo, y así
+	# ocurre en el mismo tick del golpe, sin un frame de retraso.
+	velocity.y = bounce_impulse
+	var causa: DeathCause = _causa_del_choque() if choque else DeathCause.VACIO
+	# Sin aliento no mata, pero sí explica: es la diferencia entre "se
+	# estampó" y "llegó agotado y se estampó".
+	died.emit(causa, is_zero_approx(_breath))
+
+
+## Contra qué se ha dado. Tuberías y suelo comparten capa de colisión, así
+## que no basta con la máscara: hay que mirar quién es el cuerpo tocado.
+##
+## Se sube por los ancestros porque el cuerpo con forma es un hijo
+## (`Pipe/Top`, `Ground/StaticBody2D`) y el tipo vive en la raíz de la escena.
+func _causa_del_choque() -> DeathCause:
+	# Se recorren TODAS las colisiones antes de decidir: la tubería gana si se
+	# tocan las dos a la vez, porque es la que cuenta la historia; el suelo
+	# solo estaba ahí debajo.
+	for i in get_slide_collision_count():
+		var nodo: Object = get_slide_collision(i).get_collider()
+		while nodo is Node:
+			if nodo is Pipe:
+				return DeathCause.TUBERIA
+			nodo = (nodo as Node).get_parent()
+	# Cualquier otra cosa en la capa de obstáculos es el suelo. Si algún día
+	# hubiera un tercer obstáculo, este es el sitio donde añadirlo.
+	return DeathCause.SUELO

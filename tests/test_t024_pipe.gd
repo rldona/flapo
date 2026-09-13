@@ -114,7 +114,7 @@ func _flapo_choca_con_el_tubo_y_pasa_por_el_hueco() -> void:
 		mundo.free()
 
 
-func _on_died() -> void:
+func _on_died(_cause: Bird.DeathCause, _sin_aliento: bool) -> void:
 	_choco = true
 
 

@@ -116,7 +116,7 @@ func _el_panel_ensena_una_frase() -> void:
 		vistas[titulo.text] = true
 		h.check(
 			"la frase del panel sale del recurso",
-			_lineas().lines.has(titulo.text),
+			_todas_las_frases().has(titulo.text),
 			"'%s'" % titulo.text
 		)
 		main.restart()
@@ -128,3 +128,14 @@ func _el_panel_ensena_una_frase() -> void:
 		"%d frases distintas en 6 muertes" % vistas.size()
 	)
 	main.free()
+
+
+## Todas las frases del recurso, genéricas y por causa (T-075). Desde T-075
+## el panel elige de una lista u otra según cómo se murió, así que
+## comprobar solo `lines` daría un falso fallo.
+func _todas_las_frases() -> PackedStringArray:
+	var r: DeathLines = _lineas()
+	var todas: PackedStringArray = PackedStringArray()
+	for lista in [r.lines, r.lines_pipe, r.lines_ground, r.lines_void, r.lines_breathless]:
+		todas.append_array(lista)
+	return todas

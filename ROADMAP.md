@@ -152,7 +152,7 @@ que por ser la mascota debe dibujarlo una persona.
 - ✅ Progresión de confianza: +8 de aliento cada 10 partidas, tope a las 50. → T-074 (ADR-0021)
 - 🔲 Pantalla de inicio: título, jugar, selector de dificultad, nombre de jugador y acceso a estadísticas. → T-078, T-079
 - 🔲 Pantalla de estadísticas (partidas jugadas, medalla más alta, etc.). → T-084
-- 🔲 Causa de muerte visible en el Game Over (colisión / sin aliento). → T-075
+- ✅ Causa de muerte en la frase del Game Over: tubería, suelo, vacío y agotamiento. → T-075
 - 🔲 Modo espejo desbloqueable tras récord, excepción documentada a "fuera de alcance". → T-076 (ADR-0022)
 - 🔲 Captura automática del mejor salto para compartir. → T-077
 

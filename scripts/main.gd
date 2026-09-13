@@ -81,6 +81,11 @@ var _high_score: int = 0
 var _confidence: int = 0
 ## La última frase que salió, para no repetirla dos veces seguidas.
 var _ultima_frase: String = ""
+## De qué murió Flapo la última vez y si llegó sin aliento (T-075). Se
+## guardan porque el panel se rellena en `_on_state_changed_results`, un paso
+## después de la muerte.
+var _death_cause: Bird.DeathCause = Bird.DeathCause.SUELO
+var _death_breathless: bool = false
 var _rng_frases := RandomNumberGenerator.new()
 var _is_new_high_score: bool = false
 
@@ -277,11 +282,14 @@ func _on_state_changed_results(to: GameState.State) -> void:
 		game_over_panel.set_line(_siguiente_frase())
 
 
-## Elige la frase de esta muerte, distinta de la anterior (T-056).
+## Elige la frase de esta muerte, distinta de la anterior (T-056) y acorde a
+## cómo se murió (T-075).
 func _siguiente_frase() -> String:
 	if death_lines == null:
 		return ""
-	var frase: String = death_lines.pick(_rng_frases, _ultima_frase)
+	var frase: String = death_lines.pick_for(
+		_death_cause, _death_breathless, _rng_frases, _ultima_frase
+	)
 	if frase != "":
 		_ultima_frase = frase
 	return frase
@@ -368,13 +376,17 @@ func _on_centered() -> void:
 	bird.recover_breath(GameConfig.BREATH_RECOVER_ON_GAP)
 
 
-func _on_bird_died() -> void:
+func _on_bird_died(cause: Bird.DeathCause, sin_aliento: bool) -> void:
 	# El escudo de la fruta azul absorbe el golpe antes que nada más.
 	if effects != null and effects.consume_shield():
 		bird.survive(shield_grace)
 		if audio != null:
 			audio.play_fruit_good()
 		return
+	# Se apunta ya, aunque el panel lo lea un paso después: en GAME_OVER la
+	# colisión ya no existe y la causa no se podría reconstruir.
+	_death_cause = cause
+	_death_breathless = sin_aliento
 	if juice != null:
 		juice.punch()
 	if audio != null:
