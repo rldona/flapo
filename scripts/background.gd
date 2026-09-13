@@ -20,8 +20,10 @@ extends Node2D
 @export var moving: bool = true
 
 var _offset: float = 0.0
+var _variante: GameConfig.Scenery = GameConfig.Scenery.DIA
 
 @onready var _layers: Array[Parallax2D] = [$Far, $Near]
+@onready var _rain: CPUParticles2D = $Rain
 
 
 func _process(delta: float) -> void:
@@ -39,6 +41,25 @@ func on_game_state_changed(to: GameState.State) -> void:
 	if to == GameState.State.READY or to == GameState.State.MENU:
 		_offset = 0.0
 		_apply_offset()
+
+
+## Aplica la variante de escenario (T-057).
+##
+## Solo tiñe y enciende la lluvia. **No toca `layer_speeds` ni el offset**: si
+## una variante cambiara la velocidad del parallax, dejaría de ser cosmética y
+## el mundo iría distinto según el cielo que tocara.
+func set_variant(variante: GameConfig.Scenery) -> void:
+	_variante = variante
+	var tinte: Color = GameConfig.scenery_tint(variante)
+	for capa in _layers:
+		capa.modulate = tinte
+	if _rain != null:
+		_rain.emitting = GameConfig.scenery_rains(variante)
+
+
+## Qué variante está puesta. Lo usan los tests.
+func variant() -> GameConfig.Scenery:
+	return _variante
 
 
 ## Desplazamiento acumulado de la capa `i`, px. Lo usan los tests.

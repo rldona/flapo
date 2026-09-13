@@ -15,6 +15,24 @@
 | Pico sombra | `#B88632` | | Patas sombra | `#D49A3A` |
 | | | | Edificios lejanos | `#7C9AB5` |
 
+### Colores de escenario (T-057)
+
+Cuatro variantes cosméticas. El cielo es un `ColorRect` y lleva color exacto;
+las nubes y los edificios se **tiñen** (multiplican) sobre el PNG que ya
+existe, así que solo pueden oscurecer — que es lo que hace la luz al caer la
+tarde.
+
+| Variante | Cielo | Tinte de capas |
+|---|---|---|
+| Día | `#7CB3D7` (el de siempre) | ninguno |
+| Atardecer | `#E8A06B` | `#FFC49A` |
+| Noche | `#2E3F5C` | `#6E7FA6` |
+| Lluvia | `#8FA3B0` | `#B9C6CE` |
+
+Amplían la paleta con el mismo criterio que las frutas: son tonos que el resto
+del mundo no usa. No hay PNG nuevos — cuatro juegos de nubes serían cuatro
+ficheros que mantener sincronizados a mano.
+
 ### Colores de fruta (T-047)
 
 | Fruta | Hex | Efecto |

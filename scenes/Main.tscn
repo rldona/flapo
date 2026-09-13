@@ -24,7 +24,7 @@
 [ext_resource type="PackedScene" path="res://scenes/OptionsPanel.tscn" id="21_options"]
 [ext_resource type="Script" path="res://scripts/replay_recorder.gd" id="22_rec"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost", "options_panel", "replay_recorder")]
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost", "options_panel", "replay_recorder", "sky")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
 pipe_spawner = NodePath("PipeSpawner")
@@ -46,6 +46,7 @@ glide_hint = NodePath("GlideHint")
 ghost = NodePath("Ghost")
 options_panel = NodePath("OptionsPanel")
 replay_recorder = NodePath("ReplayRecorder")
+sky = NodePath("Sky")
 death_lines = ExtResource("14_lines")
 
 [node name="Sky" type="ColorRect" parent="." unique_id=1166350777]

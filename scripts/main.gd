@@ -49,6 +49,10 @@ const _TRANSITIONS: Dictionary = {
 ## El fondo con parallax.
 @export var background: Background
 
+## El cielo. Es un rectángulo de color, no arte: por eso la variante de
+## escenario (T-057) sí puede darle el color exacto que quiera.
+@export var sky: ColorRect
+
 ## El fundido de arranque de partida.
 @export var fade: Fade
 
@@ -337,6 +341,19 @@ func _refrescar_menu() -> void:
 		options_panel.set_player_name(_session.player_name())
 
 
+## Pone el cielo que le toca a esta semilla (T-057).
+##
+## Se llama en READY, después de sembrar, porque hasta ahí la semilla de una
+## partida libre todavía es 0. Es puro adorno: no toca la física ni pide un
+## solo número al generador (ADR-0024).
+func _aplicar_escenario() -> void:
+	var variante: GameConfig.Scenery = GameConfig.scenery_for(_session.seed())
+	if sky != null:
+		sky.color = GameConfig.scenery_sky(variante)
+	if background != null:
+		background.set_variant(variante)
+
+
 ## Traslada la confianza guardada a Flapo (T-074).
 ##
 ## Es lo único que la progresión toca del juego, y se hace al empezar cada
@@ -379,6 +396,7 @@ func change_state(to: GameState.State) -> void:
 		# todavía es 0 y el fantasma no sabría si le toca salir (T-243).
 		if ghost != null:
 			ghost.preparar(_session.seed())
+		_aplicar_escenario()
 		if replay_recorder != null:
 			replay_recorder.preparar(_session.seed(), _session.difficulty(), _session.confidence())
 		_huecos_sin_planear = 0

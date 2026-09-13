@@ -34,6 +34,10 @@ enum Pant {
 
 enum Medal { NINGUNA, CROQUETA, TORTILLA, JAMON }
 
+## Las cuatro caras del mismo sitio. Es puro adorno: ni una sola de ellas
+## toca el hueco, la velocidad ni la física.
+enum Scenery { DIA, ATARDECER, NOCHE, LLUVIA }
+
 # --- Pantalla -----------------------------------------------------------
 ## Tamaño lógico del viewport, en píxeles. Coincide con
 ## display/window/size/viewport_{width,height} de project.godot.
@@ -312,6 +316,34 @@ const MEDAL_BRONZE: int = 10
 const MEDAL_SILVER: int = 20
 const MEDAL_GOLD: int = 40
 
+## --- Variantes de escenario (T-057) ---
+
+## El color exacto del cielo en cada variante.
+##
+## El cielo es un `ColorRect`, así que aquí sí se puede poner el color que se
+## quiera. Las capas de nubes y edificios ya vienen pintadas del PNG y solo
+## se pueden **teñir**, o sea multiplicar, o sea oscurecer — que es justo lo
+## que hace la luz al caer la tarde, así que no es una limitación sino la
+## física del asunto.
+const SCENERY_SKY: Array[Color] = [
+	Color("#7CB3D7"),
+	Color("#E8A06B"),
+	Color("#2E3F5C"),
+	Color("#8FA3B0"),
+]
+
+## El tinte de las capas. Blanco = dejarlas como están (el día de siempre).
+const SCENERY_TINT: Array[Color] = [
+	Color.WHITE,
+	Color("#FFC49A"),
+	Color("#6E7FA6"),
+	Color("#B9C6CE"),
+]
+
+## Cuál de ellas llueve. Se guarda como dato y no como un `if` suelto: el día
+## que haya una variante más, esto sigue diciendo la verdad.
+const SCENERY_LLUEVE: Array[bool] = [false, false, false, true]
+
 ## --- Fantasma del récord (T-243) ---
 
 ## Transparencia del fantasma. 0.45 y no menos: por debajo desaparece sobre
@@ -327,6 +359,40 @@ const GHOST_TINT: Color = Color("#8FB8D8")
 ## diseño sino un seguro: un fichero de fantasma no puede crecer sin fin ni
 ## por una partida eterna ni por un fichero manipulado a mano.
 const GHOST_MAX_FRAMES: int = 36000
+
+
+## Qué escenario le toca a una semilla (T-057).
+##
+## Sale de la semilla con una cuenta, **no de pedirle un número al
+## generador**, y esa es la decisión del ticket (ADR-0024). Pedírselo movería
+## la secuencia de tuberías un paso: los códigos compartidos de T-242 dejarían
+## de dar la misma partida y el replay de referencia de T-261 dejaría de
+## cuadrar. Un adorno no puede permitirse cambiar el juego.
+##
+## De regalo, el reto del día (T-241) sale con el mismo cielo para todo el
+## mundo, que es lo que uno espera de un reto compartido.
+static func scenery_for(semilla: int) -> Scenery:
+	return posmod(semilla, SCENERY_SKY.size()) as Scenery
+
+
+## El color del cielo de esa variante.
+static func scenery_sky(variante: Scenery) -> Color:
+	return SCENERY_SKY[int(variante)]
+
+
+## El tinte de las capas de esa variante.
+static func scenery_tint(variante: Scenery) -> Color:
+	return SCENERY_TINT[int(variante)]
+
+
+## Si en esa variante llueve.
+static func scenery_rains(variante: Scenery) -> bool:
+	return SCENERY_LLUEVE[int(variante)]
+
+
+## Nombre visible de la variante. Lo usan los tests y el modo depuración.
+static func scenery_name(variante: Scenery) -> String:
+	return ["Día", "Atardecer", "Noche", "Lluvia"][int(variante)]
 
 
 ## Cuánto de dificultad se ha desbloqueado, de 0 a 1.
