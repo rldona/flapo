@@ -14,7 +14,7 @@ fi
 
 fallos=0
 for test in "$RAIZ"/tests/test_*.gd; do
-  "$GODOT" --headless --path "$RAIZ" -s "$test" || fallos=$((fallos + 1))
+  "$GODOT" --headless --fixed-fps 60 --path "$RAIZ" -s "$test" || fallos=$((fallos + 1))
 done
 
 if [[ $fallos -gt 0 ]]; then

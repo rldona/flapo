@@ -51,6 +51,16 @@ func pulsa(keycode: Key, pulsada: bool = true) -> void:
 	Input.parse_input_event(ev)
 
 
+## El autoload `GameConfig`.
+##
+## Un script lanzado con `-s` se COMPILA antes de que se registren los
+## autoloads, así que nombrar `GameConfig` directamente en un test da
+## "Identifier not found" y ni siquiera arranca. En tiempo de ejecución sí
+## está: hay que pedírselo al árbol, y solo después del primer frame.
+func config() -> Node:
+	return _tree.root.get_node("/root/GameConfig")
+
+
 ## Espera `n` ticks de física (60 Hz fijos, ver ADR-0002).
 func ticks(n: int) -> void:
 	for i in n:

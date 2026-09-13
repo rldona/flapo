@@ -24,12 +24,8 @@ const VIEWPORT_SIZE := Vector2i(288, 512)
 const SCROLL_SPEED: float = 100.0
 ## Distancia horizontal entre dos pares de tuberías consecutivos, px.
 const PIPE_SPACING: float = 160.0
-## Alto del hueco por el que pasa Flapo, px.
-const PIPE_GAP: float = 100.0
-## Rango vertical (fracción de la altura jugable) donde puede caer el centro
-## del hueco. Evita huecos pegados al techo o al suelo.
-const GAP_RANGE_MIN: float = 0.20
-const GAP_RANGE_MAX: float = 0.80
+# El hueco y su rango vertical tampoco están aquí: son `@export` de
+# `scripts/pipe.gd`, porque es lo que se tunea a ojo en T-040.
 
 # --- Puntuación ---------------------------------------------------------
 const MEDAL_BRONZE: int = 10

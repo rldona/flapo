@@ -23,7 +23,7 @@ GODOT=/ruta/a/godot ./tests/run.sh
 Un solo fichero:
 
 ```bash
-/Applications/Godot.app/Contents/MacOS/Godot --headless --path . -s tests/test_t023_bird.gd
+/Applications/Godot.app/Contents/MacOS/Godot --headless --fixed-fps 60 --path . -s tests/test_t023_bird.gd
 ```
 
 ## Comandos útiles
@@ -32,7 +32,7 @@ Un solo fichero:
 |---|---|
 | Comprobar que un script compila | `godot --headless --path . --check-only --script scripts/bird.gd` |
 | Importar assets sin abrir el editor | `godot --headless --path . --import` |
-| Ejecutar un script de `SceneTree` | `godot --headless --path . -s tests/test_x.gd` |
+| Ejecutar un script de `SceneTree` | `godot --headless --fixed-fps 60 --path . -s tests/test_x.gd` |
 | Exportar | `godot --headless --path . --export-release Web export/Web/index.html` |
 
 En macOS el binario está dentro del `.app` y no en el `PATH`:
@@ -65,9 +65,16 @@ Convenciones:
 - Liberar la escena (`main.free()`) al final de cada caso: los tests de fugas
   de nodos (T-024, T-028) dependen de que los casos no se contaminen.
 
+## `--fixed-fps`: por qué es obligatorio
+
+Sin él, headless sincroniza con el reloj de pared: simular los 5 minutos que
+pide el criterio de T-024 tarda 5 minutos reales. `--fixed-fps 60` desacopla
+la simulación del reloj manteniendo el `delta` fijo, y esos mismos 18 000
+ticks tardan **0,36 s**. `tests/run.sh` ya lo pasa.
+
 ## Trampas conocidas
 
-Las tres cuestan una tarde si se descubren solas:
+Cuestan una tarde si se descubren solas:
 
 1. **`Input.action_press()` no simula entrada.** No cuadra los contadores de
    frame que usa `is_action_just_pressed()`, así que la pulsación se pierde
@@ -76,7 +83,17 @@ Las tres cuestan una tarde si se descubren solas:
 2. **Hay que soltar la tecla.** Si un caso deja el espacio pulsado, el
    siguiente no genera flanco de subida y falla por un motivo que no es el que
    se está probando.
-3. **`_ready()` no corre al hacer `add_child()` desde `_init()`** de un
+3. **Los autoloads no se pueden nombrar en un script `-s`.** El script del
+   test se compila antes de que se registren, así que escribir `GameConfig`
+   da `Identifier not found` y el test no llega ni a arrancar. En ejecución
+   sí existen —el resto del juego los usa con normalidad—, pero hay que
+   pedirlos al árbol y solo después del primer frame: es lo que hace
+   `Harness.config()`.
+4. **Los lambdas capturan las locales por valor.** Un
+   `var visto := false; señal.connect(func(): visto = true)` no cambia nunca
+   `visto`, y el test pasa o falla por el motivo equivocado. El flag tiene que
+   ser un miembro de la clase.
+5. **`_ready()` no corre al hacer `add_child()` desde `_init()`** de un
    `SceneTree`: se difiere al primer frame de proceso. Por eso `montar()`
    hace `await process_frame`, y por eso las propiedades se asignan **antes**
    de entrar al árbol.
