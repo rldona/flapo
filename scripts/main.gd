@@ -391,6 +391,12 @@ func _aplicar_escenario() -> void:
 		background.set_stage(GameConfig.journey_stage(_score))
 	if snapshot != null:
 		snapshot.set_sky(GameConfig.scenery_sky(variante))
+	# Y las franjas del letterbox. En una pantalla que no es múltiplo exacto
+	# de 288×512 sobra sitio arriba y abajo (ADR-0002: el escalado es entero o
+	# no es pixel-perfect). Pintarlo del color del cielo hace que el sobrante
+	# se lea como parte del mundo y no como "el juego no cabe", que es lo que
+	# parecía en negro.
+	RenderingServer.set_default_clear_color(GameConfig.scenery_sky(variante))
 
 
 ## Traslada la confianza guardada a Flapo (T-074).
