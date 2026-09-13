@@ -19,8 +19,19 @@
 [ext_resource type="PackedScene" path="res://scenes/StatsPanel.tscn" id="16_stats"]
 [ext_resource type="Script" path="res://scripts/layout_director.gd" id="17_layout"]
 [ext_resource type="Script" path="res://scripts/wind.gd" id="18_wind"]
+[ext_resource type="PackedScene" path="res://scenes/GlideHint.tscn" id="19_hint"]
+[ext_resource type="PackedScene" path="res://scenes/Ghost.tscn" id="20_ghost"]
+[ext_resource type="PackedScene" path="res://scenes/OptionsPanel.tscn" id="21_options"]
+[ext_resource type="Script" path="res://scripts/replay_recorder.gd" id="22_rec"]
+[ext_resource type="PackedScene" path="res://scenes/Buddy.tscn" id="23_buddy"]
+[ext_resource type="Script" path="res://scripts/snapshot.gd" id="24_snap"]
+[ext_resource type="Script" path="res://scripts/air_spawner.gd" id="25_air"]
+[ext_resource type="Script" path="res://scripts/journey.gd" id="29_journey"]
+[ext_resource type="PackedScene" path="res://scenes/Thermal.tscn" id="26_thermal"]
+[ext_resource type="PackedScene" path="res://scenes/Brother.tscn" id="27_bro"]
+[ext_resource type="PackedScene" path="res://scenes/Slipstream.tscn" id="28_slip"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind")]
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost", "options_panel", "replay_recorder", "sky", "buddy", "snapshot", "air_spawner", "journey")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
 pipe_spawner = NodePath("PipeSpawner")
@@ -38,6 +49,15 @@ menu_panel = NodePath("MenuPanel")
 stats_panel = NodePath("StatsPanel")
 layout = NodePath("Layout")
 wind = NodePath("Wind")
+glide_hint = NodePath("GlideHint")
+ghost = NodePath("Ghost")
+options_panel = NodePath("OptionsPanel")
+replay_recorder = NodePath("ReplayRecorder")
+sky = NodePath("Sky")
+buddy = NodePath("Buddy")
+snapshot = NodePath("Snapshot")
+air_spawner = NodePath("AirSpawner")
+journey = NodePath("Journey")
 death_lines = ExtResource("14_lines")
 
 [node name="Sky" type="ColorRect" parent="." unique_id=1166350777]
@@ -47,6 +67,29 @@ mouse_filter = 2
 color = Color(0.4863, 0.7020, 0.8431, 1)
 
 [node name="Background" parent="." instance=ExtResource("8_bg")]
+
+[node name="Buddy" parent="." node_paths=PackedStringArray("bird") instance=ExtResource("23_buddy")]
+bird = NodePath("../Bird")
+
+[node name="Journey" type="Node" parent="."]
+script = ExtResource("29_journey")
+
+[node name="AirSpawner" type="Node2D" parent="."]
+script = ExtResource("25_air")
+thermal_scene = ExtResource("26_thermal")
+brother_scene = ExtResource("27_bro")
+slipstream_scene = ExtResource("28_slip")
+
+[node name="Snapshot" type="Node" parent="." node_paths=PackedStringArray("bird", "pipe_spawner")]
+script = ExtResource("24_snap")
+bird = NodePath("../Bird")
+pipe_spawner = NodePath("../PipeSpawner")
+
+[node name="ReplayRecorder" type="Node" parent="."]
+script = ExtResource("22_rec")
+
+[node name="Ghost" parent="." node_paths=PackedStringArray("bird") instance=ExtResource("20_ghost")]
+bird = NodePath("../Bird")
 
 [node name="Bird" parent="." unique_id=269885029 instance=ExtResource("2_bird")]
 position = Vector2(72, 256)
@@ -89,6 +132,8 @@ script = ExtResource("12_effects")
 
 [node name="MenuPanel" parent="." instance=ExtResource("15_menu")]
 
+[node name="OptionsPanel" parent="." instance=ExtResource("21_options")]
+
 [node name="StatsPanel" parent="." instance=ExtResource("16_stats")]
 
 [node name="Layout" type="Node" parent="."]
@@ -96,3 +141,5 @@ script = ExtResource("17_layout")
 
 [node name="Wind" type="Node" parent="."]
 script = ExtResource("18_wind")
+
+[node name="GlideHint" parent="." instance=ExtResource("19_hint")]

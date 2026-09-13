@@ -18,6 +18,9 @@ signal scored
 ## Flapo ha cruzado por el centro del hueco (T-048).
 signal centered
 
+## Flapo ha pasado rozando el borde (T-058). El spawner solo hace de puente.
+signal grazed
+
 ## Escena de tubería a instanciar. Se asigna en el editor.
 @export var pipe_scene: PackedScene
 
@@ -40,10 +43,22 @@ var spacing: float = GameConfig.PIPE_SPACING
 var moving_chance: float = 0.0
 ## Probabilidad de que el próximo par gire (T-065). También la fija Main.
 var spin_chance: float = 0.0
+## Tuberías que quedan del tramo especial (T-067). La pone Main, que es quien
+## sabe si se ha batido el récord; el spawner solo las va gastando.
+var special_left: int = 0
+## Si la próxima tubería tiene que salir sin variantes (T-203).
+##
+## Lo pide `AirSpawner` cuando va a poner una térmica entre esta y la
+## siguiente: el ticket exige que una térmica **nunca** coincida con una
+## tubería móvil ni con el tramo especial, y que lo garantice el spawner y no
+## el azar.
+var _reservada_normal: bool = false
 ## Cuántas tuberías van en esta partida. Es lo que hace predecible a la
 ## blandita (T-066): se puede contar. Se reinicia en READY.
 var _contador: int = 0
 
+## El generador de la partida. Lo inyecta Main (T-240): el spawner NO crea el
+## suyo, porque dos generadores son dos partidas distintas.
 var _rng := RandomNumberGenerator.new()
 
 @onready var _timer: Timer = $Timer
@@ -99,6 +114,51 @@ func set_difficulty(velocidad: float, hueco: float, separacion: float) -> void:
 			hijo.scroll_speed = scroll_speed
 
 
+## La última tubería creada, o `null`. La usa `AirSpawner` para saber si la
+## térmica que va a poner tendría una tubería móvil al lado (T-203).
+func ultima_tuberia() -> Pipe:
+	var mejor: Pipe = null
+	for hijo in get_children():
+		if hijo is Pipe and (mejor == null or hijo.position.x > mejor.position.x):
+			mejor = hijo
+	return mejor
+
+
+## Reserva que la próxima tubería salga sin variantes (T-203).
+##
+## Siempre puede prometerlo. Si el tramo especial (T-067) arranca entre la
+## reserva y la tubería reservada, **el tramo se aplaza una tubería** en vez de
+## pisarla: sigue durando sus cuatro y la térmica no acaba pegada a una
+## tubería giratoria. Los dos tickets se cumplen enteros.
+##
+## Este caso no se dedujo leyendo el código: lo encontró el test de T-203
+## jugando 1.500 frames con la puntuación al máximo.
+func reservar_normal() -> bool:
+	_reservada_normal = true
+	return true
+
+
+## Para o reanuda la creación de tuberías (T-209).
+##
+## Pausar **no toca el contador ni el generador**: al reanudar, la partida
+## sigue exactamente donde estaba. Es lo que permite que el final del viaje
+## sea una pausa y no un estado nuevo (ADR-0027).
+func set_pausado(pausado: bool) -> void:
+	if _timer == null:
+		return
+	if pausado:
+		_timer.stop()
+	elif not _timer.is_stopped():
+		return
+	else:
+		_timer.start()
+
+
+## Si está pausado. Lo usan los tests.
+func esta_pausado() -> bool:
+	return _timer != null and _timer.is_stopped()
+
+
 ## Número de tuberías vivas. Lo usan los tests y el criterio de T-028.
 func pipe_count() -> int:
 	var n: int = 0
@@ -126,30 +186,58 @@ func _crear_tuberia() -> void:
 	pipe.position = Vector2(spawn_x, 0.0)
 	pipe.scored.connect(_on_pipe_scored)
 	pipe.centered.connect(_on_pipe_centered)
+	pipe.grazed.connect(_on_pipe_grazed)
 	add_child(pipe)
 	# Después de add_child: `randomize_gap` toca los nodos internos, que solo
 	# existen una vez ha corrido `_ready()` de la tubería.
 	pipe.randomize_gap(_rng)
-	_quiza_oscilante(pipe)
-	# El giro es puramente visual, así que no depende de la altura ni del
-	# hueco: se decide y ya está.
-	pipe.spin = spin_chance > 0.0 and _rng.randf() < spin_chance
+
+	# **Cada tubería consume siempre los mismos números**, decida lo que
+	# decida ser. Es un invariante y no un detalle: si la cantidad de tiradas
+	# dependiera de lo que sale, cualquier cosa que empuje una decisión —una
+	# térmica reservando (T-203), el tramo especial (T-067)— desplazaría la
+	# secuencia entera, y dos partidas con la misma semilla dejarían de ser la
+	# misma. Se tira siempre y se usa lo que haga falta.
+	var sale_movil: bool = moving_chance > 0.0 and _rng.randf() < moving_chance
+	var fase: float = _rng.randf_range(0.0, TAU)
+	var sale_giro: bool = spin_chance > 0.0 and _rng.randf() < spin_chance
+
+	var reservada: bool = _reservada_normal
+	_reservada_normal = false
+
+	if special_left > 0 and not reservada:
+		_vestir_de_tramo(pipe)
+	elif not reservada:
+		if sale_movil:
+			pipe.oscillation_amplitude = GameConfig.moving_pipe_amplitude(
+				pipe.gap, pipe.get_gap_center()
+			)
+			# Desfase al azar: si todas arrancaran en el mismo punto del seno,
+			# la pantalla entera temblaría a la vez en vez de parecer tuberías
+			# sueltas.
+			pipe.oscillation_phase = fase
+		pipe.spin = sale_giro
+
 	pipe_spawned.emit()
 
 
-## Decide si este par oscila, y con cuánta amplitud (T-063).
+## Viste una tubería del tramo especial (T-067).
 ##
-## La amplitud se calcula DESPUÉS de sortear la altura, porque depende de
-## ella: un hueco pegado al techo apenas puede subir. Si no cabe margen sale
-## 0 y la tubería es normal, que es preferible a mover un hueco medio fuera
-## de pantalla.
-func _quiza_oscilante(pipe: Pipe) -> void:
-	if moving_chance <= 0.0 or _rng.randf() >= moving_chance:
-		return
+## Móvil **y** giratoria a la vez, que es lo que el ticket pide combinar, y la
+## del medio blandita. No se sortea nada: el tramo es una celebración con
+## guion, no otra tirada de dados. Por eso tampoco toca el generador — si lo
+## tocara, el tramo movería la secuencia de tuberías y dos partidas con la
+## misma semilla dejarían de ser la misma según quién batiera su récord.
+func _vestir_de_tramo(pipe: Pipe) -> void:
+	pipe.special = true
+	pipe.soft = GameConfig.is_special_soft(special_left)
 	pipe.oscillation_amplitude = GameConfig.moving_pipe_amplitude(pipe.gap, pipe.get_gap_center())
-	# Desfase al azar: si todas arrancaran en el mismo punto del seno, la
-	# pantalla entera temblaría a la vez en vez de parecer tuberías sueltas.
-	pipe.oscillation_phase = _rng.randf_range(0.0, TAU)
+	# Desfase fijo y no al azar: además de no tocar el generador, hace que las
+	# cuatro del tramo se muevan a la vez y se lea como un tramo y no como
+	# cuatro tuberías raras seguidas.
+	pipe.oscillation_phase = 0.0
+	pipe.spin = true
+	special_left -= 1
 
 
 func _on_pipe_scored() -> void:
@@ -158,6 +246,10 @@ func _on_pipe_scored() -> void:
 
 func _on_pipe_centered() -> void:
 	centered.emit()
+
+
+func _on_pipe_grazed() -> void:
+	grazed.emit()
 
 
 func _liberar_todas() -> void:
@@ -172,8 +264,16 @@ func _congelar_todas() -> void:
 			hijo.moving = false
 
 
+## Recibe el generador de la partida (T-240).
+##
+## Se comparte, no se copia: si cada sistema tuviera el suyo, la misma
+## semilla daría partidas distintas según el orden en que se consultaran.
+func set_rng(rng: RandomNumberGenerator) -> void:
+	_rng = rng
+
+
 func _reiniciar_rng() -> void:
-	if random_seed == 0:
-		_rng.randomize()
-	else:
+	# `random_seed` sigue existiendo para poder aislar el spawner en un test
+	# suelto. En la partida real vale 0 y manda el generador de Main.
+	if random_seed != 0:
 		_rng.seed = random_seed

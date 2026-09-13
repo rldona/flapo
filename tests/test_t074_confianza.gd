@@ -143,8 +143,8 @@ func _sin_guardado_el_juego_arranca_igual() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	h.check(
 		"sin guardado, Main arranca con confianza 0",
-		main.get_confidence() == 0,
-		"%d" % main.get_confidence()
+		main.session().confidence() == 0,
+		"%d" % main.session().confidence()
 	)
 	h.check(
 		"y Flapo con el aliento de salida",
@@ -160,8 +160,8 @@ func _un_guardado_corrupto_no_rompe_el_arranque() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	h.check(
 		"con guardado corrupto, confianza 0",
-		main.get_confidence() == 0,
-		"%d" % main.get_confidence()
+		main.session().confidence() == 0,
+		"%d" % main.session().confidence()
 	)
 	h.check(
 		"y el juego llega al menú igualmente",
@@ -190,8 +190,8 @@ func _main_aplica_la_confianza_desde_la_primera_partida() -> void:
 	var esperado: float = GameConfig.max_breath_for(3)
 	h.check(
 		"Main lee la confianza guardada",
-		main.get_confidence() == 3,
-		"confianza: %d" % main.get_confidence()
+		main.session().confidence() == 3,
+		"confianza: %d" % main.session().confidence()
 	)
 	h.check(
 		"y Flapo tiene más aliento máximo ya en la primera partida",

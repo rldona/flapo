@@ -34,13 +34,13 @@ enum Fase { CALMA, AVISO, SOPLANDO }
 @export var random_seed: int = 0
 
 ## Si el viento está activo. Main lo apaga por debajo de WIND_MIN_SCORE.
-var enabled: bool = false:
-	set(valor):
-		if enabled == valor:
-			return
-		enabled = valor
-		if not enabled:
-			reset()
+##
+## El setter NO reinicia: reiniciar consume números del generador de la
+## partida (T-240), y hacerlo aquí metía un consumo extra que dependía de si
+## el viento estaba encendido al morir. Dos partidas con la misma semilla
+## dejaban de coincidir según cuánto hubieras puntuado en la anterior. Quien
+## reinicia es `on_game_state_changed`, que ocurre siempre y una sola vez.
+var enabled: bool = false
 
 var _fase: Fase = Fase.CALMA
 var _restante: float = 0.0
@@ -82,13 +82,16 @@ func on_game_state_changed(to: GameState.State) -> void:
 		reset()
 
 
+## Recibe el generador de la partida (T-240).
+func set_rng(rng: RandomNumberGenerator) -> void:
+	_rng = rng
+
+
 ## Vuelve a la calma y resortea el reloj. Main lo llama al empezar partida.
 func reset() -> void:
 	_fase = Fase.CALMA
 	_restante = _calma()
-	if random_seed == 0:
-		_rng.randomize()
-	else:
+	if random_seed != 0:
 		_rng.seed = random_seed
 
 

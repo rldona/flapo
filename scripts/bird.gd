@@ -14,6 +14,16 @@ extends CharacterBody2D
 ## momento del golpe y nadie más puede reconstruirlo después.
 signal died(cause: DeathCause, sin_aliento: bool)
 
+## Flapo ha empezado a planear (T-200). Es lo que apaga el aviso de
+## descubrimiento; se emite en cada planeo y quien decide qué significa la
+## primera vez es Main.
+signal glided
+
+## Flapo ha cogido aire al cruzar por la franja central (T-202). Va aparte
+## de `breath_changed` porque son cosas distintas: una es el número, esta es
+## el momento — y el momento es lo que se puede celebrar.
+signal breath_recovered(cantidad: float)
+
 ## Flapo ha rebotado en una tubería blandita (T-066). No muere: quien decide
 ## qué cuesta es Main.
 signal soft_hit
@@ -43,6 +53,19 @@ enum DeathCause {
 ## Capa de obstáculos (tuberías y suelo). Se guarda porque la inmunidad la
 ## apaga temporalmente y hay que saber a qué volver.
 const OBSTACULOS: int = 4
+
+@export_group("Modo espejo (T-076)")
+## Si el mundo está del revés (T-076).
+##
+## **Es un espejo, no otro control**: la gravedad tira hacia arriba y el
+## aleteo empuja hacia abajo. Todo lo demás es idéntico, y eso es a propósito:
+## un modo que además cambiara los números sería otro juego, no el mismo
+## visto en un espejo. Ver ADR-0038.
+@export var mirror: bool = false:
+	set(valor):
+		mirror = valor
+		if _sprite != null:
+			_sprite.flip_v = valor
 
 @export_group("Física")
 ## Aceleración de caída, px/s². Flapo pesa; ver GDD, "Concepto y tono".
@@ -132,6 +155,16 @@ var _breath: float = GameConfig.MAX_BREATH
 ## Cuánto lleva pulsado el botón, s. Distingue toque de mantener.
 var _held: float = 0.0
 var _gliding: bool = false
+## Cuántas térmicas lo están tocando (T-203). Un contador y no un `bool`:
+## dos columnas solapadas y un `bool` se apagaría al salir de la primera.
+var _termicas: int = 0
+## Cuántas estelas de rebufo lo están tocando (T-204). Contador por lo mismo
+## que las térmicas: dos solapadas y un `bool` mentiría al salir de una.
+var _estelas: int = 0
+## Si está en la escena del nido (T-209): ni input ni muerte, solo flotar.
+var _en_escena: bool = false
+## La máscara de colisión de antes de la escena, para devolverla al acabar.
+var _mascara_antes: int = OBSTACULOS
 ## Marcas de tiempo de los últimos aleteos, s. Es el historial del que
 ## `GameConfig.fatigue_impulse_mult()` deriva la fatiga: aquí no hay estado de
 ## fatiga, solo datos (T-049).
@@ -149,6 +182,9 @@ var _invulnerable_left: float = 0.0
 var _soft_cooldown: float = 0.0
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
+@onready var _sweat: CPUParticles2D = $Sweat
+@onready var _puff: CPUParticles2D = $Puff
+@onready var _air: CPUParticles2D = $Air
 @onready var _shape: CollisionShape2D = $CollisionShape2D
 
 
@@ -172,13 +208,22 @@ func _physics_process(delta: float) -> void:
 			# lo consume Main; Flapo solo empieza a caer cuando ya es PLAYING.
 			velocity = Vector2.ZERO
 		GameState.State.PLAYING:
+			# En la escena del nido Flapo flota: ni gravedad ni entrada, igual
+			# que en READY. No es un estado nuevo, es este mismo con el
+			# control apagado tres segundos (T-209, ADR-0027).
+			if _en_escena:
+				velocity = Vector2.ZERO
+				_gliding = false
+				move_and_slide()
+				_update_animation(delta)
+				return
 			_actualizar_planeo(delta)
 			_apply_gravity(delta)
 			# `is_action_just_pressed` es consciente de si lo llamas desde un
 			# frame de física o de dibujo, así que aquí no se pierde ni se
 			# duplica ninguna pulsación aunque los fps bailen.
 			if Input.is_action_just_pressed("flap"):
-				velocity.y = flap_impulse * _registrar_aleteo()
+				velocity.y = flap_impulse * _registrar_aleteo() * _signo()
 				_burst_left = flap_burst_time
 				_gastar_aliento(GameConfig.BREATH_DRAIN_FLAP)
 				flapped.emit()
@@ -232,6 +277,9 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_burst_left = 0.0
 		_held = 0.0
 		_gliding = false
+		_termicas = 0
+		_estelas = 0
+		_en_escena = false
 		_breath = max_breath
 		breath_changed.emit(_breath, max_breath)
 		_flap_times.clear()
@@ -253,15 +301,53 @@ func _update_animation(delta: float) -> void:
 	if _state == GameState.State.GAME_OVER:
 		if _sprite.is_playing():
 			_sprite.pause()
+		# Muerto no se jadea: el batacazo es lo que hay que mirar.
+		if _sweat != null:
+			_sweat.emitting = false
+		if _puff != null:
+			_puff.emitting = false
 		return
 	if not _sprite.is_playing():
 		_sprite.play("flap")
 	_burst_left = maxf(_burst_left - delta, 0.0)
 	var fps: float = flap_fps_burst if _burst_left > 0.0 else flap_fps_idle
+	# Jadear acelera el aleteo: es temblor de esfuerzo, no prisa (T-201).
+	if GameConfig.pant_level(_breath, max_breath) != GameConfig.Pant.NINGUNO:
+		fps *= GameConfig.PANT_FLAP_FPS_MULT
 	# `speed_scale` multiplica la velocidad base de la animación (10 fps en
 	# el SpriteFrames), así que se divide para que el @export esté en fps
 	# reales y se pueda razonar sobre él.
 	_sprite.speed_scale = fps / 10.0
+	_actualizar_jadeo()
+
+
+## Enseña el aliento en el cuerpo de Flapo, no solo en la barra (T-201).
+##
+## Todo sale de `GameConfig.pant_level()` y `pant_tint_weight()`, que son
+## funciones puras del aliento. Aquí no se guarda nada: por eso al volver el
+## aliento al máximo —al empezar partida— el jadeo se apaga solo, sin código
+## de reinicio que se pueda olvidar.
+##
+## La modulación NO toca la hitbox: el color va en el `AnimatedSprite2D` y la
+## forma vive en el `CollisionShape2D`, que son hermanos.
+func _actualizar_jadeo() -> void:
+	if _sprite == null:
+		return
+	var nivel: GameConfig.Pant = GameConfig.pant_level(_breath, max_breath)
+	var peso: float = GameConfig.pant_tint_weight(_breath, max_breath)
+	_sprite.modulate = Color.WHITE.lerp(GameConfig.PANT_TINT, peso)
+	if _sweat != null:
+		_sweat.emitting = nivel != GameConfig.Pant.NINGUNO
+	if _puff != null:
+		# Continuo mientras esté a cero, no un estallido al llegar: un
+		# one-shot exigiría recordar el frame anterior, que es justo el
+		# estado que este ticket dice que no debe existir.
+		_puff.emitting = nivel == GameConfig.Pant.AGOTADO
+
+
+## En qué estado de jadeo está ahora mismo. Lo usan los tests.
+func pant_level() -> GameConfig.Pant:
+	return GameConfig.pant_level(_breath, max_breath)
 
 
 ## Sobrevive a un golpe: el escudo de la fruta azul (T-047).
@@ -295,8 +381,13 @@ func _actualizar_planeo(delta: float) -> void:
 	var quiere: bool = _held >= glide_hold_time
 	var antes: bool = _gliding
 	_gliding = quiere and _breath > 0.0
+	if _gliding and not antes:
+		glided.emit()
 	if _gliding:
-		_gastar_aliento(GameConfig.BREATH_DRAIN_GLIDE * delta)
+		# Dentro del rebufo, planear no gasta aliento (T-204). No empuja ni
+		# sube: el rebufo es descanso, no ventaja.
+		if _estelas <= 0:
+			_gastar_aliento(GameConfig.BREATH_DRAIN_GLIDE * delta)
 		# Planear descansa: es la salida deliberada a la fatiga, y lo que
 		# convierte "deja de machacar" en una acción y no en una espera.
 		if not antes and not _flap_times.is_empty():
@@ -345,7 +436,22 @@ func _ajustar_aliento(delta_aliento: float) -> void:
 
 ## Recupera aliento. Lo llama Main al cruzar el centro de un hueco.
 func recover_breath(cantidad: float) -> void:
+	var antes: float = _breath
 	_ajustar_aliento(cantidad)
+	# La señal lleva lo que de VERDAD ha entrado, no lo que se pidió: con el
+	# aliento casi lleno, recuperar 25 puede ser recuperar 3, y celebrar 25
+	# sería mentirle al jugador.
+	var ganado: float = _breath - antes
+	if ganado > 0.0:
+		_bocanada(ganado)
+
+
+## Celebra la bocanada: partícula de aire y aviso (T-202).
+func _bocanada(cantidad: float) -> void:
+	if _air != null:
+		_air.restart()
+		_air.emitting = true
+	breath_recovered.emit(cantidad)
 
 
 ## Aliento actual, en las unidades de GameConfig.MAX_BREATH.
@@ -353,20 +459,93 @@ func breath() -> float:
 	return _breath
 
 
+## Main enciende y apaga la escena del nido (T-209).
+##
+## Mientras está encendida Flapo no responde y **no puede morir**: es el
+## criterio del ticket, y sin él la escena sería una trampa — tres segundos
+## sin control con las tuberías todavía en pantalla.
+func set_escena(activa: bool) -> void:
+	_en_escena = activa
+	if activa:
+		velocity = Vector2.ZERO
+		# Sin colisiones tampoco: no basta con no morir. Las tuberías que
+		# quedaban en pantalla siguen avanzando y, al atravesarlo, la física
+		# lo desplaza al resolver la penetración — medido: 3,3 px hacia
+		# arriba en tres segundos de escena. Flotar quieto tiene que ser
+		# quieto de verdad.
+		_mascara_antes = collision_mask
+		collision_mask = 0
+	else:
+		collision_mask = _mascara_antes
+
+
+## Si está en la escena del nido. Lo usan los tests.
+func en_escena() -> bool:
+	return _en_escena
+
+
+## Main le dice que ha entrado o salido de una térmica (T-203).
+##
+## Se cuentan las entradas en vez de guardar un `sí/no`: con dos columnas
+## solapadas, salir de la primera apagaría el efecto estando aún dentro de la
+## segunda.
+func set_in_thermal(dentro: bool) -> void:
+	_termicas = maxi(_termicas + (1 if dentro else -1), 0)
+
+
+## Si está dentro de alguna térmica. Lo usan los tests.
+func in_thermal() -> bool:
+	return _termicas > 0
+
+
+## Main le dice que ha entrado o salido de una estela de rebufo (T-204).
+func set_in_slipstream(dentro: bool) -> void:
+	_estelas = maxi(_estelas + (1 if dentro else -1), 0)
+
+
+## Si está dentro de alguna estela. Lo usan los tests.
+func in_slipstream() -> bool:
+	return _estelas > 0
+
+
 ## Si Flapo está planeando ahora mismo.
 func is_gliding() -> bool:
 	return _gliding
 
 
+## Hacia dónde tira la gravedad: 1 abajo, -1 arriba en modo espejo (T-076).
+##
+## Un solo signo para toda la física en vez de un `if mirror` en cada sitio.
+## Con `if` repartidos, cualquier ajuste futuro tendría que acordarse de las
+## dos ramas, y la que menos se juega es la que se rompe sin que nadie lo vea.
+func _signo() -> float:
+	return -1.0 if mirror else 1.0
+
+
+## Aplica un tope de caída respetando hacia dónde se cae.
+func _limitar(v: float, tope: float) -> float:
+	return maxf(v, tope * _signo()) if mirror else minf(v, tope)
+
+
 func _apply_gravity(delta: float) -> void:
+	var signo: float = _signo()
 	# Planeando cae a una fracción de la gravedad y con un tope mucho más
 	# bajo: es descender despacio, no flotar.
 	if _gliding:
-		velocity.y = minf(
-			velocity.y + gravity * gravity_mult * glide_gravity_mult * delta, glide_max_fall_speed
+		# Dentro de una térmica, planear SUBE (T-203). El aleteo no cambia:
+		# la térmica le da un segundo uso al planeo, no un control nuevo.
+		if _termicas > 0:
+			velocity.y = maxf(
+				velocity.y - AirConfig.THERMAL_LIFT * delta * signo,
+				-AirConfig.THERMAL_MAX_RISE * signo
+			)
+			return
+		velocity.y = _limitar(
+			velocity.y + gravity * gravity_mult * glide_gravity_mult * delta * signo,
+			glide_max_fall_speed
 		)
 		return
-	velocity.y = minf(velocity.y + gravity * gravity_mult * delta, max_fall_speed)
+	velocity.y = _limitar(velocity.y + gravity * gravity_mult * delta * signo, max_fall_speed)
 
 
 ## La FÍSICA no mueve a Flapo en horizontal (T-066).
@@ -407,7 +586,11 @@ func _clamp_to_ceiling() -> void:
 func _update_rotation(delta: float) -> void:
 	# La velocidad vertical se mapea a un ángulo: subiendo, morro arriba;
 	# cayendo, picado. Es el truco que hace legible el salto sin animación.
-	var fall_ratio: float = clampf(inverse_lerp(flap_impulse, max_fall_speed, velocity.y), 0.0, 1.0)
+	# `velocity.y * _signo()`: en espejo, subir y bajar son al revés, y el
+	# morro tiene que seguir apuntando adonde va (T-076).
+	var fall_ratio: float = clampf(
+		inverse_lerp(flap_impulse, max_fall_speed, velocity.y * _signo()), 0.0, 1.0
+	)
 	var target: float = deg_to_rad(lerpf(rotation_up_degrees, rotation_down_degrees, fall_ratio))
 	# Interpolación exponencial: independiente de los fps, a diferencia de un
 	# `lerp(rotation, target, 0.2)` a pelo, que va más rápido cuantos más fps.
@@ -418,7 +601,11 @@ func _check_death() -> void:
 	if _dead:
 		return
 	var choque: bool = get_slide_collision_count() > 0
-	if not choque and position.y < fall_death_y:
+	# En espejo, el techo es el suelo (T-076). Sin esto, Flapo se quedaría
+	# pegado arriba para siempre: la gravedad lo empuja contra el techo y ahí
+	# no hay ningún cuerpo con el que chocar.
+	var contra_el_techo: bool = mirror and position.y <= ceiling_y
+	if not choque and not contra_el_techo and position.y < fall_death_y:
 		return
 	# Las blanditas se miran ANTES de morir (T-066): si todo lo que se ha
 	# tocado es blando, no hay muerte que procesar.
@@ -428,8 +615,12 @@ func _check_death() -> void:
 	_dead = true
 	# El rebote se aplica aquí y no en Juice: es física de Flapo, y así
 	# ocurre en el mismo tick del golpe, sin un frame de retraso.
-	velocity.y = bounce_impulse
-	var causa: DeathCause = _causa_del_choque() if choque else DeathCause.VACIO
+	velocity.y = bounce_impulse * _signo()
+	var causa: DeathCause = DeathCause.VACIO
+	if choque:
+		causa = _causa_del_choque()
+	elif contra_el_techo:
+		causa = DeathCause.SUELO
 	# Sin aliento no mata, pero sí explica: es la diferencia entre "se
 	# estampó" y "llegó agotado y se estampó".
 	died.emit(causa, is_zero_approx(_breath))

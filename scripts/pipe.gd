@@ -17,6 +17,11 @@ signal scored
 ## bien.
 signal centered
 
+## Flapo ha pasado **rozando** el borde del hueco (T-058). Ni muerte ni
+## mérito: un susto. Sale de la misma cuenta que `centered`, mirando el otro
+## extremo del hueco en vez del centro.
+signal grazed
+
 @export_group("Hueco")
 ## Alto del hueco, px. Es la constante que más cambia la dificultad.
 @export var gap: float = GameConfig.PIPE_GAP:
@@ -49,6 +54,15 @@ signal centered
 @export var soft: bool = false:
 	set(valor):
 		soft = valor
+		_aplicar_tinte()
+
+@export_group("Tramo especial (T-067)")
+## Si esta tubería es del tramo de celebración (T-067). Se tiñe al ponerla,
+## igual que la blandita: el tramo tiene que verse llegar, no descubrirse al
+## chocar.
+@export var special: bool = false:
+	set(valor):
+		special = valor
 		_aplicar_tinte()
 
 @export_group("Giratoria (T-065)")
@@ -93,9 +107,11 @@ var _ya_puntuada: bool = false
 @onready var _top: StaticBody2D = $Top
 @onready var _bottom: StaticBody2D = $Bottom
 @onready var _score_zone: Area2D = $ScoreZone
+@onready var _band: ColorRect = $Band
 
 
 func _ready() -> void:
+	_band.color = GameConfig.BREATH_BAND_TINT
 	_aplicar_tinte()
 	# Las formas se crean por instancia. Un `RectangleShape2D` guardado en el
 	# .tscn sería el MISMO recurso en todas las tuberías: cambiar el tamaño de
@@ -136,7 +152,14 @@ func set_gap_center(y: float) -> void:
 ## también teñiría la zona de puntuación si algún día tuviera dibujo, y lo
 ## que tiene que verse distinto es el tubo.
 func _aplicar_tinte() -> void:
-	var color: Color = GameConfig.SOFT_PIPE_TINT if soft else Color.WHITE
+	# El orden importa: una tubería del tramo especial que además sea blandita
+	# se pinta de blandita. Lo que el jugador necesita saber en ese momento no
+	# es que está en un tramo bonito, es que esa no le mata.
+	var color: Color = Color.WHITE
+	if special:
+		color = GameConfig.SPECIAL_PIPE_TINT
+	if soft:
+		color = GameConfig.SOFT_PIPE_TINT
 	for cuerpo in [_top, _bottom]:
 		if cuerpo == null:
 			continue
@@ -165,6 +188,16 @@ func _girar(delta: float) -> void:
 		var cap := (cuerpo as Node).get_node_or_null("Cap") as Sprite2D
 		if cap != null:
 			cap.rotation = angulo
+
+
+## Alto real del brillo de la franja, px. Lo usan los tests.
+func band_height() -> float:
+	return _band.size.y if _band != null else 0.0
+
+
+## Centro del brillo en coordenadas locales, px. Lo usan los tests.
+func band_center() -> float:
+	return _band.position.y + _band.size.y * 0.5 if _band != null else 0.0
 
 
 ## Ángulo actual de las bocas, rad. Lo usan los tests.
@@ -230,9 +263,12 @@ func _on_score_zone_body_entered(cuerpo: Node2D) -> void:
 	scored.emit()
 	# Solo la mitad central del hueco recupera aliento. Si valiera pasar por
 	# cualquier sitio, recuperar sería automático y el recurso no existiría.
-	var margen: float = gap * GameConfig.BREATH_BAND_RATIO * 0.5
-	if absf(cuerpo.global_position.y - global_position.y - _gap_center) <= margen:
+	var desvio: float = absf(cuerpo.global_position.y - global_position.y - _gap_center)
+	var margen: float = GameConfig.breath_band_half(gap)
+	if desvio <= margen:
 		centered.emit()
+	elif desvio >= GameConfig.graze_threshold(gap):
+		grazed.emit()
 
 
 func _asignar_forma(cuerpo: StaticBody2D) -> void:
@@ -272,6 +308,12 @@ func _recolocar() -> void:
 	_bottom.position.y = _gap_center + media_luz + body_length * 0.5
 	# La zona de puntuación ES el hueco: mismo centro, mismo alto.
 	_score_zone.position.y = _gap_center
+	# Y el brillo ES la franja que recupera aliento, con el mismo cálculo que
+	# la usa de verdad: no hay dos números que puedan desincronizarse (T-202).
+	if _band != null:
+		var alto: float = GameConfig.breath_band_half(gap) * 2.0
+		_band.size = Vector2(width, alto)
+		_band.position = Vector2(-width * 0.5, _gap_center - alto * 0.5)
 
 
 ## Estira el cuerpo del tubo y coloca la cabeza en su boca.

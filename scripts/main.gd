@@ -49,6 +49,10 @@ const _TRANSITIONS: Dictionary = {
 ## El fondo con parallax.
 @export var background: Background
 
+## El cielo. Es un rectángulo de color, no arte: por eso la variante de
+## escenario (T-057) sí puede darle el color exacto que quiera.
+@export var sky: ColorRect
+
 ## El fundido de arranque de partida.
 @export var fade: Fade
 
@@ -59,6 +63,27 @@ const _TRANSITIONS: Dictionary = {
 ## La pantalla de inicio (T-078).
 @export var menu_panel: MenuPanel
 
+## El aviso que enseña a planear (T-200).
+@export var glide_hint: GlideHint
+
+## El fantasma del récord (T-243). Graba y reproduce; no colisiona ni puntúa.
+@export var ghost: Ghost
+
+## El grabador de replays (T-261). Solo escucha el botón; no toca el juego.
+@export var replay_recorder: ReplayRecorder
+
+## El compañero silencioso (T-058). No colisiona, no puntúa, no decide nada.
+@export var buddy: Buddy
+
+## La captura del mejor salto (T-077). Solo mira; no toca el juego.
+@export var snapshot: Snapshot
+
+## El aire: térmicas (T-203) y el rebufo del hermano (T-204).
+@export var air_spawner: AirSpawner
+
+## El final del viaje (T-209). No es un estado: es una pausa con un cartel.
+@export var journey: Journey
+
 ## Las ráfagas de viento (T-064).
 @export var wind: Wind
 
@@ -67,6 +92,9 @@ const _TRANSITIONS: Dictionary = {
 
 ## La pantalla de estadísticas (T-084).
 @export var stats_panel: StatsPanel
+
+## El submenú de opciones (T-087).
+@export var options_panel: OptionsPanel
 
 ## El velo de pausa.
 @export var pause_panel: PausePanel
@@ -89,15 +117,23 @@ const _TRANSITIONS: Dictionary = {
 
 ## El juego arranca en el menú (T-078), no en READY: la dificultad se elige
 ## antes de la primera partida, no después.
+## Todo lo que la partida sabe de sí misma: semilla, reto, nombre, modo y
+## confianza. Vive aparte porque no tiene nada que ver con el bucle de juego.
+var _session := GameSession.new()
+
 var _state: GameState.State = GameState.State.MENU
 var _score: int = 0
 var _high_score: int = 0
-## Escalón de confianza (T-074). Se lee del guardado, no se calcula aquí.
-var _confidence: int = 0
-## Nombre del jugador (T-079). Vacío significa "no ha puesto ninguno".
-var _player_name: String = ""
-## Modo elegido en el menú (T-078). También del guardado.
-var _difficulty: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
+## Huecos cruzados en esta partida sin haber planeado nunca (T-200).
+var _huecos_sin_planear: int = 0
+## Si el tramo especial ya ha salido en esta partida (T-067). Una vez y no
+## más: repetirlo cada vez que se sube el récord lo convertiría en el juego
+## normal a partir de cierto punto.
+var _tramo_usado: bool = false
+## Con qué puntuación se congela la dificultad mientras dura el tramo, o -1 si
+## no hay tramo en marcha (T-067).
+var _tramo_score: int = -1
+
 ## La última frase que salió, para no repetirla dos veces seguidas.
 var _ultima_frase: String = ""
 ## De qué murió Flapo la última vez y si llegó sin aliento (T-075). Se
@@ -105,16 +141,16 @@ var _ultima_frase: String = ""
 ## después de la muerte.
 var _death_cause: Bird.DeathCause = Bird.DeathCause.SUELO
 var _death_breathless: bool = false
-var _rng_frases := RandomNumberGenerator.new()
+## Generador aparte para lo cosmético (frases al morir). Fuera del RNG de la
+## partida a propósito: ver ADR-0030.
+var _rng_cosmetico := RandomNumberGenerator.new()
 var _is_new_high_score: bool = false
 
 
 func _ready() -> void:
-	_rng_frases.randomize()
+	_rng_cosmetico.randomize()
 	_high_score = SaveManager.get_high_score()
-	_confidence = SaveManager.get_confidence()
-	_difficulty = SaveManager.get_difficulty()
-	_player_name = SaveManager.get_player_name()
+	_session.cargar()
 	if log_transitions:
 		state_changed.connect(_on_state_changed_log)
 	_connect_children()
@@ -199,49 +235,58 @@ func is_new_high_score() -> bool:
 	return _is_new_high_score
 
 
-## Escalón de confianza acumulado (T-074).
-func get_confidence() -> int:
-	return _confidence
-
-
-## Modo de dificultad activo (T-078).
-func get_difficulty() -> GameConfig.Difficulty:
-	return _difficulty
-
-
-## Cambia el modo y lo recuerda. Se guarda al elegir, no al morir: si el
-## jugador cierra el juego desde el menú, la elección no se pierde.
+## Arranca el reto del día (T-241). Sin argumentos, el de hoy.
 ##
-## Solo tiene efecto fuera de una partida: cambiar la dificultad a mitad de
-## vuelo movería las tuberías que ya están en pantalla.
-func set_difficulty(modo: GameConfig.Difficulty) -> void:
+## Solo cambia la SEMILLA: modo de dificultad, frutas y todo lo demás siguen
+## siendo los del juego normal. Un reto que además cambiara las reglas no
+## sería el mismo juego para todos, que es justo lo que lo hace comparable.
+func start_daily(fecha: Array = []) -> void:
+	_session.preparar_reto(fecha)
+	change_state(GameState.State.READY)
+
+
+## Vuelve al juego normal, con semilla sorteada (T-241).
+func start_free() -> void:
+	_session.preparar_libre()
+	change_state(GameState.State.READY)
+
+
+## Arranca la partida de un código. `false` si el código no vale (T-242).
+func start_code(codigo_texto: String) -> bool:
+	if not _session.preparar_codigo(codigo_texto):
+		return false
+	change_state(GameState.State.READY)
+	return true
+
+
+## Lo que esta partida sabe de sí misma: semilla, código, reto, nombre, modo
+## y confianza. Ver `GameSession`.
+func session() -> GameSession:
+	return _session
+
+
+## Intenta jugar el código que se ha escrito en el menú (T-242).
+##
+## Un código malo **no rompe nada y no saca del menú**: se enseña un aviso
+## corto y ahí se queda, que es lo que dice el criterio del ticket.
+func _on_code_pressed(texto: String) -> void:
+	if start_code(texto):
+		return
+	if menu_panel != null:
+		menu_panel.set_aviso("Ese código no vale")
+
+
+## El jugador ha elegido modo en el menú (T-078).
+##
+## Solo tiene efecto fuera de una partida: cambiarlo a mitad de vuelo movería
+## las tuberías que ya están en pantalla.
+func _on_difficulty_selected(modo: GameConfig.Difficulty) -> void:
 	if _state == GameState.State.PLAYING:
 		push_warning("La dificultad no se cambia en mitad de una partida.")
 		return
-	_difficulty = modo
-	SaveManager.set_difficulty(modo)
+	_session.set_difficulty(modo)
 	_apply_difficulty()
 	_refrescar_menu()
-
-
-## El nombre del jugador tal y como se guarda: vacío si no puso ninguno.
-func get_player_name() -> String:
-	return _player_name
-
-
-## El nombre a enseñar. Nunca vacío: sin nombre, el de siempre.
-func display_player_name() -> String:
-	return GameConfig.display_player_name(_player_name)
-
-
-## Guarda el nombre. Se llama en cada tecla, así que se sale pronto si no ha
-## cambiado nada: escribir no debería tocar el disco doce veces.
-func set_player_name(nombre: String) -> void:
-	var limpio: String = GameConfig.sanitize_player_name(nombre)
-	if limpio == _player_name:
-		return
-	_player_name = limpio
-	SaveManager.set_player_name(limpio)
 
 
 ## Vuelve al menú desde el Game Over o desde READY.
@@ -265,6 +310,56 @@ func stats_rows() -> Array:
 	]
 
 
+## Abre las opciones enseñando el estado real de cada ajuste.
+##
+## Se rellena al abrir y no al arrancar: el silencio se puede cambiar desde
+## la pausa y desde el Game Over, así que el panel no puede fiarse de lo que
+## le dijeron una vez.
+func _abrir_opciones() -> void:
+	if options_panel == null:
+		return
+	options_panel.set_player_name(_session.player_name())
+	options_panel.set_difficulty(_session.difficulty())
+	options_panel.set_muted(audio.is_muted() if audio != null else false)
+	options_panel.set_ghost_hidden(Settings.is_ghost_hidden())
+	options_panel.set_mirror(_session.mirror(), GameConfig.mirror_unlocked(_high_score))
+	options_panel.set_open(true)
+
+
+## El jugador ha escondido o enseñado el fantasma del récord (T-087).
+##
+## Tiene efecto en la SIGUIENTE partida, no en la que está en curso: desde el
+## menú no hay ninguna en curso, y el fantasma decide si sale al entrar en
+## PLAYING.
+func _on_ghost_toggled() -> void:
+	if options_panel == null:
+		return
+	options_panel.set_ghost_hidden(Settings.set_ghost_hidden(not Settings.is_ghost_hidden()))
+	if audio != null:
+		audio.play_button()
+
+
+## El jugador ha tocado el modo espejo (T-076).
+##
+## Se vuelve a comprobar el desbloqueo aquí, y no solo al enseñar el botón:
+## que un control esté escondido no es una garantía de nada. Quien decide es
+## quien tiene el récord.
+func _on_mirror_toggled() -> void:
+	if options_panel == null or not GameConfig.mirror_unlocked(_high_score):
+		return
+	_session.set_mirror(not _session.mirror())
+	options_panel.set_mirror(_session.mirror(), true)
+	if audio != null:
+		audio.play_button()
+
+
+## El jugador ha tocado el sonido desde opciones (T-087).
+func _on_sound_toggled() -> void:
+	if audio == null or options_panel == null:
+		return
+	options_panel.set_muted(_on_mute_pressed())
+
+
 func _abrir_estadisticas() -> void:
 	if stats_panel == null:
 		return
@@ -273,11 +368,29 @@ func _abrir_estadisticas() -> void:
 
 
 func _refrescar_menu() -> void:
-	if menu_panel == null:
-		return
-	menu_panel.set_difficulty(_difficulty)
-	menu_panel.set_player_name(_player_name)
-	menu_panel.set_high_score(_high_score)
+	if menu_panel != null:
+		menu_panel.set_high_score(_high_score, SaveManager.get_journey_completed())
+	if options_panel != null:
+		options_panel.set_difficulty(_session.difficulty())
+		options_panel.set_player_name(_session.player_name())
+
+
+## Pone el cielo que le toca a esta semilla (T-057).
+##
+## Se llama en READY, después de sembrar, porque hasta ahí la semilla de una
+## partida libre todavía es 0. Es puro adorno: no toca la física ni pide un
+## solo número al generador (ADR-0024).
+func _aplicar_escenario() -> void:
+	var variante: GameConfig.Scenery = GameConfig.scenery_for(_session.seed())
+	if sky != null:
+		sky.color = GameConfig.scenery_sky(variante)
+	if background != null:
+		background.set_variant(variante)
+		# El tramo también se pone al empezar, no solo al puntuar: si no, una
+		# partida nueva arrancaría con el paisaje de la anterior (T-222).
+		background.set_stage(GameConfig.journey_stage(_score))
+	if snapshot != null:
+		snapshot.set_sky(GameConfig.scenery_sky(variante))
 
 
 ## Traslada la confianza guardada a Flapo (T-074).
@@ -286,7 +399,7 @@ func _refrescar_menu() -> void:
 ## partida: el jugador la nota en una barra de aliento más larga, no en un
 ## menú ni en un mensaje. Ver ADR-0021.
 func _aplicar_confianza() -> void:
-	bird.max_breath = GameConfig.max_breath_for(_confidence)
+	bird.max_breath = _session.max_breath()
 
 
 ## Intenta pasar a `to`. Ignora el cambio si no es una transición legal.
@@ -302,20 +415,53 @@ func change_state(to: GameState.State) -> void:
 	if to == GameState.State.MENU:
 		_score = 0
 		_refrescar_menu()
-	elif stats_panel != null:
-		# Salir del menú cierra las estadísticas: si no, se quedarían encima
-		# de la partida.
-		stats_panel.set_open(false)
+	else:
+		# Salir del menú cierra lo que hubiera abierto encima: si no, se
+		# quedaría delante de la partida.
+		if stats_panel != null:
+			stats_panel.set_open(false)
+		if options_panel != null:
+			options_panel.set_open(false)
 	if to == GameState.State.READY:
 		_score = 0
+		# El récord se relee del guardado al empezar cada partida, no solo al
+		# morir. Desde T-067 el récord CAMBIA la partida —dispara el tramo
+		# especial—, así que arrastrarlo en memoria hacía que una partida
+		# dependiera de la anterior. Lo destapó el bot de T-260: dos tandas
+		# con las mismas semillas dejaron de dar lo mismo.
+		_high_score = SaveManager.get_high_score()
 		_is_new_high_score = false
 		effects.clear()
 		_aplicar_confianza()
+		# Antes que nada: los sistemas tienen que recibir el generador ya
+		# sembrado antes de que su propio `on_game_state_changed` los
+		# reinicie y empiece a pedirle números.
+		_session.sembrar([pipe_spawner, fruit_spawner, wind])
+		# Después de sembrar: hasta ahí, la semilla de una partida libre
+		# todavía es 0 y el fantasma no sabría si le toca salir (T-243).
+		if ghost != null:
+			ghost.preparar(_session.seed())
+		_aplicar_escenario()
+		# El espejo se aplica al empezar la partida, nunca en vuelo: darle la
+		# vuelta a la gravedad a media partida sería una muerte gratis.
+		bird.mirror = _session.mirror()
+		if replay_recorder != null:
+			replay_recorder.preparar(
+				_session.seed(),
+				_session.difficulty(),
+				_session.confidence(),
+				_high_score,
+				_session.mirror()
+			)
+		_huecos_sin_planear = 0
+		_tramo_usado = false
+		_tramo_score = -1
 		bird.gravity_mult = 1.0
 		bird.size_mult = 1.0
 		bird.hitbox_mult = 1.0
 		_apply_difficulty()
 		score_changed.emit(_score)
+	_actualizar_aviso_planeo()
 	state_changed.emit(to)
 
 
@@ -337,11 +483,18 @@ func _connect_children() -> void:
 		"FruitSpawner": fruit_spawner,
 		"MenuPanel": menu_panel,
 		"Wind": wind,
+		"Ghost": ghost,
+		"ReplayRecorder": replay_recorder,
+		"Buddy": buddy,
+		"Snapshot": snapshot,
+		"AirSpawner": air_spawner,
+		"Journey": journey,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
 		return
 	pause_panel.resume_pressed.connect(set_paused.bind(false))
+	pause_panel.save_replay_pressed.connect(_on_save_replay_pressed)
 	if audio == null:
 		push_error("Main no tiene asignado el nodo Audio en el inspector.")
 		return
@@ -353,6 +506,11 @@ func _connect_children() -> void:
 		return
 	fruit_spawner.taken.connect(_on_fruit_taken)
 	pipe_spawner.pipe_spawned.connect(fruit_spawner.on_pipe_spawned)
+	if air_spawner != null:
+		pipe_spawner.pipe_spawned.connect(air_spawner.on_pipe_spawned)
+		air_spawner.set_pipe_spawner(pipe_spawner)
+		air_spawner.thermal_changed.connect(bird.set_in_thermal)
+		air_spawner.slipstream_changed.connect(bird.set_in_slipstream)
 	effects.changed.connect(_on_effects_changed)
 	effects.shield_changed.connect(hud.set_shield)
 	for nombre in piezas:
@@ -363,20 +521,35 @@ func _connect_children() -> void:
 
 	bird.died.connect(_on_bird_died)
 	bird.soft_hit.connect(_on_soft_hit)
+	bird.breath_recovered.connect(_on_breath_recovered)
+	bird.glided.connect(_on_glided)
 	if wind != null:
 		wind.warning_started.connect(_on_wind_warning)
 		wind.gust_started.connect(_on_wind_gust)
 		wind.gust_ended.connect(_on_wind_ended)
 	game_over_panel.menu_pressed.connect(to_menu)
 	if menu_panel != null:
-		menu_panel.play_pressed.connect(func() -> void: change_state(GameState.State.READY))
-		menu_panel.difficulty_selected.connect(set_difficulty)
+		menu_panel.play_pressed.connect(start_free)
 		menu_panel.stats_pressed.connect(_abrir_estadisticas)
-		menu_panel.name_changed.connect(set_player_name)
+		menu_panel.options_pressed.connect(_abrir_opciones)
+		# Jugar normal sortea semilla; el reto usa la de hoy (T-241).
+		menu_panel.daily_pressed.connect(start_daily.bind([]))
+		menu_panel.code_pressed.connect(_on_code_pressed)
+	if journey != null:
+		journey.started.connect(_on_journey_started)
+		journey.ended.connect(_on_journey_ended)
 	if stats_panel != null:
 		stats_panel.back_pressed.connect(func() -> void: stats_panel.set_open(false))
+	if options_panel != null:
+		options_panel.back_pressed.connect(func() -> void: options_panel.set_open(false))
+		options_panel.name_changed.connect(_session.set_player_name)
+		options_panel.difficulty_selected.connect(_on_difficulty_selected)
+		options_panel.sound_toggled.connect(_on_sound_toggled)
+		options_panel.ghost_toggled.connect(_on_ghost_toggled)
+		options_panel.mirror_toggled.connect(_on_mirror_toggled)
 	pipe_spawner.scored.connect(_on_scored)
 	pipe_spawner.centered.connect(_on_centered)
+	pipe_spawner.grazed.connect(_on_grazed)
 	bird.breath_changed.connect(hud.set_breath)
 	bird.fatigue_changed.connect(hud.set_fatigued)
 	score_changed.connect(hud.set_score)
@@ -401,7 +574,9 @@ func _notification(what: int) -> void:
 
 func _on_state_changed_results(to: GameState.State) -> void:
 	if to == GameState.State.GAME_OVER:
-		game_over_panel.set_player_name(_player_name)
+		game_over_panel.set_player_name(_session.player_name())
+		game_over_panel.set_challenge(_session.daily.nombre())
+		game_over_panel.set_code("" if _session.daily.activo() else _session.codigo())
 		game_over_panel.show_results(_score, _high_score, _is_new_high_score)
 		game_over_panel.set_line(_siguiente_frase())
 
@@ -412,7 +587,7 @@ func _siguiente_frase() -> String:
 	if death_lines == null:
 		return ""
 	var frase: String = death_lines.pick_for(
-		_death_cause, _death_breathless, _rng_frases, _ultima_frase
+		_death_cause, _death_breathless, _rng_cosmetico, _ultima_frase
 	)
 	if frase != "":
 		_ultima_frase = frase
@@ -426,14 +601,111 @@ func _on_share_pressed(texto: String) -> void:
 	DisplayServer.clipboard_set(texto)
 
 
+## Decide si toca el tramo especial de celebración (T-067).
+##
+## "Superar el récord de esa sesión": `_high_score` es el récord con el que
+## se empezó la partida —solo se refresca al morir—, así que la primera
+## puntuación que lo pasa es el momento exacto.
+##
+## Con récord 0 no se dispara (`SPECIAL_MIN_RECORD`): en la primera partida
+## todo es récord, y celebrar la primera tubería de alguien que todavía no
+## sabe cruzar un hueco no celebra nada.
+func _quiza_tramo_especial() -> void:
+	if _tramo_usado or _high_score < GameConfig.SPECIAL_MIN_RECORD:
+		return
+	if _score <= _high_score:
+		return
+	_tramo_usado = true
+	_tramo_score = _score
+	if pipe_spawner != null:
+		pipe_spawner.special_left = GameConfig.SPECIAL_STRETCH_PIPES
+
+
+## La puntuación con la que se calcula la dificultad (T-067).
+##
+## Mientras dura el tramo se congela. Es lo que lo convierte en celebración y
+## no en un muro: las tuberías se mueven, giran y brillan, pero **el hueco no
+## se estrecha ni el mundo acelera**. Sin esto, el premio por batir tu récord
+## sería que el juego se ponga más difícil justo ahí.
+func _score_para_dificultad() -> int:
+	if _tramo_score >= 0 and pipe_spawner != null and pipe_spawner.special_left > 0:
+		return _tramo_score
+	return _score
+
+
 func _on_scored() -> void:
+	# Durante la escena del nido no se puntúa: es el criterio del ticket, y de
+	# todos modos no hay tuberías que cruzar (T-209).
+	if journey != null and journey.activa():
+		return
+	var antes_de_puntuar: int = _score
 	_score += 1
+	_quiza_tramo_especial()
+	# Solo se llega al nido jugando. Parece obvio y no lo es: `_on_scored` se
+	# puede llamar con la partida ya terminada —lo hacen los tests, y bastaría
+	# un efecto futuro que puntúe al morir—, y entonces la escena arrancaba en
+	# GAME_OVER y al acabar reanudaba el generador de tuberías encima del
+	# cadáver. Lo destapó el test de T-047, no este.
+	if journey != null and _state == GameState.State.PLAYING:
+		journey.quiza_empezar(_score)
+	if not _session.has_glided():
+		_huecos_sin_planear += 1
+		_actualizar_aviso_planeo()
 	if wind != null:
 		wind.enabled = _score >= GameConfig.WIND_MIN_SCORE
 	if audio != null:
 		audio.play_point()
+	_quiza_medalla(antes_de_puntuar)
+	# El paisaje va contando lo lejos que has llegado (T-222). Se empuja en
+	# cada punto y el fondo decide si eso es un cambio de tramo o no.
+	if background != null:
+		background.set_stage(GameConfig.journey_stage(_score))
 	_apply_difficulty()
 	score_changed.emit(_score)
+
+
+## Si esta tubería ha subido de medalla, el compañero lo celebra (T-058).
+##
+## Se compara la medalla de antes con la de ahora en vez de mirar umbrales:
+## así añadir una medalla en `GameConfig` no obliga a tocar esto.
+func _quiza_medalla(antes: int) -> void:
+	if buddy == null:
+		return
+	if GameConfig.medal_for(_score) != GameConfig.medal_for(antes):
+		buddy.aplaudir()
+
+
+## Flapo ha llegado al nido (T-209).
+##
+## Se para lo que genera mundo y se apaga el control. **No se cambia de
+## estado**: se sigue en PLAYING con casi todo igual, que es lo que permite
+## que al acabar la partida continúe sin reconstruir nada (ADR-0027).
+func _on_journey_started() -> void:
+	if pipe_spawner != null:
+		pipe_spawner.set_pausado(true)
+	if fruit_spawner != null:
+		fruit_spawner.set_pausado(true)
+	if bird != null:
+		bird.set_escena(true)
+	if hud != null:
+		hud.set_journey_line(GameConfig.JOURNEY_LINE)
+	SaveManager.set_journey_completed()
+
+
+## Se acabó la escena: la partida sigue donde estaba.
+func _on_journey_ended() -> void:
+	# Si la partida ha terminado mientras duraba la escena, no se reanuda
+	# nada: el mundo se quedó parado por GAME_OVER y así tiene que seguir.
+	if _state != GameState.State.PLAYING:
+		return
+	if pipe_spawner != null:
+		pipe_spawner.set_pausado(false)
+	if fruit_spawner != null:
+		fruit_spawner.set_pausado(false)
+	if bird != null:
+		bird.set_escena(false)
+	if hud != null:
+		hud.set_journey_line("")
 
 
 ## Empieza el aviso de ráfaga (T-064). Todavía no sopla: esto es el tiempo
@@ -457,6 +729,41 @@ func _on_wind_ended() -> void:
 	_apply_difficulty()
 
 
+## Flapo ha planeado (T-200). La primera vez es la que importa: se guarda y
+## el aviso no vuelve a salir jamás.
+func _on_glided() -> void:
+	_session.marcar_planeo()
+	_actualizar_aviso_planeo()
+
+
+## Decide qué aviso de planeo toca, si es que toca alguno (T-200).
+##
+## Todo el "¿toca?" son funciones puras de GameConfig; aquí solo se junta el
+## estado y se llama. Así la regla se puede probar sin montar el juego.
+func _actualizar_aviso_planeo() -> void:
+	if glide_hint == null:
+		return
+	var partidas: int = SaveManager.get_games_played()
+	if _state == GameState.State.READY:
+		var pict: bool = GameConfig.show_glide_pictogram(_session.has_glided(), partidas)
+		glide_hint.mostrar("pictograma" if pict else "")
+		return
+	if _state == GameState.State.PLAYING:
+		var aviso: bool = GameConfig.show_glide_hint(
+			_session.has_glided(), partidas, _huecos_sin_planear
+		)
+		glide_hint.mostrar("aviso" if aviso else "")
+		return
+	glide_hint.mostrar("")
+
+
+## Flapo ha cogido aire (T-202). El sonido va aquí y no en Flapo porque el
+## audio lo gobierna Main, como el resto ("call down", ADR-0005).
+func _on_breath_recovered(_cantidad: float) -> void:
+	if audio != null:
+		audio.play_breath()
+
+
 ## Flapo ha rebotado en una tubería blandita (T-066).
 ##
 ## El aliento ya se lo ha cobrado él —es suyo—; aquí se cobra el punto, que
@@ -475,6 +782,11 @@ func _on_soft_hit() -> void:
 	score_changed.emit(_score)
 
 
+## Si el tramo especial está en marcha ahora mismo. Lo usan los tests.
+func in_special_stretch() -> bool:
+	return pipe_spawner != null and pipe_spawner.special_left > 0
+
+
 ## El factor de viento de este instante (T-064).
 ##
 ## Se pregunta a `GameConfig` en vez de guardarlo: la dirección que de verdad
@@ -482,7 +794,7 @@ func _on_soft_hit() -> void:
 func _wind_factor() -> float:
 	if wind == null or not wind.is_blowing():
 		return 1.0
-	return GameConfig.wind_factor_for(_score, _difficulty, wind.is_tailwind())
+	return GameConfig.wind_factor_for(_score, _session.difficulty(), wind.is_tailwind())
 
 
 ## Empuja la dificultad de la puntuación actual a quien la necesita.
@@ -495,32 +807,47 @@ func _apply_difficulty() -> void:
 	# la curva (T-064), y solo al final el modificador de la fruta violeta,
 	# que sí puede bajar del mínimo: ese es su efecto, y el criterio del
 	# viento no debía llevárselo por delante.
-	var velocidad: float = GameConfig.wind_speed_for(_score, _difficulty, _wind_factor())
+	var puntos: int = _score_para_dificultad()
+	var velocidad: float = GameConfig.wind_speed_for(puntos, _session.difficulty(), _wind_factor())
 	velocidad *= effects.speed_mult()
-	var hueco: float = GameConfig.pipe_gap_for(_score, _difficulty)
-	var separacion: float = GameConfig.pipe_spacing_for(_score, _difficulty)
+	var hueco: float = GameConfig.pipe_gap_for(puntos, _session.difficulty())
+	var separacion: float = GameConfig.pipe_spacing_for(puntos, _session.difficulty())
 	if pipe_spawner != null:
 		pipe_spawner.set_difficulty(velocidad, hueco, separacion)
 		# La probabilidad de tubería móvil es una función pura de la
 		# puntuación, como el resto de la curva (T-063).
-		pipe_spawner.moving_chance = GameConfig.moving_pipe_chance(_score)
-		pipe_spawner.spin_chance = GameConfig.spin_pipe_chance(_score)
+		pipe_spawner.moving_chance = GameConfig.moving_pipe_chance(puntos)
+		pipe_spawner.spin_chance = GameConfig.spin_pipe_chance(puntos)
 	if ground != null:
 		ground.scroll_speed = velocidad
 	if background != null:
 		background.scroll_speed = velocidad
 	if fruit_spawner != null:
 		fruit_spawner.set_difficulty(velocidad, hueco, separacion)
+	if air_spawner != null:
+		air_spawner.set_difficulty(velocidad, separacion, puntos)
+
+
+## Guarda una copia del replay desde la pausa (T-261).
+##
+## La partida sigue viva: el fichero recoge lo jugado hasta aquí, que es lo
+## que quiere quien acaba de ver algo raro y pausa para conservarlo.
+func _on_save_replay_pressed() -> void:
+	if replay_recorder == null:
+		return
+	var ruta: String = replay_recorder.guardar_copia(_score)
+	pause_panel.set_aviso("Guardada" if ruta != "" else "No se ha podido guardar")
 
 
 ## Alterna el silencio y lo cuenta a los dos paneles que lo enseñan.
-func _on_mute_pressed() -> void:
+func _on_mute_pressed() -> bool:
 	if audio == null:
-		return
+		return false
 	var muted: bool = audio.toggle_muted()
 	audio.play_button()
 	pause_panel.set_muted(muted)
 	game_over_panel.set_muted(muted)
+	return muted
 
 
 ## Flapo ha cogido una fruta.
@@ -551,6 +878,16 @@ func _on_effects_changed(kind: Effects.Kind, restante: float) -> void:
 	_apply_difficulty()
 
 
+## Flapo ha pasado rozando el borde de un hueco (T-058).
+##
+## Al jugador no se le dice nada: se lo dice el compañero, que se aparta de un
+## salto. Es la diferencia entre un juego que te avisa y un mundo que
+## reacciona.
+func _on_grazed() -> void:
+	if buddy != null:
+		buddy.asustarse()
+
+
 ## Flapo ha cruzado por el centro de un hueco: recupera aliento (T-048).
 func _on_centered() -> void:
 	bird.recover_breath(GameConfig.BREATH_RECOVER_ON_GAP)
@@ -573,9 +910,21 @@ func _on_bird_died(cause: Bird.DeathCause, sin_aliento: bool) -> void:
 		audio.play_hit()
 	# Se registra ANTES de cambiar de estado: el panel lee el récord al
 	# recibir GAME_OVER y tiene que ver ya el dato de esta partida.
-	_is_new_high_score = SaveManager.record_game(_score)
+	# En el reto, la marca va a SU clave. El récord general no se toca: son
+	# dos cosas que se comparan con gente distinta (T-241).
+	_is_new_high_score = _session.registrar_partida(_score)
 	_high_score = SaveManager.get_high_score()
-	_confidence = SaveManager.get_confidence()
+	# Antes de cambiar de estado, mientras el vuelo grabado sigue completo.
+	if ghost != null:
+		ghost.terminar(_score, _is_new_high_score)
+	# Siempre, no solo si pasa algo raro: un replay solo sirve si ya estaba
+	# grabado cuando apareció el bug (T-261).
+	if replay_recorder != null:
+		replay_recorder.terminar(_score)
+	# Solo al batir el récord (T-077). En un Game Over cualquiera no se pide
+	# siquiera: componer una imagen que nadie va a compartir es trabajo tirado.
+	if snapshot != null and _is_new_high_score:
+		snapshot.capturar()
 	change_state(GameState.State.GAME_OVER)
 
 

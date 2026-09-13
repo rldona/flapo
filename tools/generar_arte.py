@@ -139,6 +139,62 @@ def ciudad():
     return img
 
 
+# --- Tramos del viaje (T-222) --------------------------------------------
+# Cuatro capas cercanas de 96 px de ancho, el mismo que la ciudad, para que
+# las cuatro compartan un solo Parallax2D y el cambio de tramo sea un fundido
+# de alfas y no un baile de nodos. Ver ADR-0040.
+#
+# Todas en tonos azul-grises: es perspectiva atmosférica, lo lejano pierde
+# color. Por eso el parque no es verde — el único verde de la paleta es el de
+# la fruta, y ese existe justo para NO parecer escenario (docs/art-guide.md).
+def parque():
+    """Copas de árboles y un banco. El principio del viaje: a ras de suelo."""
+    ancho, alto = 96, 120
+    img = lienzo(ancho, alto)
+    # Arbolado: copas redondeadas de alturas distintas, troncos cortos.
+    arboles = [(8, 26, 44), (30, 20, 34), (48, 30, 52), (74, 22, 38)]
+    for x, w, h in arboles:
+        base = alto - 1
+        copa = base - h
+        # Copa: tres bandas que estrechan hacia arriba, que es lo que lee
+        # como "redondo" a esta escala sin dibujar una circunferencia.
+        rect(img, x, copa + h // 3, x + w - 1, base - 8, EDIFICIO_LEJOS)
+        rect(img, x + 3, copa + h // 6, x + w - 4, copa + h // 3, EDIFICIO_LEJOS)
+        rect(img, x + 6, copa, x + w - 7, copa + h // 6, EDIFICIO_LEJOS)
+        # Tronco.
+        rect(img, x + w // 2 - 1, base - 8, x + w // 2 + 1, base, CUERPO_S)
+    # Un banco, para que se lea "parque" y no "bosque".
+    rect(img, 60, alto - 10, 70, alto - 8, CUERPO_S)
+    rect(img, 61, alto - 8, 62, alto - 4, CUERPO_S)
+    rect(img, 68, alto - 8, 69, alto - 4, CUERPO_S)
+    return img
+
+
+def banco_nubes():
+    """Nubes grandes. Ya se ha dejado la ciudad atrás."""
+    ancho, alto = 96, 120
+    img = lienzo(ancho, alto)
+    for x, y, w, h in [(2, 74, 40, 18), (36, 52, 46, 22), (0, 30, 28, 14),
+                       (62, 92, 34, 16), (48, 12, 40, 16)]:
+        rect(img, x + 2, y + h // 2, x + w - 3, y + h - 1, NUBE)
+        rect(img, x + w // 4, y, x + 3 * w // 4, y + h - 1, NUBE)
+    return img
+
+
+def cielo_abierto():
+    """Casi nada. Es el punto del viaje en el que ya no queda mundo debajo."""
+    ancho, alto = 96, 120
+    img = lienzo(ancho, alto)
+    # Dos jirones tenues y un pájaro lejano. Vacío a propósito: el tramo se
+    # nota porque desaparece todo, no porque aparezca algo.
+    for x, y, w in [(10, 40, 30), (58, 88, 26)]:
+        rect(img, x, y, x + w, y + 2, NUBE)
+        rect(img, x + 6, y + 3, x + w - 8, y + 4, NUBE)
+    rect(img, 44, 20, 46, 21, EDIFICIO_LEJOS)
+    rect(img, 47, 19, 49, 20, EDIFICIO_LEJOS)
+    return img
+
+
 # --- Medallas (T-053) ----------------------------------------------------
 # Croqueta, tortilla y jamón. Nombres de comida, como pide el GDD.
 def medalla(relleno, sombra, forma):
@@ -319,6 +375,9 @@ def main():
     guardar(nube(40, 16), "cloud_a")
     guardar(nube(52, 14), "cloud_b")
     guardar(ciudad(), "city")
+    guardar(parque(), "stage_parque")
+    guardar(banco_nubes(), "stage_nubes")
+    guardar(cielo_abierto(), "stage_cielo")
     guardar(medalla(PICO_S, SUELO_S, "croqueta"), "medal_croqueta")
     guardar(medalla(NUBE, EDIFICIO_LEJOS, "tortilla"), "medal_tortilla")
     guardar(medalla(PICO, TRIPA, "jamon"), "medal_jamon")

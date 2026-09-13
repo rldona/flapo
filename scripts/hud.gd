@@ -26,6 +26,7 @@ const COLOR_FATIGA := Color(0.851, 0.537, 0.447)
 @onready var _effect_label: Label = $Effect
 @onready var _shield_label: Label = $Shield
 @onready var _wind_label: Label = $Wind
+@onready var _journey_label: Label = $Journey
 @onready var _breath_back: ColorRect = $Breath/Back
 @onready var _breath_fill: ColorRect = $Breath/Fill
 
@@ -107,6 +108,23 @@ func set_wind(fase: String, a_favor: bool) -> void:
 	else:
 		_wind_label.text = "%s %s %s" % [flecha, flecha, flecha]
 		_wind_label.modulate = Color.WHITE
+
+
+## La línea del final del viaje (T-209), o "" para quitarla.
+##
+## Va en el HUD y no en un panel propio porque **no para el juego**: la
+## partida sigue debajo. Un panel encima diría "esto ha terminado", y es justo
+## lo contrario de lo que pasa.
+func set_journey_line(texto: String) -> void:
+	if _journey_label == null:
+		return
+	_journey_label.text = texto
+	_journey_label.visible = texto != ""
+
+
+## Lo que dice la línea del nido ahora mismo. Lo usan los tests.
+func journey_line() -> String:
+	return _journey_label.text if _journey_label != null and _journey_label.visible else ""
 
 
 func set_shield(activo: bool) -> void:

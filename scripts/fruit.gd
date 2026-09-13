@@ -23,6 +23,10 @@ signal taken(kind: Effects.Kind, puntos: int)
 ## Ciclos de vaivén por segundo.
 @export var float_speed: float = 1.6
 
+## Punto de partida del balanceo, rad. Lo fija el spawner con el RNG de la
+## partida (T-240).
+var float_phase: float = 0.0
+
 var _textura: Texture2D = null
 var _tomada: bool = false
 var _y_base: float = 0.0
@@ -35,7 +39,11 @@ func _ready() -> void:
 	if _textura != null:
 		_sprite.texture = _textura
 	_y_base = position.y
-	_fase = randf() * TAU
+	# La fase la trae el spawner desde el generador de la partida (T-240).
+	# Antes era `randf()` global y era el único sitio del juego que se
+	# saltaba el determinismo sin que se notara: dos partidas con la misma
+	# semilla tenían las frutas flotando en distinto punto del seno.
+	_fase = float_phase
 	body_entered.connect(_on_body_entered)
 
 

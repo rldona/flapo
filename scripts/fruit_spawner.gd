@@ -64,6 +64,21 @@ func _ready() -> void:
 ## nodo se hubiera enterado de que la partida había empezado. Se perdía la
 ## primera oportunidad de fruta y, sobre todo, el código dependía de un orden
 ## que nadie había decidido.
+## Para o reanuda las frutas (T-209).
+##
+## Durante la escena del nido no nacen frutas. **No es cosmético**: las frutas
+## se cronometran a partir de las tuberías (medio intervalo después), así que
+## si el generador de tuberías se para y el reloj de las frutas sigue, la
+## fruta que estaba en cola nace donde no toca y el "a mitad de camino" deja
+## de ser verdad para el resto de la partida.
+##
+## Lo destapó el test de T-047 al fallar por una fruta a 41 px de una tubería
+## en vez de a 80.
+func set_pausado(pausado: bool) -> void:
+	if _timer != null and pausado:
+		_timer.stop()
+
+
 func on_pipe_spawned() -> void:
 	_timer.start(_medio_intervalo())
 
@@ -139,6 +154,7 @@ func _crear() -> void:
 	fruit.kind = kind
 	fruit.points = penalty_points if CASTIGOS.has(kind) else 0
 	fruit.scroll_speed = scroll_speed
+	fruit.float_phase = _rng.randf() * TAU
 	var i: int = int(kind) - 1
 	if i >= 0 and i < textures.size():
 		fruit.set_texture(textures[i])
@@ -164,8 +180,11 @@ func _congelar_todas() -> void:
 			hijo.scroll_speed = 0.0
 
 
+## Recibe el generador de la partida (T-240).
+func set_rng(rng: RandomNumberGenerator) -> void:
+	_rng = rng
+
+
 func _reiniciar_rng() -> void:
-	if random_seed == 0:
-		_rng.randomize()
-	else:
+	if random_seed != 0:
 		_rng.seed = random_seed

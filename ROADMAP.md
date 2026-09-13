@@ -112,9 +112,9 @@ Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 
 **Ola 2 — innovación**
 
-- 🔲 Descubrir el planeo en un segundo: pictograma en `READY`, se apaga al primer planeo. → T-200
-- 🔲 Jadeo visible: alas temblando, mejillas rojas y sudor con el aliento bajo. → T-201
-- 🔲 Bocanada: franja central marcada y feedback al recuperar aliento. → T-202
+- ✅ Descubrir el planeo: pictograma en `READY` y aviso a los 3 huecos, se apaga al primer planeo. → T-200
+- ✅ Jadeo visible: alas temblando, mejillas rojas, sudor y vaho por debajo del 30 %. → T-201
+- ✅ Bocanada: franja central marcada, sonido de inhalación y partícula de aire. → T-202
 - 🔲 Térmicas: columnas de aire donde planear sube. → T-203 (ADR-0026)
 - 🔲 El hermano pasa: estela de rebufo donde planear es gratis. → T-204 (ADR-0026)
 - 🔲 Racha de huecos centrados: ×2 en puntos. → T-205
@@ -200,9 +200,9 @@ que por ser la mascota debe dibujarlo una persona.
 
 **Ola 2 — innovación**
 
-- 🔲 Semilla determinista: un solo RNG inyectado, partidas reproducibles. → T-240 (ADR-0030)
-- 🔲 Reto del día: semilla por fecha, sin servidor. → T-241
-- 🔲 Semilla compartible: código corto para jugar las mismas tuberías. → T-242
+- ✅ Semilla determinista: un solo RNG inyectado, sin azar global. → T-240 (ADR-0030)
+- ✅ Reto del día: semilla = fecha local, marca en clave propia. → T-241
+- ✅ Semilla compartible: código de 5 caracteres en base 36. → T-242
 - 🔲 Fantasma del récord: replay translúcido de tu mejor vuelo. → T-243
 - 🔲 Logros con nombre de tapa. → T-244
 - 🔲 Soplar para aletear: entrada por micrófono, opcional. → T-245 (ADR-0031)

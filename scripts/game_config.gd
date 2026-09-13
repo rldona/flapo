@@ -25,7 +25,22 @@ enum Difficulty {
 	DIFICIL,
 }
 
+## Cómo de ahogado está Flapo (T-201).
+enum Pant {
+	NINGUNO,  ## Respira bien: nada que enseñar.
+	JADEO,  ## Va justo: alas temblando, mejillas y sudor.
+	AGOTADO,  ## A cero: además, vaho.
+}
+
 enum Medal { NINGUNA, CROQUETA, TORTILLA, JAMON }
+
+## Las cuatro caras del mismo sitio. Es puro adorno: ni una sola de ellas
+## toca el hueco, la velocidad ni la física.
+enum Scenery { DIA, ATARDECER, NOCHE, LLUVIA }
+
+## Los cuatro paisajes del viaje, en orden. El nido (T-209) está al final del
+## último: el paisaje va contando lo cerca que estás sin decir un número.
+enum Stage { PARQUE, TEJADOS, NUBES, CIELO }
 
 # --- Pantalla -----------------------------------------------------------
 ## Tamaño lógico del viewport, en píxeles. Coincide con
@@ -216,6 +231,77 @@ const CONFIDENCE_MAX_LEVEL: int = 5
 ## una partida, pero la barra es visiblemente más larga a las 50.
 const CONFIDENCE_BREATH_BONUS: float = 8.0
 
+# --- Semilla determinista (T-240) ---------------------------------------
+## Semilla que se usa cuando nadie pide una concreta. 0 significa "sortea
+## una": la partida libre sigue siendo distinta cada vez, pero la semilla que
+## le tocó se puede leer y volver a jugar (T-242).
+const SEED_ALEATORIA: int = 0
+
+# --- Semilla compartible (T-242) ----------------------------------------
+## Alfabeto del código. Base 36 sin distinguir mayúsculas: se dicta por
+## teléfono y se teclea en un móvil, así que cuanto menos haya que precisar,
+## mejor.
+const CODIGO_ALFABETO: String = "0123456789abcdefghijklmnopqrstuvwxyz"
+
+## Cuántos caracteres tiene un código. 5 en base 36 son 60 millones de
+## partidas distintas: de sobra para que dos amigos no repitan, y corto para
+## caber en el Game Over a 288 px.
+const CODIGO_LARGO: int = 5
+
+# --- Reto del día (T-241) -----------------------------------------------
+## Nombres de los meses para el texto de compartir. Aquí y no en el panel:
+## es contenido de las reglas del reto, no de la pantalla que lo enseña.
+const MESES: Array[String] = [
+	"enero",
+	"febrero",
+	"marzo",
+	"abril",
+	"mayo",
+	"junio",
+	"julio",
+	"agosto",
+	"septiembre",
+	"octubre",
+	"noviembre",
+	"diciembre",
+]
+
+# --- Descubrir el planeo (T-200) ----------------------------------------
+## En cuántas primeras partidas puede salir el aviso de planeo. Pocas: el
+## planeo es la mecánica que ningún clon tiene y hay que enseñarla, pero un
+## cartel que sigue saliendo a la décima partida es un cartel que molesta.
+const GLIDE_HINT_MAX_GAMES: int = 5
+
+## Cuántos huecos se cruzan sin planear antes de sugerirlo dentro de la
+## partida. Tres: uno es casualidad, tres es que no se ha descubierto.
+const GLIDE_HINT_AFTER_GAPS: int = 3
+
+# --- Bocanada (T-202) ---------------------------------------------------
+## Color del brillo que marca la franja que recupera aliento. El mismo crema
+## de la tripa de Flapo (docs/art-guide.md), muy transparente: tiene que
+## leerse como aire, no como una fruta ni como el tramo especial de T-067.
+const BREATH_BAND_TINT: Color = Color(0.949, 0.851, 0.655, 0.16)
+
+# --- Jadeo visible (T-201) ----------------------------------------------
+## Por debajo de esta fracción del aliento, Flapo jadea: alas temblando,
+## mejillas rojas y sudor. 0,3 y no 0,5 porque el jadeo tiene que significar
+## "voy justo", no "he gastado un poco".
+const BREATH_LOW_RATIO: float = 0.30
+
+## Cuánto se acelera el aleteo al jadear. Temblor, no prisa: x1,6 se lee como
+## esfuerzo; más se leería como que Flapo vuela mejor cansado.
+const PANT_FLAP_FPS_MULT: float = 1.6
+
+## Color al que tira Flapo con las mejillas encendidas. Es el mismo
+## `#D98972` de las mejillas de la paleta (docs/art-guide.md), aplicado como
+## modulación: no hay sprites nuevos.
+const PANT_TINT: Color = Color("#F2B3A0")
+
+## Cuánto se mezcla ese color como mucho, con el aliento a 0. Bajo a
+## propósito: teñir del todo a Flapo lo haría irreconocible, y la silueta es
+## lo que lo identifica (docs/art-guide.md).
+const PANT_TINT_MAX: float = 0.55
+
 # --- Fatiga (T-049) -----------------------------------------------------
 ## Cuántos aleteos caben en la ventana antes de que empiece a notarse. A los
 ## 3,4 aleteos por hueco que da la curva de dificultad en su tope (ADR-0018),
@@ -233,6 +319,238 @@ const FATIGUE_PENALTY: float = 0.3
 const MEDAL_BRONZE: int = 10
 const MEDAL_SILVER: int = 20
 const MEDAL_GOLD: int = 40
+
+## --- Variantes de escenario (T-057) ---
+
+## El color exacto del cielo en cada variante.
+##
+## El cielo es un `ColorRect`, así que aquí sí se puede poner el color que se
+## quiera. Las capas de nubes y edificios ya vienen pintadas del PNG y solo
+## se pueden **teñir**, o sea multiplicar, o sea oscurecer — que es justo lo
+## que hace la luz al caer la tarde, así que no es una limitación sino la
+## física del asunto.
+const SCENERY_SKY: Array[Color] = [
+	Color("#7CB3D7"),
+	Color("#E8A06B"),
+	Color("#2E3F5C"),
+	Color("#8FA3B0"),
+]
+
+## El tinte de las capas. Blanco = dejarlas como están (el día de siempre).
+const SCENERY_TINT: Array[Color] = [
+	Color.WHITE,
+	Color("#FFC49A"),
+	Color("#6E7FA6"),
+	Color("#B9C6CE"),
+]
+
+## Cuál de ellas llueve. Se guarda como dato y no como un `if` suelto: el día
+## que haya una variante más, esto sigue diciendo la verdad.
+const SCENERY_LLUEVE: Array[bool] = [false, false, false, true]
+
+## --- Tramos del viaje (T-222) ---
+
+## Cada cuántos puntos se cambia de tramo.
+##
+## 13 no es un número redondo y es a propósito: cuatro tramos de 13 ponen el
+## cielo abierto en el punto 39, y el nido (T-209) cae en el 50, ya dentro del
+## último tramo. Así el paisaje anuncia el final antes de que llegue en vez de
+## cambiar justo encima.
+const JOURNEY_STAGE_SCORE: int = 13
+
+## Cuánto tarda el fundido entre tramos, s. Dos segundos: el cambio tiene que
+## notarse al mirarlo y no al mirarlo fijamente, y sobre todo no puede robar
+## la atención del hueco que se está cruzando.
+const JOURNEY_FADE_TIME: float = 2.0
+
+## --- Fin del viaje: el nido (T-209) ---
+
+## A qué puntuación llega Flapo al nido. 50: por encima de la medalla de oro
+## (40), o sea alcanzable pero no de casualidad.
+const JOURNEY_END_SCORE: int = 50
+
+## Cuánto dura la escena, s. Tres: lo que se tarda en leer una línea y
+## respirar. Más y el jugador quiere seguir jugando; menos y no se entera.
+const JOURNEY_SCENE_TIME: float = 3.0
+
+## Lo que dice. Es la única frase del juego que no se burla de Flapo.
+const JOURNEY_LINE: String = "Ha llegado. Gordo, pero ha llegado."
+
+## --- Captura del mejor salto (T-077) ---
+
+## Cuántos segundos de vuelo entran en la captura.
+const SNAPSHOT_SECONDS: float = 2.0
+
+## Cuántas siluetas de Flapo se dibujan en esos segundos. Seis: suficientes
+## para que se lea el arco del vuelo, pocas para que no sea una mancha.
+const SNAPSHOT_SAMPLES: int = 6
+
+## A cuánto se amplía la imagen final. x3 sobre 288×512 da 864×1536, que es
+## lo que una red social necesita para no reescalarla y emborronarla.
+const SNAPSHOT_SCALE: int = 3
+
+## Transparencia de la silueta más antigua. La más reciente va opaca; las de
+## en medio interpolan. Es lo que convierte seis copias en un movimiento.
+const SNAPSHOT_FADE_MIN: float = 0.22
+
+## Color de las tuberías en la captura. La silueta, no el dibujo: la captura
+## cuenta un vuelo, no enseña arte.
+const SNAPSHOT_PIPE_COLOR: Color = Color("#3A5468")
+
+## --- Modo espejo (T-076) ---
+
+## Récord a partir del cual se ofrece el modo espejo.
+##
+## 25 y no menos: es por encima de la medalla de plata (20), o sea que lo ve
+## quien ya domina el juego normal. Ofrecérselo antes sería ofrecer una
+## variante a quien todavía no tiene de qué variar.
+const MIRROR_UNLOCK_SCORE: int = 25
+
+## --- Compañero silencioso (T-058) ---
+
+## A qué fracción del borde del hueco empieza a considerarse un roce.
+##
+## 0.80 del semihueco: los últimos 20 % antes del tubo. Más generoso y el
+## compañero se asustaría en casi todas las tuberías, que es la forma más
+## rápida de que el jugador deje de mirarlo.
+const GRAZE_RATIO: float = 0.80
+
+## Dónde vuela el compañero respecto a Flapo, px. Detrás y arriba, nunca
+## delante: entre Flapo y el hueco no puede haber nada que mirar.
+const BUDDY_OFFSET: Vector2 = Vector2(-26.0, -20.0)
+
+## Cuánto tarda en alcanzar su sitio, en segundos. El retardo es lo que le da
+## vida: un segundo pájaro pegado a Flapo con un offset fijo se lee como un
+## adorno del sprite, no como otro bicho.
+const BUDDY_LAG: float = 0.22
+
+## Cuánto sube y baja al volar, px, y cada cuánto. Ligero: es un compañero,
+## no un segundo objetivo en pantalla.
+const BUDDY_BOB: float = 3.0
+const BUDDY_BOB_PERIOD: float = 0.9
+
+## Tinte y tamaño. Más pequeño y más apagado que Flapo: si compitiera en
+## contraste, el ojo iría al sitio equivocado.
+const BUDDY_TINT: Color = Color("#9BBBA8")
+const BUDDY_SCALE: float = 0.7
+
+## Cuánto dura cada reacción, en segundos.
+const BUDDY_SCARE_TIME: float = 0.6
+const BUDDY_CLAP_TIME: float = 1.0
+
+## Cuánto se aparta del susto, px, y cuánto aplaude, px de rebote.
+const BUDDY_SCARE_JUMP: float = 14.0
+const BUDDY_CLAP_BOUNCE: float = 7.0
+
+## --- Tramo especial al superar el récord (T-067) ---
+
+## Cuántas tuberías dura el tramo. Cuatro: suficiente para que se note que
+## está pasando algo y corto para que no se convierta en un examen. A la
+## velocidad de crucero son unos seis segundos.
+const SPECIAL_STRETCH_PIPES: int = 4
+
+## Récord mínimo para que el tramo exista.
+##
+## Con récord 0, la primera tubería de la primera partida ya sería récord y el
+## tramo saldría antes de que el jugador sepa lo que es un hueco. Celebrar algo
+## que no ha costado nada no celebra nada.
+const SPECIAL_MIN_RECORD: int = 1
+
+## El color del tramo. Dorado apagado: se lee como "esto es tuyo" y no como
+## "cuidado", que es lo contrario de lo que este tramo quiere decir. La
+## blandita (T-066) es verde y la normal no se tiñe, así que no se confunden.
+const SPECIAL_PIPE_TINT: Color = Color("#E6C46A")
+
+## --- Fantasma del récord (T-243) ---
+
+## Transparencia del fantasma. 0.45 y no menos: por debajo desaparece sobre
+## el cielo claro y el fantasma deja de servir para nada; por encima se
+## confunde con Flapo en un hueco estrecho, que es justo lo que no debe pasar.
+const GHOST_ALPHA: float = 0.45
+
+## Tinte del fantasma. Azulado a propósito: la silueta es la misma que la de
+## Flapo, así que el color es lo ÚNICO que los distingue de un vistazo.
+const GHOST_TINT: Color = Color("#8FB8D8")
+
+## Tope de frames que se graban, unos 10 minutos a 60 Hz. No es un límite de
+## diseño sino un seguro: un fichero de fantasma no puede crecer sin fin ni
+## por una partida eterna ni por un fichero manipulado a mano.
+const GHOST_MAX_FRAMES: int = 36000
+
+
+## Si el récord guardado da acceso al modo espejo (T-076).
+##
+## Depende del récord y no de las partidas jugadas: es un premio por jugar
+## bien, no por jugar mucho. La confianza (T-074) ya premia lo segundo.
+static func mirror_unlocked(record: int) -> bool:
+	return record >= MIRROR_UNLOCK_SCORE
+
+
+## A qué desvío del centro del hueco empieza a contar como roce (T-058).
+##
+## Se mide desde el centro, igual que `breath_band_half`, para que las dos
+## bandas —la del aliento y la del susto— hablen el mismo idioma y no puedan
+## solaparse por accidente.
+static func graze_threshold(gap: float) -> float:
+	return gap * 0.5 * GRAZE_RATIO
+
+
+## En qué tramo del viaje va una puntuación (T-222).
+##
+## Función pura, como toda la curva (ADR-0018): no hay estado de tramo que
+## sincronizar, y reiniciar vuelve al parque sin código de reinicio porque el
+## marcador vuelve a 0.
+static func journey_stage(score: int) -> Stage:
+	var indice: int = int(maxi(score, 0) / JOURNEY_STAGE_SCORE)
+	return clampi(indice, 0, Stage.size() - 1) as Stage
+
+
+## Nombre visible del tramo. Lo usan los tests.
+static func stage_name(tramo: Stage) -> String:
+	return ["Parque", "Tejados", "Nubes", "Cielo"][int(tramo)]
+
+
+## Si a esta tubería del tramo le toca ser blandita (T-067).
+##
+## La del medio. Un tramo de celebración con una red debajo: si el jugador se
+## estrella justo en el momento de su récord, el juego le ha tendido una
+## trampa disfrazada de premio.
+static func is_special_soft(restantes: int) -> bool:
+	return restantes == SPECIAL_STRETCH_PIPES / 2
+
+
+## Qué escenario le toca a una semilla (T-057).
+##
+## Sale de la semilla con una cuenta, **no de pedirle un número al
+## generador**, y esa es la decisión del ticket (ADR-0024). Pedírselo movería
+## la secuencia de tuberías un paso: los códigos compartidos de T-242 dejarían
+## de dar la misma partida y el replay de referencia de T-261 dejaría de
+## cuadrar. Un adorno no puede permitirse cambiar el juego.
+##
+## De regalo, el reto del día (T-241) sale con el mismo cielo para todo el
+## mundo, que es lo que uno espera de un reto compartido.
+static func scenery_for(semilla: int) -> Scenery:
+	return posmod(semilla, SCENERY_SKY.size()) as Scenery
+
+
+## El color del cielo de esa variante.
+static func scenery_sky(variante: Scenery) -> Color:
+	return SCENERY_SKY[int(variante)]
+
+
+## El tinte de las capas de esa variante.
+static func scenery_tint(variante: Scenery) -> Color:
+	return SCENERY_TINT[int(variante)]
+
+
+## Si en esa variante llueve.
+static func scenery_rains(variante: Scenery) -> bool:
+	return SCENERY_LLUEVE[int(variante)]
+
+
+## Nombre visible de la variante. Lo usan los tests y el modo depuración.
+static func scenery_name(variante: Scenery) -> String:
+	return ["Día", "Atardecer", "Noche", "Lluvia"][int(variante)]
 
 
 ## Cuánto de dificultad se ha desbloqueado, de 0 a 1.
@@ -327,6 +645,103 @@ static func moving_pipe_chance(score: int) -> float:
 	var recorrido: int = maxi(DIFFICULTY_CAP - MOVING_PIPE_MIN_SCORE, 1)
 	var t: float = clampf(float(score - MOVING_PIPE_MIN_SCORE) / float(recorrido), 0.0, 1.0)
 	return lerpf(MOVING_PIPE_CHANCE_MIN, MOVING_PIPE_CHANCE_MAX, t)
+
+
+## El espacio de semillas que caben en un código (T-242).
+static func codigo_modulo() -> int:
+	var n: int = 1
+	for i in CODIGO_LARGO:
+		n *= CODIGO_ALFABETO.length()
+	return n
+
+
+## La semilla como código corto en base 36 (T-242).
+##
+## Se reduce al espacio del código antes de escribirlo. Es lo que hace que el
+## código sea **de ida y vuelta**: escribir 5 caracteres y leerlos tiene que
+## devolver la misma semilla, y para eso la semilla que se enseña no puede
+## ser mayor que lo que cabe.
+static func seed_a_codigo(semilla: int) -> String:
+	var n: int = posmod(semilla, codigo_modulo())
+	var base: int = CODIGO_ALFABETO.length()
+	var texto: String = ""
+	for i in CODIGO_LARGO:
+		texto = CODIGO_ALFABETO[n % base] + texto
+		n /= base
+	return texto
+
+
+## De código a semilla, o -1 si el código no vale (T-242).
+##
+## Devuelve -1 y no lanza nada: un código mal tecleado es lo más normal del
+## mundo, y el juego tiene que responder con un aviso, no con un error.
+static func codigo_a_seed(codigo: String) -> int:
+	var limpio: String = codigo.strip_edges().to_lower()
+	if limpio.length() != CODIGO_LARGO:
+		return -1
+	var base: int = CODIGO_ALFABETO.length()
+	var n: int = 0
+	for c in limpio:
+		var d: int = CODIGO_ALFABETO.find(c)
+		if d < 0:
+			return -1
+		n = n * base + d
+	return n
+
+
+## La semilla del reto de un día concreto (T-241).
+##
+## Es la fecha como número, AAAAMMDD. Derivada **solo de la fecha**: así todo
+## el mundo juega las mismas tuberías ese día sin que haya un servidor que
+## las reparta. Que sea legible a simple vista es a propósito: un 20260908 se
+## puede comprobar de un vistazo, un hash no.
+static func daily_seed(anio: int, mes: int, dia: int) -> int:
+	return anio * 10000 + mes * 100 + dia
+
+
+## La clave con la que se guarda la marca de ese día (T-241).
+static func daily_key(anio: int, mes: int, dia: int) -> String:
+	return "daily_%d" % daily_seed(anio, mes, dia)
+
+
+## "8 de septiembre", para el texto de compartir (T-241).
+static func daily_name(mes: int, dia: int) -> String:
+	if mes < 1 or mes > MESES.size():
+		return "%d/%d" % [dia, mes]
+	return "%d de %s" % [dia, MESES[mes - 1]]
+
+
+## Si toca enseñar el pictograma de planeo en READY (T-200).
+##
+## Función pura de lo guardado: en cuanto Flapo ha planeado una vez, no
+## vuelve a salir nunca. Un guardado ausente o corrupto devuelve 0 partidas y
+## `false` en `ha_planeado`, así que cuenta como primera vez — que es lo que
+## queremos: ante la duda, se enseña.
+static func show_glide_pictogram(ha_planeado: bool, partidas: int) -> bool:
+	if ha_planeado:
+		return false
+	return partidas < GLIDE_HINT_MAX_GAMES
+
+
+## Si toca sugerir el planeo en mitad de la partida (T-200).
+##
+## Además de las condiciones del pictograma, hace falta llevar unos cuantos
+## huecos sin haber planeado: el aviso es para quien ya está jugando y no ha
+## dado con ello, no para quien acaba de empezar.
+static func show_glide_hint(ha_planeado: bool, partidas: int, huecos: int) -> bool:
+	if not show_glide_pictogram(ha_planeado, partidas):
+		return false
+	return huecos >= GLIDE_HINT_AFTER_GAPS
+
+
+## Media altura de la franja que recupera aliento, px (T-202).
+##
+## Existe para que **el dibujo y la regla salgan del mismo sitio**. Antes el
+## número vivía dentro de `_on_score_zone_body_entered`; marcar la franja en
+## pantalla con una segunda cuenta habría sido la forma más fácil de que el
+## brillo dejara de coincidir con lo que de verdad recupera.
+static func breath_band_half(gap: float) -> float:
+	return gap * BREATH_BAND_RATIO * 0.5
 
 
 ## Cuánto puede oscilar un hueco de alto `gap` centrado en `centro` sin que se
@@ -447,6 +862,37 @@ static func spin_pipe_chance(score: int) -> float:
 	var recorrido: int = maxi(DIFFICULTY_CAP - SPIN_PIPE_MIN_SCORE, 1)
 	var t: float = clampf(float(score - SPIN_PIPE_MIN_SCORE) / float(recorrido), 0.0, 1.0)
 	return lerpf(SPIN_PIPE_CHANCE_MIN, SPIN_PIPE_CHANCE_MAX, t)
+
+
+## En qué estado de jadeo está Flapo con ese aliento (T-201).
+##
+## **Función pura, y eso es la decisión del ticket**: el jadeo no se guarda en
+## ningún sitio, se deriva del aliento en cada frame. Así no hay un estado
+## que reiniciar al empezar partida —y por tanto no hay un reinicio que
+## olvidar, que es como se cuelan los bugs de ADR-0011—: al volver el aliento
+## al máximo, el jadeo desaparece solo.
+static func pant_level(aliento: float, maximo: float) -> Pant:
+	if maximo <= 0.0:
+		return Pant.NINGUNO
+	if aliento <= 0.0:
+		return Pant.AGOTADO
+	if aliento / maximo < BREATH_LOW_RATIO:
+		return Pant.JADEO
+	return Pant.NINGUNO
+
+
+## Cuánto se tiñe Flapo con ese aliento, de 0 a `PANT_TINT_MAX` (T-201).
+##
+## Continuo y no por escalones: el rubor sube según se acaba el aire, así que
+## el jugador ve venir el agotamiento en vez de encontrárselo de golpe.
+static func pant_tint_weight(aliento: float, maximo: float) -> float:
+	if maximo <= 0.0 or BREATH_LOW_RATIO <= 0.0:
+		return 0.0
+	var ratio: float = clampf(aliento / maximo, 0.0, 1.0)
+	if ratio >= BREATH_LOW_RATIO:
+		return 0.0
+	var hundido: float = 1.0 - ratio / BREATH_LOW_RATIO
+	return hundido * PANT_TINT_MAX
 
 
 ## Nombre del modo para la interfaz. Vive aquí y no en el menú porque es

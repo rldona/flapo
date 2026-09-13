@@ -34,9 +34,55 @@ Un solo fichero:
 | Importar assets y regenerar el registro de `class_name` | `godot --headless --path . --import` |
 | Ejecutar un script de `SceneTree` | `godot --headless --fixed-fps 60 --path . -s tests/test_x.gd` |
 | Exportar | `godot --headless --path . --export-release "Web" export/Web/index.html` |
+| Métrica de justicia con el bot (T-260, lento) | `godot --headless --fixed-fps 60 --path . -s tools/bot_flapo.gd -- 200` |
+| Reproducir un replay (T-261) | `godot --headless --fixed-fps 60 --path . -s tests/replay.gd -- user://last.replay` |
 
 En macOS el binario está dentro del `.app` y no en el `PATH`:
 `/Applications/Godot.app/Contents/MacOS/Godot`. Ver `docs/environment.md`.
+
+## El bot de justicia (T-260)
+
+`tools/bot_flapo.gd` pone a jugar a un piloto automático 200 veces con
+semillas fijas y saca media, mediana y el histograma de muertes por índice de
+tubería. **`tests/run.sh` no lo ejecuta**: tarda minutos y lo que devuelve es
+una medida, no un veredicto.
+
+Se usa así: se anota el resultado, se toca `GameConfig`, se vuelve a correr
+con las mismas semillas y se compara. Lo que significa algo no es el número
+sino su movimiento, y sobre todo si aparece o desaparece un pico en el
+histograma. La línea base está en `docs/perf.md`.
+
+Qué NO mide: si el juego es divertido, y si es justo para un humano — el bot
+no tiene tiempo de reacción ni se pone nervioso. Ver ADR-0035.
+
+## Replays: cómo adjuntar una partida a una issue (T-261)
+
+El juego guarda **siempre** la última partida en `user://last.replay`, sin que
+haya que activar nada. Adjuntar ese fichero a una issue vale más que cualquier
+descripción: se reproduce en headless sin que nadie tenga que jugar.
+
+Dónde está `user://`:
+
+| Plataforma | Ruta |
+|---|---|
+| macOS | `~/Library/Application Support/Godot/app_userdata/Flapo/` |
+| Linux | `~/.local/share/godot/app_userdata/Flapo/` |
+| Windows | `%APPDATA%\Godot\app_userdata\Flapo\` |
+| Web | Almacenamiento del navegador; usar "Guardar esta partida" en la pausa |
+
+Si el bug se ve **durante** la partida y no al morir, se pausa y se le da a
+**"Guardar esta partida"**: deja una copia con fecha que el `last.replay` de
+la siguiente muerte no pisa.
+
+Para reproducirlo:
+
+```
+godot --headless --fixed-fps 60 --path . -s tests/replay.gd -- user://last.replay
+```
+
+Sale con 0 si la puntuación coincide con la grabada y con 1 si no, así que
+sirve tal cual en CI. Qué lleva dentro y por qué —incluido que lleva el modo y
+la confianza, no solo la semilla— está en ADR-0036.
 
 ## Cómo se escribe una comprobación
 

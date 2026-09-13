@@ -109,18 +109,21 @@ func _el_menu_y_el_compartir_lo_usan() -> void:
 	var main: Node = await h.montar(MAIN, {"log_transitions": false})
 	h.check(
 		"sin nombre puesto, se enseña el de siempre",
-		main.display_player_name() == GameConfig.PLAYER_NAME_DEFAULT,
-		"'%s'" % main.display_player_name()
+		(
+			GameConfig.display_player_name(main.session().player_name())
+			== GameConfig.PLAYER_NAME_DEFAULT
+		),
+		"'%s'" % GameConfig.display_player_name(main.session().player_name())
 	)
 
 	# Escribir en el campo del menú llega hasta el guardado.
-	main.menu_panel._name.text = "Raúl\n"
-	main.menu_panel._on_name_changed("Raúl\n")
+	main.options_panel._name.text = "Raúl\n"
+	main.options_panel._on_name_changed("Raúl\n")
 	await h.ticks(1)
 	h.check(
 		"lo escrito llega saneado a Main",
-		main.get_player_name() == "Raúl",
-		"'%s'" % main.get_player_name()
+		main.session().player_name() == "Raúl",
+		"'%s'" % main.session().player_name()
 	)
 	h.check(
 		"y al guardado",
@@ -129,12 +132,12 @@ func _el_menu_y_el_compartir_lo_usan() -> void:
 	)
 	h.check(
 		"y el campo del menú enseña lo saneado, no lo tecleado",
-		main.menu_panel.player_name() == "Raúl",
-		"'%s'" % main.menu_panel.player_name()
+		main.options_panel.player_name() == "Raúl",
+		"'%s'" % main.options_panel.player_name()
 	)
 
 	# Y sin nombre se puede jugar igual: es lo que no puede romperse.
-	main.set_player_name("")
+	main.session().set_player_name("")
 	h.jugar(main)
 	await h.ticks(2)
 	h.check(
@@ -144,7 +147,7 @@ func _el_menu_y_el_compartir_lo_usan() -> void:
 	)
 
 	# El texto de compartir se firma con el nombre a enseñar, nunca vacío.
-	main.set_player_name("Raúl")
+	main.session().set_player_name("Raúl")
 	main.change_state(GameState.State.GAME_OVER)
 	await h.ticks(2)
 	var compartido: Array = []
@@ -160,7 +163,7 @@ func _el_menu_y_el_compartir_lo_usan() -> void:
 
 	# Y sin nombre se comparte en primera persona: firmar con el nombre por
 	# defecto daría "Flapo ha cruzado 3 tuberías con Flapo".
-	main.set_player_name("")
+	main.session().set_player_name("")
 	main.game_over_panel.set_player_name("")
 	compartido.clear()
 	main.game_over_panel._on_share_pressed()

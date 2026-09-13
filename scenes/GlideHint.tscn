@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/glide_hint.gd" id="1_hint"]
+
+[node name="GlideHint" type="CanvasLayer"]
+layer = 4
+script = ExtResource("1_hint")
+
+[node name="Root" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Root"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -112.0
+offset_bottom = -64.0
+mouse_filter = 2
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1

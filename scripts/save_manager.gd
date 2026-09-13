@@ -86,6 +86,24 @@ static func set_difficulty(modo: GameConfig.Difficulty) -> void:
 		push_warning("No se ha podido guardar la dificultad (error %d)." % err)
 
 
+## Si el jugador está jugando en modo espejo (T-076).
+##
+## Va con la dificultad y no en `settings.cfg`: es un modo de juego, como
+## fácil/normal/difícil, no una preferencia de presentación. Por defecto
+## `false`, siempre: el modo normal es el juego.
+static func get_mirror() -> bool:
+	return _leer_int("mirror") > 0
+
+
+## Recuerda el modo espejo. Se guarda al elegirlo, no al morir.
+static func set_mirror(activo: bool) -> void:
+	var cfg: ConfigFile = _datos()
+	cfg.set_value(SECCION, "mirror", 1 if activo else 0)
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el modo espejo (error %d)." % err)
+
+
 ## Nombre del jugador (T-079). Vacío si no ha puesto ninguno: quien decide
 ## qué enseñar entonces es `GameConfig.display_player_name`.
 static func get_player_name() -> String:
@@ -106,10 +124,93 @@ static func set_player_name(nombre: String) -> void:
 		push_warning("No se ha podido guardar el nombre (error %d)." % err)
 
 
-## Registra una partida terminada. Devuelve `true` si ha sido récord.
-static func record_game(score: int) -> bool:
+## Si el jugador ha planeado alguna vez (T-200).
+##
+## Es lo que apaga el aviso para siempre. Ausente o corrupto devuelve
+## `false`, o sea "todavía no": ante la duda se enseña, que es el error
+## barato — el caro sería que alguien no descubra nunca el planeo.
+static func get_has_glided() -> bool:
+	return _leer_int("has_glided") > 0
+
+
+## Lo marca. Se guarda en cuanto ocurre, no al morir: si el jugador cierra el
+## juego justo después de descubrirlo, no tiene que volver a descubrirlo.
+static func set_has_glided() -> void:
+	if get_has_glided():
+		return
 	var cfg: ConfigFile = _datos()
-	var record: bool = score > get_high_score()
+	cfg.set_value(SECCION, "has_glided", 1)
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el descubrimiento (error %d)." % err)
+
+
+## Si el jugador ha llegado al nido alguna vez (T-209).
+##
+## Es lo único que el final deja guardado: un sí. No hay porcentaje de
+## completado ni "veces que has llegado" — el viaje se hace una vez y lo demás
+## es seguir jugando.
+static func get_journey_completed() -> bool:
+	return _leer_int("journey_completed") > 0
+
+
+## Lo marca. Se guarda al llegar, no al morir: quien llega al nido y cierra el
+## juego de la emoción no tiene que volver a llegar.
+static func set_journey_completed() -> void:
+	if get_journey_completed():
+		return
+	var cfg: ConfigFile = _datos()
+	cfg.set_value(SECCION, "journey_completed", 1)
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el final del viaje (error %d)." % err)
+
+
+## Mejor marca conseguida en el reto de ese día (T-241).
+##
+## Clave propia por día, separada del récord general: mezclarlos haría que un
+## buen día de reto contaminara el récord de siempre, y son dos cosas que se
+## comparan con gente distinta.
+static func get_daily_best(clave: String) -> int:
+	return _leer_int(clave)
+
+
+## Guarda la marca del día si mejora. Devuelve `true` si era mejor.
+static func record_daily(clave: String, score: int) -> bool:
+	if score <= get_daily_best(clave):
+		return false
+	var cfg: ConfigFile = _datos()
+	cfg.set_value(SECCION, clave, score)
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el reto (error %d)." % err)
+	return true
+
+
+## Los retos jugados, de más reciente a más antiguo (T-241).
+##
+## Se derivan de las claves que ya hay en el fichero: no hace falta una lista
+## aparte que mantener sincronizada, y por tanto no puede desincronizarse.
+static func get_daily_history() -> Array:
+	var cfg: ConfigFile = _datos()
+	if not cfg.has_section(SECCION):
+		return []
+	var retos: Array = []
+	for clave in cfg.get_section_keys(SECCION):
+		if (clave as String).begins_with("daily_"):
+			retos.append([clave, _leer_int(clave)])
+	retos.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0])
+	return retos
+
+
+## Registra una partida terminada. Devuelve `true` si ha sido récord.
+##
+## `cuenta_para_el_record` lo pone a `false` el reto del día (T-241): esa
+## partida cuenta como jugada —y suma confianza y tuberías— pero su marca
+## va a la clave del reto, no al récord general.
+static func record_game(score: int, cuenta_para_el_record: bool = true) -> bool:
+	var cfg: ConfigFile = _datos()
+	var record: bool = cuenta_para_el_record and score > get_high_score()
 	if record:
 		cfg.set_value(SECCION, "high_score", score)
 	var partidas: int = get_games_played() + 1

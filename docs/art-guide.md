@@ -15,6 +15,43 @@
 | Pico sombra | `#B88632` | | Patas sombra | `#D49A3A` |
 | | | | Edificios lejanos | `#7C9AB5` |
 
+### Colores de escenario (T-057)
+
+Cuatro variantes cosméticas. El cielo es un `ColorRect` y lleva color exacto;
+las nubes y los edificios se **tiñen** (multiplican) sobre el PNG que ya
+existe, así que solo pueden oscurecer — que es lo que hace la luz al caer la
+tarde.
+
+| Variante | Cielo | Tinte de capas |
+|---|---|---|
+| Día | `#7CB3D7` (el de siempre) | ninguno |
+| Atardecer | `#E8A06B` | `#FFC49A` |
+| Noche | `#2E3F5C` | `#6E7FA6` |
+| Lluvia | `#8FA3B0` | `#B9C6CE` |
+
+Amplían la paleta con el mismo criterio que las frutas: son tonos que el resto
+del mundo no usa. No hay PNG nuevos — cuatro juegos de nubes serían cuatro
+ficheros que mantener sincronizados a mano.
+
+### Tramos del viaje (T-222)
+
+Cuatro capas cercanas de **96×120**, el mismo ancho que la ciudad para que las
+cuatro compartan un solo `Parallax2D` (ADR-0040):
+
+| Tramo | Fichero | Qué es |
+|---|---|---|
+| Parque | `stage_parque.png` | Copas de árboles y un banco |
+| Tejados | `city.png` (el de siempre) | La silueta de ciudad de T-052 |
+| Nubes | `stage_nubes.png` | Nubes grandes, ya sin suelo |
+| Cielo | `stage_cielo.png` | Casi vacío, y un pájaro lejano |
+
+Todas en los **azul-grises del fondo**, incluido el parque. No es una licencia:
+es perspectiva atmosférica, lo lejano pierde color. Y el único verde de la
+paleta es el de la fruta, que existe justo para no parecer escenario.
+
+El último tramo está casi vacío a propósito: se nota **porque desaparece
+todo**, no porque aparezca algo.
+
 ### Colores de fruta (T-047)
 
 | Fruta | Hex | Efecto |

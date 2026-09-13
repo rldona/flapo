@@ -107,6 +107,11 @@ def main():
     # reconocerse como "algo ha ido mal" sin sonar a muerte.
     guardar(mezcla(tono(560, 220, 0.22, "sierra", 0.35, ruido=0.25)), "fruit_bad")
 
+    # Bocanada (T-202): inhalación. Barrido de ruido hacia ARRIBA, al revés
+    # que la caída, y sin tono definido: tiene que sonar a aire entrando, no
+    # a una nota. Se distingue del punto porque no es musical.
+    guardar(mezcla(tono(180, 520, 0.28, "sierra", 0.16, ruido=0.85)), "breath")
+
     # Botón: click seco y neutro.
     guardar(mezcla(tono(880, 700, 0.05, "cuadrada", 0.3)), "button")
 

@@ -200,6 +200,14 @@ central**.
 | `BREATH_RECOVER_ON_GAP` | +25 por hueco centrado | ~15,6/s: sostiene el planeo, no el aleteo |
 | `BREATH_BAND_RATIO` | 0,5 | solo la mitad central del hueco cuenta |
 
+Desde T-202 esa franja **se ve**: un brillo crema muy tenue marca en cada
+tubería la mitad central del hueco, y al cruzarla suena una inhalación y sale
+una bocanada de aire. Es lo que enseña la regla sin un texto que la explique.
+
+El brillo y la regla salen del **mismo cálculo** (`breath_band_half`), así que
+no pueden desincronizarse: enseñar una franja y premiar otra sería peor que no
+marcar nada.
+
 **A 0 de aliento el planeo deja de frenar, pero el aleteo corto sigue dando el
 impulso completo.** Flapo nunca se queda sin poder aletear: el castigo es
 perder una herramienta, no el control. Ver ADR-0020.
@@ -215,6 +223,26 @@ jugador ve es que la barra de aliento es un poco más larga que hace unos
 días. Por eso la lista de "fuera de alcance en v1" sigue intacta. Mejora
 quien insiste, no quien ya juega bien, y solo mejora el **planeo**: el
 aleteo, que es el control, no cambia nunca. Ver ADR-0021.
+
+### Enseñar el planeo (T-200)
+El planeo es la mecánica que ningún clon tiene, y nadie la descubre solo. En
+`READY`, durante las **5 primeras partidas**, un cartel dice "mantén pulsado
+para planear"; dentro de la partida vuelve a salir si a los **3 huecos** no se
+ha planeado nunca. **En cuanto se plana una vez, desaparece para siempre** y
+queda guardado.
+
+Nunca bloquea ni pausa: aletear con el cartel puesto funciona igual. Un
+tutorial que hay que cerrar es un tutorial que estorba.
+
+### Jadeo visible (T-201)
+La barra de aliento es UI; el aliento **también se ve en Flapo**. Por debajo
+del **30 %** (`BREATH_LOW_RATIO`): alas temblando (aleteo ×1,6), mejillas
+encendidas y gotas de sudor. A 0, además, vaho.
+
+El rubor es una **rampa continua**, no un interruptor: sube según se acaba el
+aire, así que el agotamiento se ve venir. Y todo es función pura del aliento
+—no hay estado de jadeo guardado—, así que al empezar partida se apaga solo.
+La hitbox no cambia en ningún estado.
 
 ### Fatiga (T-049)
 Más de **4 aleteos en 1,2 s** reduce el impulso del siguiente un **30 %**. Se
@@ -239,6 +267,39 @@ la vez, 6 s de duración; el escudo va aparte y no caduca.
 Las de castigo pagan en puntos: es lo que las convierte en una apuesta en vez
 de en una trampa. Ver ADR-0019.
 
+## Semilla compartible (T-242)
+Cada partida libre enseña en el Game Over un **código de 5 caracteres** en
+base 36, y el menú tiene "Jugar un código". Dos amigos escriben el mismo y
+juegan exactamente las mismas tuberías, sin ranking online ni servidor.
+
+La semilla de una partida libre se sortea **dentro del espacio del código**:
+si fuera mayor, el código enseñado llevaría a otra partida y nadie se
+enteraría. Da igual mayúsculas y espacios, porque se dicta por teléfono. Un
+código inválido no rompe nada: aviso corto y se sigue en el menú.
+
+En el reto del día no hay código: ya se identifica por su fecha.
+
+## Reto del día (T-241)
+Botón en el menú. La semilla es **la fecha local en AAAAMMDD**, así que todo
+el mundo juega las mismas tuberías ese día **sin servidor**. Cambia a
+medianoche del jugador, no en UTC.
+
+Solo cambia la semilla: el modo de dificultad, las frutas y el resto de
+reglas son los del juego normal — un reto con reglas distintas no sería
+comparable. La marca va a **su propia clave** y no toca el récord general,
+pero la partida sí cuenta como jugada (suma confianza y tuberías). Al
+compartir dice de qué día era.
+
+## Determinismo (T-240)
+Toda la aleatoriedad de una partida —huecos, variantes de tubería, frutas,
+viento— sale de **un solo generador** con semilla conocida. Con la misma
+semilla, la secuencia de tuberías es idéntica; desde un arranque limpio, la
+partida entera lo es frame a frame.
+
+Lo cosmético (sacudida de cámara, frases al morir) queda **fuera** a
+propósito: si entrara, el aspecto del juego afectaría a su simulación. Y el
+determinismo **no sobrevive a cambiar una constante del GDD**. Ver ADR-0030.
+
 ## Fuera de alcance en v1
 Skins, ranking online, anuncios, compras, modos de juego.
 
@@ -248,3 +309,13 @@ contradice: no se compra, no se elige y no tiene pantalla. Ver ADR-0021.
 Los **power-ups estaban aquí** hasta T-047: se sacaron de la lista a
 propósito, con ADR-0019, cuando el juego ya estaba completo y se vio que
 aguantaba más sustancia.
+
+El **modo espejo (T-076)** es la segunda excepción, con ADR-0038. Se
+desbloquea con récord 25 y da la vuelta a la gravedad y al aleteo: la física
+de siempre con el signo cambiado. Entra porque **no añade sistemas** —ni
+tienda, ni servidor, ni assets, ni una segunda economía— y se paga una vez.
+Skins, ranking online, anuncios y compras siguen fuera, y por ese mismo
+motivo: todas ellas traen algo que mantener para siempre.
+
+Es **opt-in y nunca automático**: aparece un botón en Opciones al
+desbloquearlo, y hasta entonces no existe. El modo normal no cambia en nada.

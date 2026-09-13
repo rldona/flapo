@@ -1,6 +1,6 @@
 class_name Settings
 extends RefCounted
-## Ajustes del jugador: de momento, solo el silencio.
+## Ajustes del jugador: silencio y qué se enseña en pantalla.
 ##
 ## Vive aparte de `SaveManager` (progreso) porque son cosas distintas: borrar
 ## la partida no debería desactivar el mute, y al revés. Misma regla de oro:
@@ -8,6 +8,11 @@ extends RefCounted
 
 const RUTA: String = "user://settings.cfg"
 const SECCION: String = "audio"
+
+## Los ajustes de juego van en su propia sección. Separar por temas y no
+## amontonarlo todo en `audio` es lo que hace que el fichero siga siendo
+## legible cuando T-090 traiga tres ajustes más de accesibilidad.
+const SECCION_JUEGO: String = "juego"
 
 static var _cfg: ConfigFile = null
 
@@ -26,6 +31,26 @@ static func set_muted(muted: bool) -> bool:
 	if err != OK:
 		push_warning("No se han podido guardar los ajustes (error %d)." % err)
 	return muted
+
+
+## Si el jugador ha escondido el fantasma del récord (T-087).
+##
+## Por defecto se ve: es una función del juego, no una molestia que haya que
+## desactivar. Quien no lo quiera lo apaga, pero nadie tiene que descubrir
+## que existe para poder disfrutarlo.
+static func is_ghost_hidden() -> bool:
+	var valor: Variant = _datos().get_value(SECCION_JUEGO, "ghost_hidden", false)
+	return valor if typeof(valor) == TYPE_BOOL else false
+
+
+## Esconde o enseña el fantasma. Devuelve el valor que ha quedado.
+static func set_ghost_hidden(oculto: bool) -> bool:
+	var cfg: ConfigFile = _datos()
+	cfg.set_value(SECCION_JUEGO, "ghost_hidden", oculto)
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se han podido guardar los ajustes (error %d)." % err)
+	return oculto
 
 
 ## Olvida la copia en memoria. Solo para tests: simula reabrir el juego.

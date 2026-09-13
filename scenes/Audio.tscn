@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/audio_director.gd" id="1_audio"]
 [ext_resource type="AudioStream" uid="uid://bsqqcqxcbmq5g" path="res://assets/audio/flap.wav" id="flap"]
@@ -8,6 +8,7 @@
 [ext_resource type="AudioStream" uid="uid://bu0q48bpe7qsh" path="res://assets/audio/button.wav" id="button"]
 [ext_resource type="AudioStream" uid="uid://bf5wecokrm3ir" path="res://assets/audio/fruit_good.wav" id="fruit_good"]
 [ext_resource type="AudioStream" uid="uid://c10y2p5moek3x" path="res://assets/audio/fruit_bad.wav" id="fruit_bad"]
+[ext_resource type="AudioStream" path="res://assets/audio/breath.wav" id="breath"]
 
 [node name="Audio" type="Node"]
 script = ExtResource("1_audio")
@@ -34,6 +35,10 @@ bus = &"SFX"
 
 [node name="FruitGood" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("fruit_good")
+bus = &"SFX"
+
+[node name="Breath" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("breath")
 bus = &"SFX"
 
 [node name="FruitBad" type="AudioStreamPlayer" parent="."]
