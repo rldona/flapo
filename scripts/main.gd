@@ -54,6 +54,9 @@ const _TRANSITIONS: Dictionary = {
 ## El velo de pausa.
 @export var pause_panel: PausePanel
 
+## Los sonidos del juego.
+@export var audio: AudioDirector
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -114,6 +117,12 @@ func _can_pause() -> bool:
 ##
 ## No recarga la escena: cada sistema se reinicia al recibir READY. Ver
 ## ADR-0011 sobre por qué, y el test de 50 reinicios que lo respalda.
+func _on_restart_pressed() -> void:
+	if audio != null:
+		audio.play_button()
+	restart()
+
+
 func restart() -> void:
 	# Reiniciar con el juego pausado lo dejaría todo congelado y sin velo.
 	set_paused(false)
@@ -172,6 +181,12 @@ func _connect_children() -> void:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
 		return
 	pause_panel.resume_pressed.connect(set_paused.bind(false))
+	if audio == null:
+		push_error("Main no tiene asignado el nodo Audio en el inspector.")
+		return
+	pause_panel.mute_pressed.connect(_on_mute_pressed)
+	game_over_panel.mute_pressed.connect(_on_mute_pressed)
+	bird.flapped.connect(audio.play_flap)
 	for nombre in piezas:
 		if piezas[nombre] == null:
 			push_error("Main no tiene asignado el nodo %s en el inspector." % nombre)
@@ -182,9 +197,12 @@ func _connect_children() -> void:
 	pipe_spawner.scored.connect(_on_scored)
 	score_changed.connect(hud.set_score)
 	score_changed.connect(game_over_panel.set_score)
-	game_over_panel.restart_pressed.connect(restart)
+	game_over_panel.restart_pressed.connect(_on_restart_pressed)
 	game_over_panel.share_pressed.connect(_on_share_pressed)
 	state_changed.connect(_on_state_changed_results)
+	# Los paneles arrancan enseñando el estado real del silencio.
+	pause_panel.set_muted(audio.is_muted())
+	game_over_panel.set_muted(audio.is_muted())
 
 
 ## Rellena el panel al morir. Va aparte de `_on_bird_died` porque el panel
@@ -211,12 +229,26 @@ func _on_share_pressed(texto: String) -> void:
 
 func _on_scored() -> void:
 	_score += 1
+	if audio != null:
+		audio.play_point()
 	score_changed.emit(_score)
+
+
+## Alterna el silencio y lo cuenta a los dos paneles que lo enseñan.
+func _on_mute_pressed() -> void:
+	if audio == null:
+		return
+	var muted: bool = audio.toggle_muted()
+	audio.play_button()
+	pause_panel.set_muted(muted)
+	game_over_panel.set_muted(muted)
 
 
 func _on_bird_died() -> void:
 	if juice != null:
 		juice.punch()
+	if audio != null:
+		audio.play_hit()
 	# Se registra ANTES de cambiar de estado: el panel lee el récord al
 	# recibir GAME_OVER y tiene que ver ya el dato de esta partida.
 	_is_new_high_score = SaveManager.record_game(_score)

@@ -11,6 +11,10 @@ extends CharacterBody2D
 ## significa (pasar a GAME_OVER) es `Main`: "signal up".
 signal died
 
+## Flapo ha aleteado. La emite él porque es quien lee la entrada; quien
+## decide que eso suena es Main.
+signal flapped
+
 @export_group("Física")
 ## Aceleración de caída, px/s². Flapo pesa; ver GDD, "Concepto y tono".
 @export var gravity: float = 1200.0
@@ -83,6 +87,7 @@ func _physics_process(delta: float) -> void:
 			if Input.is_action_just_pressed("flap"):
 				velocity.y = flap_impulse
 				_burst_left = flap_burst_time
+				flapped.emit()
 		GameState.State.GAME_OVER:
 			# Sigue cayendo, pero ya no responde: el batacazo se ve entero.
 			_apply_gravity(delta)

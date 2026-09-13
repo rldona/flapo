@@ -128,10 +128,10 @@ que por ser la mascota debe dibujarlo una persona.
 
 ## Fase 5 — Audio (1 día)
 
-- 🔲 Sonidos: aleteo, punto, golpe, caída, botón. Grabar/generar (jsfxr, Freesound) y limpiar en Audacity.
-- 🔲 Música: un loop corto de fondo (opcional; en Flappy original no hay).
-- 🔲 `AudioStreamPlayer` por sonido, bus de SFX y Música separados.
-- 🔲 Botón de silencio persistente.
+- ✅ Sonidos: aleteo, punto, golpe, caída, botón, sintetizados con `tools/generar_audio.py`. → T-060 (ADR-0017)
+- ⏭️ Música: descartada a propósito. El Flappy original no tiene, y un loop mediocre cansa en partidas de 20 s. El bus `Music` queda listo por si se retoma. → T-062
+- ✅ `AudioStreamPlayer` por sonido, buses SFX y Music separados. → T-061
+- ✅ Botón de silencio persistente en `user://settings.cfg`. → T-061
 
 ---
 

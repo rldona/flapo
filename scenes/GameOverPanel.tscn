@@ -67,6 +67,10 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 48)
 text = "Otra vez"
 
+[node name="MuteButton" type="Button" parent="Root/Box"]
+custom_minimum_size = Vector2(0, 48)
+text = "Sonido: sí"
+
 [node name="ShareButton" type="Button" parent="Root/Box"]
 visible = false
 custom_minimum_size = Vector2(0, 48)

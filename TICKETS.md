@@ -240,6 +240,10 @@ Buses `SFX` y `Music`; botón mute que guarda en `user://settings.cfg`.
 ### T-062 · Música de fondo (opcional)
 labels: fase:5, area:audio · estimate: 2
 Loop corto (8-16 compases) en LMMS o pista CC0. Volumen bajo, sin cortes en el loop.
+
+**Descartado en la Fase 5** (ver ADR-0017): el Flappy original no tiene música
+y un loop mediocre cansa más que el silencio en partidas de veinte segundos.
+El bus `Music` existe y está a −6 dB por si se retoma.
 **Criterios de aceptación**
 - Loop sin click audible en el punto de unión.
 

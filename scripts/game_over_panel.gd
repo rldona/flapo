@@ -14,6 +14,9 @@ signal restart_pressed
 ## El jugador quiere compartir su marca. Solo se puede pulsar en Android.
 signal share_pressed(texto: String)
 
+## El jugador ha tocado el botón de silencio.
+signal mute_pressed
+
 ## Retardo antes de que aparezca el panel, s (GDD: 0,5 s). Da tiempo a ver el
 ## batacazo entero antes de tapar la pantalla con una caja.
 @export var delay: float = 0.5
@@ -38,10 +41,12 @@ var _score: int = 0
 @onready var _high_label: Label = $Root/Box/HighScore
 @onready var _record_label: Label = $Root/Box/NewRecord
 @onready var _button: Button = $Root/Box/Button
+@onready var _mute_button: Button = $Root/Box/MuteButton
 @onready var _share_button: Button = $Root/Box/ShareButton
 
 
 func _ready() -> void:
+	_mute_button.pressed.connect(func() -> void: mute_pressed.emit())
 	_button.pressed.connect(_on_button_pressed)
 	_share_button.pressed.connect(_on_share_pressed)
 	# Compartir solo tiene sentido donde hay algo con lo que compartir.
@@ -126,3 +131,8 @@ func _on_button_pressed() -> void:
 func _on_share_pressed() -> void:
 	var pieza: String = "1 tubería" if _score == 1 else "%d tuberías" % _score
 	share_pressed.emit("He cruzado %s con Flapo." % pieza)
+
+
+## Refleja el estado del silencio en el botón.
+func set_muted(muted: bool) -> void:
+	_mute_button.text = "Sonido: no" if muted else "Sonido: sí"

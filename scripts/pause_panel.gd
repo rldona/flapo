@@ -8,10 +8,15 @@ extends CanvasLayer
 ## El jugador quiere seguir jugando.
 signal resume_pressed
 
+## El jugador ha tocado el botón de silencio.
+signal mute_pressed
+
 @onready var _button: Button = $Root/Box/Button
+@onready var _mute_button: Button = $Root/Box/MuteButton
 
 
 func _ready() -> void:
+	_mute_button.pressed.connect(func() -> void: mute_pressed.emit())
 	_button.pressed.connect(_on_button_pressed)
 	visible = false
 
@@ -23,3 +28,8 @@ func set_paused(paused: bool) -> void:
 
 func _on_button_pressed() -> void:
 	resume_pressed.emit()
+
+
+## Refleja el estado del silencio en el botón.
+func set_muted(muted: bool) -> void:
+	_mute_button.text = "Sonido: no" if muted else "Sonido: sí"
