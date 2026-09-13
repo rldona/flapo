@@ -51,6 +51,9 @@ const _TRANSITIONS: Dictionary = {
 ## El fundido de arranque de partida.
 @export var fade: Fade
 
+## El velo de pausa.
+@export var pause_panel: PausePanel
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -77,6 +80,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		change_state(GameState.State.PLAYING)
 	elif _state == GameState.State.GAME_OVER and event.is_action_pressed("restart"):
 		restart()
+	elif event.is_action_pressed("pause") and _can_pause():
+		set_paused(not get_tree().paused)
 
 
 ## Estado actual. Solo lectura: cambiarlo pasa por `change_state()`, que es
@@ -85,11 +90,33 @@ func get_state() -> GameState.State:
 	return _state
 
 
+## Pausa o reanuda.
+##
+## `get_tree().paused` congela el árbol entero salvo lo que tenga
+## `process_mode = ALWAYS`. Como la física también se para, al reanudar NO
+## hay delta acumulado: Flapo sigue exactamente donde estaba, que es el
+## criterio de T-072. Es la diferencia con pausar a mano con un flag.
+func set_paused(paused: bool) -> void:
+	if paused and not _can_pause():
+		return
+	get_tree().paused = paused
+	if pause_panel != null:
+		pause_panel.set_paused(paused)
+
+
+## Solo se puede pausar jugando: pausar en READY o con el panel de muerte
+## delante no significa nada y complica el reinicio.
+func _can_pause() -> bool:
+	return _state == GameState.State.PLAYING
+
+
 ## Vuelve a dejarlo todo listo para jugar.
 ##
 ## No recarga la escena: cada sistema se reinicia al recibir READY. Ver
 ## ADR-0011 sobre por qué, y el test de 50 reinicios que lo respalda.
 func restart() -> void:
+	# Reiniciar con el juego pausado lo dejaría todo congelado y sin velo.
+	set_paused(false)
 	change_state(GameState.State.READY)
 
 
@@ -141,6 +168,10 @@ func _connect_children() -> void:
 		"Background": background,
 		"Fade": fade,
 	}
+	if pause_panel == null:
+		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
+		return
+	pause_panel.resume_pressed.connect(set_paused.bind(false))
 	for nombre in piezas:
 		if piezas[nombre] == null:
 			push_error("Main no tiene asignado el nodo %s en el inspector." % nombre)
@@ -158,6 +189,14 @@ func _connect_children() -> void:
 
 ## Rellena el panel al morir. Va aparte de `_on_bird_died` porque el panel
 ## debe enterarse igual si algún día se llega a GAME_OVER por otra vía.
+## Android avisa al mandar la app a segundo plano. Sin esto, el jugador
+## vuelve de atender una llamada y se encuentra a Flapo ya estrellado.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
+		if _can_pause():
+			set_paused(true)
+
+
 func _on_state_changed_results(to: GameState.State) -> void:
 	if to == GameState.State.GAME_OVER:
 		game_over_panel.show_results(_score, _high_score, _is_new_high_score)

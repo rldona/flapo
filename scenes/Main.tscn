@@ -9,8 +9,9 @@
 [ext_resource type="Script" path="res://scripts/juice.gd" id="7_juice"]
 [ext_resource type="PackedScene" path="res://scenes/Background.tscn" id="8_bg"]
 [ext_resource type="PackedScene" path="res://scenes/Fade.tscn" id="9_fade"]
+[ext_resource type="PackedScene" path="res://scenes/PausePanel.tscn" id="10_pause"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade")]
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
 pipe_spawner = NodePath("PipeSpawner")
@@ -20,6 +21,7 @@ hud = NodePath("Hud")
 juice = NodePath("Juice")
 background = NodePath("Background")
 fade = NodePath("Fade")
+pause_panel = NodePath("PausePanel")
 
 [node name="BackgroundPlaceholder" type="ColorRect" parent="." unique_id=1166350777]
 offset_right = 288.0
@@ -58,3 +60,5 @@ camera = NodePath("../Camera2D")
 flash_rect = NodePath("../FlashLayer/Flash")
 
 [node name="Fade" parent="." instance=ExtResource("9_fade")]
+
+[node name="PausePanel" parent="." instance=ExtResource("10_pause")]
