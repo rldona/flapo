@@ -317,7 +317,8 @@ refactoriza.
 labels: fase:8, area:ci · estimate: 1
 `export_presets.cfg` para Web, Android, Linux y Windows. Sin secretos dentro.
 **Criterios de aceptación**
-- Exportación manual de los 4 presets funciona en local.
+- Exportación manual de los 4 presets funciona en local. Android solo en
+  depuración: el release necesita el keystore de T-092.
 
 ### T-091 · Workflow de export en GitHub Actions
 labels: fase:8, area:ci · estimate: 3

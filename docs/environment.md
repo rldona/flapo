@@ -82,7 +82,31 @@ Decisiones del preset:
   emborrona el pixel art. El arte va en modo lossless (`docs/art-guide.md`).
 - `exclude_filter="tests/*"` → los tests no se envían al jugador.
 
-Faltan los presets de Android, Linux y Windows: son T-090.
+Presets disponibles (`export_presets.cfg`, versionado y sin secretos):
+
+| Preset | Salida | Estado |
+|---|---|---|
+| `Web` | `export/Web/index.html` | ✅ verificado en local y en CI |
+| `Linux` | `export/Linux/flapo.x86_64` | ✅ 70 MB |
+| `Windows` | `export/Windows/flapo.exe` | ✅ 104 MB |
+| `Android` | `export/Android/flapo.apk` | ⚠️ solo depuración |
+
+El export de **release** de Android falla a propósito con *"Could not find
+release keystore"*: el keystore de firma es **T-092** y no puede estar en el
+repo. El de depuración sí funciona y firma con el keystore que genera Godot:
+
+```bash
+godot --headless --path . --export-debug "Android" export/Android/flapo-debug.apk
+```
+
+Dos ajustes que exige el export y no son obvios:
+
+- Escritorio necesita `texture_format/s3tc_bptc=true` y Android
+  `texture_format/etc2_astc=true`. Godot exige **al menos un formato de
+  textura**, aunque nuestro pixel art se importe sin comprimir: el flag solo
+  decide qué variantes se empaquetan.
+- Android exige además `rendering/textures/vram_compression/import_etc2_astc`
+  a `true` en `project.godot`, o el export ni empieza.
 
 ## Notas
 - El binario de Godot no está en el `PATH`; para invocarlo en headless desde

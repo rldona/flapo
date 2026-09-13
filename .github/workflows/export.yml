@@ -68,8 +68,8 @@ jobs:
         with: { python-version: "3.12" }
       - uses: pre-commit/action@v3.0.1
 
-  # Solo en tags. De momento un único preset: los de Android, Linux y
-  # Windows son T-090, y una matriz con presets inexistentes fallaría.
+  # Solo en tags. Android queda fuera hasta T-092: su export de release
+  # necesita un keystore que vive como secreto de GitHub, nunca en el repo.
   export:
     name: Exportar release
     if: startsWith(github.ref, 'refs/tags/v')
@@ -79,7 +79,7 @@ jobs:
       image: barichello/godot-ci:4.7.2
     strategy:
       matrix:
-        preset: [Web]
+        preset: [Web, Linux, Windows]
     steps:
       - uses: actions/checkout@v4
       - name: Importar assets
