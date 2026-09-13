@@ -137,10 +137,10 @@ que por ser la mascota debe dibujarlo una persona.
 
 ## Fase 6 — Persistencia y pulido (1-2 días)
 
-- 🔲 Guardar récord en `user://save.cfg` (`ConfigFile`).
-- 🔲 Pantalla Game Over: puntuación, récord, medalla, botón de reintento y de compartir (Android).
-- 🔲 Pausa (Android: al salir de la app se pausa).
-- 🔲 Soporte de pantallas altas: márgenes seguros (notch).
+- ✅ Guardar récord en `user://save.cfg` (`ConfigFile`). → T-070 (ADR-0013)
+- ✅ Pantalla Game Over: puntuación, récord, medalla, reintento y compartir. → T-071
+- ✅ Pausa, y automática al perder el foco. → T-072 (ADR-0014)
+- ✅ Márgenes seguros y letterbox del color del cielo. → T-073. Falta verlo en un emulador con notch.
 - 🔲 Revisión de accesibilidad: contraste, tamaño de botones ≥ 48 px en móvil.
 
 ---
