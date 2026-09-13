@@ -243,6 +243,22 @@ Fundido `READY → PLAYING`, retardo de 0,5 s antes de mostrar Game Over.
 
 ## Fase 4 — Arte
 
+### T-057 · Variantes de escenario (clima/hora del día)
+labels: fase:4, area:art|code · estimate: 2
+Amplía el parallax de fondo (T-052) con 2-3 variantes cosméticas (atardecer, lluvia suave, noche) que se eligen al azar por partida o al superar un récord. No toca dificultad ni física, solo arte y selección aleatoria de las capas ya existentes.
+**Criterios de aceptación**
+- Al menos 2 variantes además de la actual, con el mismo criterio de paleta del `docs/art-guide.md`.
+- Test en `tests/` que compruebe que la variante se elige sin romper el parallax existente y que reiniciar puede cambiarla.
+- Raúl revisa que las variantes se leen bien en el navegador tras reexportar.
+
+### T-058 · Compañero silencioso
+labels: fase:4, area:code|art · estimate: 2
+Un segundo pajarillo (NPC, no jugable, sin colisión) que vuela cerca de Flapo y reacciona a eventos del juego (se asusta al pasar un hueco muy justo, aplaude al conseguir medalla) mediante animaciones simples. No es controlable ni afecta a la puntuación ni a la física.
+**Criterios de aceptación**
+- No colisiona con tuberías, suelo ni frutas (no es `CharacterBody2D` con colisión activa).
+- Test en `tests/` que compruebe que su presencia no altera la puntuación ni el estado de la partida (misma puntuación con y sin él, mismo resultado en `test_t047_frutas.gd` u otro test de referencia).
+- Raúl revisa el timing de las reacciones en el navegador: no debe distraer del hueco a cruzar.
+
 ### T-050 · Sprite de Flapo (idle + aleteo)
 labels: fase:4, area:art · estimate: 3
 3 frames 16×12 con la paleta del proyecto. Silueta redonda con tripa y alas pequeñas; aleteo exagerado (ver GDD, Concepto y tono). Fuente `.pxo` en `assets/sprites/src/`, PNG exportado en `assets/sprites/`.
@@ -309,6 +325,58 @@ El bus `Music` existe y está a −6 dB por si se retoma.
 ---
 
 ## Fase 6 — Persistencia y pulido
+
+### T-075 · Causa de muerte en el Game Over
+labels: fase:6, area:code · estimate: 1
+Depende de T-048 y T-056. La pantalla de Game Over ya sabe si Flapo chocó o se quedó sin aliento; hoy no se lo dice al jugador. Añadir una frase corta que combine la reacción variable (T-056) con la causa real ("chocó de morros", "se quedó sin fuelle").
+**Criterios de aceptación**
+- Reutiliza el recurso de frases de T-056, con variantes por causa (colisión / sin aliento).
+- Test en `tests/` que compruebe que la causa mostrada coincide con el motivo real de la muerte (mock de ambos casos).
+- Raúl revisa que el texto no alarga el retardo de 0,5 s antes del panel (T-044).
+
+### T-076 · Modo espejo desbloqueable
+labels: fase:6, area:code · estimate: 3
+Tras alcanzar cierto récord (`MIRROR_UNLOCK_SCORE` en `GameConfig`), se ofrece un modo opcional con la gravedad y el control invertidos (mantener para subir, soltar para caer). El GDD deja "modos de juego" fuera de v1: esta ADR reabre esa decisión igual que hizo ADR-0019 con las frutas, a sabiendas de que retrasa un poco más la publicación.
+**Criterios de aceptación**
+- El modo normal no cambia en nada; el espejo es opt-in desde un botón en Game Over o menú, nunca automático.
+- Test en `tests/` que compruebe que la inversión de gravedad/control es consistente y que el desbloqueo depende del récord guardado.
+- ADR-0022 documenta la decisión y por qué no contradice el resto de "fuera de alcance en v1" (skins, ranking online, anuncios, compras).
+- `docs/GDD.md` actualizado: el modo espejo pasa de "fuera de alcance" a excepción documentada.
+
+### T-077 · Captura del mejor salto
+labels: fase:6, area:code · estimate: 3
+Al superar el récord, generar automáticamente una imagen (o GIF corto) de los últimos segundos de vuelo, para compartir junto al botón ya existente de T-071. Pensado para redes, no cambia el gameplay.
+**Criterios de aceptación**
+- Usa `Viewport.get_texture()` (o equivalente) sin depender de hardware gráfico específico — documentar en ADR si se necesita algo no trivial en Godot 4.
+- Test en `tests/` que compruebe que la captura solo se dispara al superar récord, no en cualquier Game Over.
+- Raúl revisa la calidad de la imagen/GIF resultante en el navegador y en Android.
+
+### T-078 · Pantalla de inicio (título, jugar, dificultad, estadísticas)
+labels: fase:6, area:code · estimate: 3
+Añade un estado `MENU` antes de `READY`: logo/nombre del juego, botón "Jugar", selector de dificultad (fácil/normal/difícil, escala el punto de partida de la curva de T-045 con un multiplicador en `GameConfig` sobre los valores iniciales, no una tabla paralela) y una entrada a la pantalla de estadísticas (T-084). La dificultad elegida se recuerda entre partidas.
+**Criterios de aceptación**
+- Nuevo estado en la máquina de `Main` (`MENU → READY → PLAYING → GAME_OVER`, y vuelta a `MENU` desde Game Over), documentado junto a ADR-0005.
+- Constantes de las 3 dificultades en `GameConfig`, derivadas de las funciones existentes (`scroll_speed_for`, `pipe_gap_for`, etc.), no tablas duplicadas.
+- Persistida la última dificultad elegida en `user://save.cfg`.
+- Test en `tests/` que compruebe que cada dificultad produce los valores esperados a puntuación 0 y que el estado inicial del juego es `MENU`.
+- Raúl revisa el flujo completo en el navegador: menú → jugar → Game Over → menú, y que el logo/nombre se lee bien en 1x.
+
+### T-079 · Nombre de jugador
+labels: fase:6, area:code · estimate: 2
+Depende de T-078. Campo de texto simple en la pantalla de inicio para un nombre corto, persistido junto al récord y usado en la pantalla de compartir (T-071) y, si aplica, en la causa de muerte (T-075).
+**Criterios de aceptación**
+- Límite de caracteres en `GameConfig` (`PLAYER_NAME_MAX_LEN`) y saneado de caracteres que rompan el texto de compartir.
+- Persistido en `user://save.cfg`; vacío usa un nombre por defecto sin bloquear la partida.
+- Test en `tests/` que compruebe guardado/recuperación y el saneado.
+- Raúl revisa la usabilidad del teclado táctil en Android.
+
+### T-084 · Pantalla de estadísticas
+labels: fase:6, area:code · estimate: 2
+Depende de T-078. Accesible desde el menú: partidas jugadas, mejor puntuación (ya existe), medalla más alta conseguida, y algún dato nuevo que ya se puede derivar sin más estado (p. ex. racha de mejora, aleteos totales) — decidir en el ticket cuáles aportan algo y no inflar `SaveManager` con contadores que nadie mira.
+**Criterios de aceptación**
+- Los contadores nuevos se persisten en `user://save.cfg` junto al resto (mismo `ConfigFile`).
+- Test en `tests/` que compruebe que los contadores se acumulan bien entre partidas y sobreviven a un fichero de guardado ausente/corrupto (igual que T-070/T-074).
+- Raúl revisa qué estadísticas se muestran; son contenido de producto, no solo dato técnico.
 
 ### T-074 · Progresión de confianza
 labels: fase:6, area:code · estimate: 3

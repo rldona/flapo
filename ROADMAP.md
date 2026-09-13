@@ -122,6 +122,8 @@ Objetivo: sustituir todos los placeholders por pixel art propio.
 - ✅ Icono 512×512 y splash. → T-054
 - ✅ Importación: filtro `Nearest`, sin mipmaps, sin compresión con pérdida. → T-055
 - ✅ Stretch `viewport` + `integer`. → T-020 (ADR-0002)
+- 🔲 Variantes de escenario (clima/hora del día) sobre el parallax existente, cosmético. → T-057
+- 🔲 Compañero silencioso: NPC no jugable que reacciona a eventos del juego. → T-058
 
 Entregable: juego sin ningún placeholder. Fuentes de arte (`.pxo`) en `assets/sprites/src/`.
 
@@ -148,6 +150,11 @@ que por ser la mascota debe dibujarlo una persona.
 - ✅ Márgenes seguros y letterbox del color del cielo. → T-073. Falta verlo en un emulador con notch.
 - ✅ Revisión de accesibilidad: contraste WCAG y 48 dp táctiles verificados en `tests/test_a11y.gd`.
 - ✅ Progresión de confianza: +8 de aliento cada 10 partidas, tope a las 50. → T-074 (ADR-0021)
+- 🔲 Pantalla de inicio: título, jugar, selector de dificultad, nombre de jugador y acceso a estadísticas. → T-078, T-079
+- 🔲 Pantalla de estadísticas (partidas jugadas, medalla más alta, etc.). → T-084
+- 🔲 Causa de muerte visible en el Game Over (colisión / sin aliento). → T-075
+- 🔲 Modo espejo desbloqueable tras récord, excepción documentada a "fuera de alcance". → T-076 (ADR-0022)
+- 🔲 Captura automática del mejor salto para compartir. → T-077
 
 ---
 
