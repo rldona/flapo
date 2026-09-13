@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  GODOT_VERSION: 4.4.1   # ajustar a la versión de docs/environment.md
+  GODOT_VERSION: 4.7.2   # debe coincidir con docs/environment.md
   PROJECT_NAME: flapo
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
     needs: checks
     runs-on: ubuntu-latest
     container:
-      image: barichello/godot-ci:4.4.1   # misma versión que GODOT_VERSION
+      image: barichello/godot-ci:4.7.2   # misma versión que GODOT_VERSION
     strategy:
       matrix:
         preset: [Web, Android, Linux, Windows]
