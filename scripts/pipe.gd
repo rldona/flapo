@@ -117,8 +117,8 @@ func _apply_layout() -> void:
 	# Cada tubo se centra en su propio punto medio, de ahí el medio largo.
 	_top.position.y = _gap_center - media_luz - body_length * 0.5
 	_bottom.position.y = _gap_center + media_luz + body_length * 0.5
-	_colocar_placeholder(_top)
-	_colocar_placeholder(_bottom)
+	_vestir(_top, false)
+	_vestir(_bottom, true)
 	# La zona de puntuación ES el hueco: mismo centro, mismo alto.
 	_score_zone.position.y = _gap_center
 	var forma := (_score_zone.get_node("CollisionShape2D") as CollisionShape2D).shape
@@ -126,11 +126,26 @@ func _apply_layout() -> void:
 		(forma as RectangleShape2D).size = Vector2(width, gap)
 
 
-func _colocar_placeholder(cuerpo: StaticBody2D) -> void:
-	var rect := cuerpo.get_node_or_null("BodyPlaceholder") as ColorRect
-	if rect == null:
+## Estira el cuerpo del tubo y coloca la cabeza en su boca.
+##
+## El cuerpo es un `Sprite2D` con `region_enabled` y `texture_repeat`: la
+## región es más alta que la textura, así que el motor la repite en vez de
+## estirarla. Es lo que cumple el criterio de T-051 (se estira a cualquier
+## altura sin deformar la cabeza), y sale más barato que un NinePatchRect.
+func _vestir(cuerpo: StaticBody2D, hacia_abajo: bool) -> void:
+	var body := cuerpo.get_node_or_null("Body") as Sprite2D
+	var cap := cuerpo.get_node_or_null("Cap") as Sprite2D
+	if body == null or cap == null:
 		return
-	rect.offset_left = -width * 0.5
-	rect.offset_right = width * 0.5
-	rect.offset_top = -body_length * 0.5
-	rect.offset_bottom = body_length * 0.5
+	body.region_rect = Rect2(0.0, 0.0, width, body_length)
+	body.position = Vector2.ZERO
+	var media: float = body_length * 0.5
+	var alto_cabeza: float = cap.texture.get_height()
+	# La cabeza va en el extremo que mira al hueco, y del revés en el tubo de
+	# arriba para que la boca apunte hacia abajo.
+	if hacia_abajo:
+		cap.position = Vector2(0.0, -media + alto_cabeza * 0.5)
+		cap.flip_v = false
+	else:
+		cap.position = Vector2(0.0, media - alto_cabeza * 0.5)
+		cap.flip_v = true

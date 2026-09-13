@@ -97,9 +97,9 @@ func _el_panel_ensena_el_resultado() -> void:
 		"el panel enseña la medalla que toca",
 		(
 			panel.get_node("Root/Box/Medal").visible
-			and panel.get_node("Root/Box/Medal").text == "Tortilla"
+			and panel.get_node("Root/Box/MedalName").text == "Tortilla"
 		),
-		"texto: '%s'" % panel.get_node("Root/Box/Medal").text
+		"texto: '%s'" % panel.get_node("Root/Box/MedalName").text
 	)
 	main.free()
 
@@ -118,7 +118,10 @@ func _marca_el_record_nuevo_solo_cuando_toca() -> void:
 	)
 	h.check(
 		"y sin medalla si no llega al umbral",
-		not panel.get_node("Root/Box/Medal").visible,
+		(
+			not panel.get_node("Root/Box/Medal").visible
+			and not panel.get_node("Root/Box/MedalName").visible
+		),
 		"3 puntos, umbral de croqueta %d" % GameConfig.MEDAL_BRONZE
 	)
 

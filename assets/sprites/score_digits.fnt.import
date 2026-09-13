@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://ct7yedt3vpnnt"
+path="res://.godot/imported/score_digits.fnt-c8fb187f46923f16bbf091fe837b4d88.fontdata"
+
+[deps]
+
+source_file="res://assets/sprites/score_digits.fnt"
+dest_files=["res://.godot/imported/score_digits.fnt-c8fb187f46923f16bbf091fe837b4d88.fontdata"]
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=2

@@ -13,7 +13,7 @@ config_version=5
 config/name="Flapo"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="res://assets/sprites/icon_app.png"
 
 [display]
 
@@ -24,6 +24,11 @@ window/size/window_height_override=1024
 window/stretch/mode="viewport"
 window/stretch/scale_mode="integer"
 window/handheld/orientation="portrait"
+# El splash se dibuja a tamaño de juego y sin filtro, o el pixel art del logo
+# saldría borroso justo en lo primero que ve el jugador.
+boot_splash/bg_color=Color(0.4863, 0.702, 0.8431, 1)
+boot_splash/image="res://assets/sprites/splash.png"
+boot_splash/use_filter=false
 
 [input]
 

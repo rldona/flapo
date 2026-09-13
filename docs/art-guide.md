@@ -35,5 +35,11 @@ las tuberías, que sí son obstáculo.
   mismo alto que el pájaro del Flappy original (34×24) sobre la misma
   pantalla, así que el hueco de 100 px sigue siendo el correcto.
 - Reglas: outline 1 px oscuro, sin anti-aliasing fuera de la paleta, siluetas legibles a 1x.
-- Importación en Godot: filtro `Nearest`, sin mipmaps.
+- Importación en Godot: filtro `Nearest` (por defecto de proyecto, ver
+  ADR-0002), sin mipmaps y sin compresión con pérdida. Se comprueba en T-055
+  recorriendo los `.import`.
+- El cielo es un color plano (`ColorRect`), no una textura: a 288×512 un PNG
+  de cielo liso serían 147 KB para no aportar nada.
+- El arte que no es Flapo se genera con `tools/generar_arte.py`, para que
+  cambiar la paleta sea regenerar y no repintar.
 - Fuentes `.pxo` en `assets/sprites/src/`, PNG exportados en `assets/sprites/`.

@@ -40,7 +40,17 @@ echo "   todos compilan"
 
 echo "== Comprobaciones =="
 for test in "$RAIZ"/tests/test_*.gd; do
-  "$GODOT" --headless --fixed-fps 60 --path "$RAIZ" -s "$test" || fallos=$((fallos + 1))
+  salida="$("$GODOT" --headless --fixed-fps 60 --path "$RAIZ" -s "$test" 2>&1)"
+  codigo=$?
+  echo "$salida"
+  if [[ $codigo -ne 0 ]]; then
+    fallos=$((fallos + 1))
+  elif echo "$salida" | grep -qE "SCRIPT ERROR|Parse Error|Invalid access|Invalid call"; then
+    # Un error de script aborta su función pero deja correr las demás, así
+    # que el resumen puede decir "0 fallos" con media prueba sin ejecutar.
+    echo "   ^ error de script: la prueba no se ha ejecutado entera"
+    fallos=$((fallos + 1))
+  fi
 done
 
 if [[ $fallos -gt 0 ]]; then

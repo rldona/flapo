@@ -59,7 +59,7 @@ Objetivo: GDD de una página. Si no cabe en una página, el alcance es demasiado
   - Controles: toque/click/espacio.
   - Feedback: sonidos (aleteo, punto, golpe), parpadeo al morir, sacudida de cámara.
   - Lo que NO está en el alcance v1 (skins, ranking online, power-ups).
-- 🔲 Definir estilo visual: paleta de 16 colores (Lospec), tamaño del pájaro 16×12 px, tubería 26 px de ancho.
+- ✅ Paleta propia de 16 colores, Flapo 24×24, tubería 26 px. → T-011 y ADR-0015
 
 Entregable: GDD cerrado y paleta elegida.
 
@@ -109,16 +109,20 @@ aplazado, y el GIF, que necesita a alguien jugando.
 
 Objetivo: sustituir todos los placeholders por pixel art propio.
 
-- 🔲 Pájaro: idle + aleteo (3 frames), 16×12.
-- 🔲 Tubería: cuerpo repetible + cabeza.
-- 🔲 Suelo: tile de 32 px repetible.
-- 🔲 Fondo: cielo, nubes, silueta de ciudad.
-- 🔲 UI: números de puntuación, botón de reinicio, logo, medalla (bronce/plata/oro).
-- 🔲 Icono de la app (varios tamaños) y splash.
-- 🔲 Configurar importación de texturas: filtro `Nearest`, sin mipmaps.
-- 🔲 Ajustar `Project Settings → Display → Stretch` a `viewport` + `integer`.
+- 🔄 Pájaro: aleteo de 3 frames, **24×24** (ADR-0015). Reconstruido del arte entregado; pendiente de retoque a mano.
+- ✅ Tubería: cuerpo repetible + cabeza. → T-051
+- ✅ Suelo: tile de 32 px repetible. → T-052
+- ✅ Fondo: cielo, nubes, silueta de ciudad. → T-052
+- ✅ UI: fuente de cifras propia, logo y medallas croqueta/tortilla/jamón. → T-053
+- ✅ Icono 512×512 y splash. → T-054
+- ✅ Importación: filtro `Nearest`, sin mipmaps, sin compresión con pérdida. → T-055
+- ✅ Stretch `viewport` + `integer`. → T-020 (ADR-0002)
 
 Entregable: juego sin ningún placeholder. Fuentes de arte (`.pxo`) en `assets/sprites/src/`.
+
+Estado: todo el arte salvo Flapo se genera con `tools/generar_arte.py` en la
+paleta del proyecto (ADR-0016). Queda el retoque a mano del sprite de Flapo,
+que por ser la mascota debe dibujarlo una persona.
 
 ---
 

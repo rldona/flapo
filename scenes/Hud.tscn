@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+[ext_resource type="FontFile" path="res://assets/sprites/score_digits.fnt" id="2_font"]
 
 [node name="Hud" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -10,6 +11,7 @@ anchor_right = 1.0
 offset_top = 24.0
 offset_bottom = 56.0
 mouse_filter = 2
+theme_override_fonts/font = ExtResource("2_font")
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1

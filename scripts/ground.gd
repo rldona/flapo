@@ -55,13 +55,13 @@ func _colocar_tiles() -> void:
 
 
 func _montar_tile(tile: Node2D) -> void:
-	var rect := tile.get_node_or_null("Placeholder") as ColorRect
-	if rect == null:
+	var sprite := tile.get_node_or_null("Sprite") as Sprite2D
+	if sprite == null:
 		return
-	rect.offset_left = 0.0
-	rect.offset_right = _tile_width
-	rect.offset_top = 0.0
-	rect.offset_bottom = GameConfig.GROUND_HEIGHT
+	# Región más ancha que la textura + `texture_repeat`: el tile de 32 px se
+	# repite hasta cubrir el ancho de pantalla, sin estirarse.
+	sprite.region_rect = Rect2(0.0, 0.0, _tile_width, GameConfig.GROUND_HEIGHT)
+	sprite.position = Vector2.ZERO
 
 
 func _montar_colision() -> void:

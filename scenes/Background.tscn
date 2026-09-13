@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/background.gd" id="1_bg"]
+[ext_resource type="Texture2D" uid="uid://dxvrbr4ivl8m2" path="res://assets/sprites/cloud_a.png" id="2_ca"]
+[ext_resource type="Texture2D" uid="uid://dayqw6qavebva" path="res://assets/sprites/cloud_b.png" id="3_cb"]
+[ext_resource type="Texture2D" uid="uid://wtoihctu5abf" path="res://assets/sprites/city.png" id="4_city"]
 
 [node name="Background" type="Node2D"]
 script = ExtResource("1_bg")
@@ -8,37 +11,17 @@ script = ExtResource("1_bg")
 [node name="Far" type="Parallax2D" parent="."]
 repeat_size = Vector2(144, 0)
 
-[node name="CloudA" type="ColorRect" parent="Far"]
-offset_left = 12.0
-offset_top = 60.0
-offset_right = 52.0
-offset_bottom = 76.0
-mouse_filter = 2
-color = Color(0.7490, 0.8510, 0.9255, 0.85)
+[node name="CloudA" type="Sprite2D" parent="Far"]
+position = Vector2(32, 68)
+texture = ExtResource("2_ca")
 
-[node name="CloudB" type="ColorRect" parent="Far"]
-offset_left = 78.0
-offset_top = 108.0
-offset_right = 130.0
-offset_bottom = 122.0
-mouse_filter = 2
-color = Color(0.7490, 0.8510, 0.9255, 0.7)
+[node name="CloudB" type="Sprite2D" parent="Far"]
+position = Vector2(104, 116)
+texture = ExtResource("3_cb")
 
 [node name="Near" type="Parallax2D" parent="."]
 repeat_size = Vector2(96, 0)
 
-[node name="BuildingA" type="ColorRect" parent="Near"]
-offset_left = 4.0
-offset_top = 330.0
-offset_right = 36.0
-offset_bottom = 448.0
-mouse_filter = 2
-color = Color(0.4863, 0.6039, 0.7098, 1)
-
-[node name="BuildingB" type="ColorRect" parent="Near"]
-offset_left = 44.0
-offset_top = 366.0
-offset_right = 88.0
-offset_bottom = 448.0
-mouse_filter = 2
-color = Color(0.3137, 0.4118, 0.5098, 1)
+[node name="City" type="Sprite2D" parent="Near"]
+position = Vector2(48, 388)
+texture = ExtResource("4_city")

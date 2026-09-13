@@ -23,7 +23,7 @@ background = NodePath("Background")
 fade = NodePath("Fade")
 pause_panel = NodePath("PausePanel")
 
-[node name="BackgroundPlaceholder" type="ColorRect" parent="." unique_id=1166350777]
+[node name="Sky" type="ColorRect" parent="." unique_id=1166350777]
 offset_right = 288.0
 offset_bottom = 512.0
 mouse_filter = 2

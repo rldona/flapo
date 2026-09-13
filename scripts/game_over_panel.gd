@@ -22,6 +22,9 @@ signal share_pressed(texto: String)
 ## Escala de partida de la animación de entrada. 1.0 la desactiva.
 @export_range(0.5, 1.0) var pop_scale: float = 0.86
 
+## Imágenes de las medallas, en el orden del enum: croqueta, tortilla, jamón.
+@export var medal_textures: Array[Texture2D] = []
+
 ## Segundos que faltan para que salga. Negativo = no hay nada pendiente.
 var _delay_left: float = -1.0
 var _fade_left: float = 0.0
@@ -29,7 +32,8 @@ var _score: int = 0
 
 @onready var _root: Control = $Root
 @onready var _box: VBoxContainer = $Root/Box
-@onready var _medal_label: Label = $Root/Box/Medal
+@onready var _medal_rect: TextureRect = $Root/Box/Medal
+@onready var _medal_label: Label = $Root/Box/MedalName
 @onready var _score_label: Label = $Root/Box/Score
 @onready var _high_label: Label = $Root/Box/HighScore
 @onready var _record_label: Label = $Root/Box/NewRecord
@@ -79,6 +83,11 @@ func show_results(score: int, high_score: int, is_record: bool) -> void:
 	var medal: GameConfig.Medal = GameConfig.medal_for(score)
 	_medal_label.text = GameConfig.medal_name(medal)
 	_medal_label.visible = medal != GameConfig.Medal.NINGUNA
+	# El enum empieza en NINGUNA, así que la textura es el índice menos uno.
+	var i: int = int(medal) - 1
+	_medal_rect.visible = i >= 0 and i < medal_textures.size()
+	if _medal_rect.visible:
+		_medal_rect.texture = medal_textures[i]
 
 
 ## Se conecta a `Main.score_changed` para que el marcador esté al día

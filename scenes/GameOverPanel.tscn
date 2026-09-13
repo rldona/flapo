@@ -1,10 +1,15 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/game_over_panel.gd" id="1_panel"]
+[ext_resource type="Texture2D" uid="uid://cdjku25m5h0wl" path="res://assets/sprites/medal_croqueta.png" id="2_croq"]
+[ext_resource type="Texture2D" uid="uid://cb5ldfecq4ce7" path="res://assets/sprites/medal_tortilla.png" id="3_tort"]
+[ext_resource type="Texture2D" uid="uid://duj6wyrkfj45f" path="res://assets/sprites/medal_jamon.png" id="4_jamon"]
+[ext_resource type="FontFile" path="res://assets/sprites/score_digits.fnt" id="5_font"]
 
 [node name="GameOverPanel" type="CanvasLayer"]
 layer = 2
 script = ExtResource("1_panel")
+medal_textures = [ExtResource("2_croq"), ExtResource("3_tort"), ExtResource("4_jamon")]
 
 [node name="Root" type="Control" parent="."]
 anchor_right = 1.0
@@ -15,7 +20,7 @@ mouse_filter = 2
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-color = Color(0, 0, 0, 0.45)
+color = Color(0.149, 0.231, 0.275, 0.55)
 
 [node name="Box" type="VBoxContainer" parent="Root"]
 anchor_left = 0.5
@@ -23,9 +28,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -80.0
-offset_top = -92.0
+offset_top = -100.0
 offset_right = 80.0
-offset_bottom = 92.0
+offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 6
@@ -34,11 +39,18 @@ theme_override_constants/separation = 6
 text = "¡Uf!"
 horizontal_alignment = 1
 
-[node name="Medal" type="Label" parent="Root/Box"]
+[node name="Medal" type="TextureRect" parent="Root/Box"]
+custom_minimum_size = Vector2(0, 24)
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 3
+
+[node name="MedalName" type="Label" parent="Root/Box"]
 text = ""
 horizontal_alignment = 1
 
 [node name="Score" type="Label" parent="Root/Box"]
+theme_override_fonts/font = ExtResource("5_font")
 text = "0"
 horizontal_alignment = 1
 
