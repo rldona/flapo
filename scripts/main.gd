@@ -207,6 +207,7 @@ func _connect_children() -> void:
 		push_error("Main no tiene asignado el nodo Effects en el inspector.")
 		return
 	fruit_spawner.taken.connect(_on_fruit_taken)
+	pipe_spawner.pipe_spawned.connect(fruit_spawner.on_pipe_spawned)
 	effects.changed.connect(_on_effects_changed)
 	effects.shield_changed.connect(hud.set_shield)
 	for nombre in piezas:

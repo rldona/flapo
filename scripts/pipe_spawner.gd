@@ -7,6 +7,10 @@ extends Node2D
 ## libera sola al salir de pantalla (ADR-0008), y el spawner solo tiene que
 ## saber cuándo crear y cuándo parar.
 
+## Acaba de nacer una tubería. La usa FruitSpawner para colocarse justo a
+## mitad de camino de la siguiente.
+signal pipe_spawned
+
 ## Flapo ha cruzado una tubería. El spawner solo hace de puente: quien
 ## detecta el paso es la tubería y quien lleva la cuenta es Main.
 signal scored
@@ -106,6 +110,7 @@ func _crear_tuberia() -> void:
 	# Después de add_child: `randomize_gap` toca los nodos internos, que solo
 	# existen una vez ha corrido `_ready()` de la tubería.
 	pipe.randomize_gap(_rng)
+	pipe_spawned.emit()
 
 
 func _on_pipe_scored() -> void:

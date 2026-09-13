@@ -6,6 +6,13 @@ extends Node2D
 ## así siempre son alcanzables y siempre son esquivables, que es lo que las
 ## convierte en una decisión. Una fruta pegada a un tubo no se decide, se
 ## sufre.
+##
+## Para que ese "a mitad de camino" sea verdad, el reloj **no es propio**: se
+## engancha a `PipeSpawner.pipe_spawned` y arranca un temporizador de un solo
+## disparo a medio intervalo. Con un temporizador propio en paralelo bastaba
+## un cambio de dificultad para desfasarlos —Godot no reinicia la cuenta al
+## cambiar `wait_time`— y medido daba frutas naciendo a 52 px de una tubería
+## en vez de a 85. Ver ADR-0019.
 
 ## Flapo ha cogido una fruta. El spawner solo hace de puente.
 signal taken(kind: Effects.Kind, puntos: int)
@@ -34,6 +41,8 @@ const CASTIGOS: Array = [Effects.Kind.PESADO, Effects.Kind.GRANDE]
 
 var scroll_speed: float = GameConfig.SCROLL_SPEED
 var _gap_actual: float = GameConfig.PIPE_GAP
+var _separacion: float = GameConfig.PIPE_SPACING
+var _jugando: bool = false
 var _rng := RandomNumberGenerator.new()
 
 @onready var _timer: Timer = $Timer
@@ -42,22 +51,29 @@ var _rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	_timer.timeout.connect(_on_timeout)
 	_timer.process_callback = Timer.TIMER_PROCESS_PHYSICS
-	_timer.wait_time = GameConfig.pipe_spawn_interval()
+	_timer.one_shot = true
 	_reiniciar_rng()
+
+
+## Main conecta aquí la señal de PipeSpawner.
+func on_pipe_spawned() -> void:
+	if not _jugando:
+		return
+	_timer.start(_medio_intervalo())
 
 
 ## Main llama a esto al cambiar de estado ("call down", ADR-0005).
 func on_game_state_changed(to: GameState.State) -> void:
 	match to:
 		GameState.State.READY:
+			_jugando = false
 			_timer.stop()
 			_liberar_todas()
 			_reiniciar_rng()
 		GameState.State.PLAYING:
-			# Arranca a medio intervalo para que la primera fruta caiga entre
-			# la primera y la segunda tubería, no encima de una.
-			_timer.start(_timer.wait_time * 0.5)
+			_jugando = true
 		GameState.State.GAME_OVER:
+			_jugando = false
 			_timer.stop()
 			_congelar_todas()
 
@@ -66,8 +82,7 @@ func on_game_state_changed(to: GameState.State) -> void:
 func set_difficulty(velocidad: float, hueco: float, separacion: float) -> void:
 	scroll_speed = velocidad
 	_gap_actual = hueco
-	if _timer != null:
-		_timer.wait_time = separacion / velocidad
+	_separacion = separacion
 	for hijo in get_children():
 		if hijo is Fruit:
 			hijo.scroll_speed = velocidad
@@ -95,6 +110,11 @@ func kinds_disponibles() -> Array:
 	if _gap_actual >= big_min_gap:
 		kinds.append(Effects.Kind.GRANDE)
 	return kinds
+
+
+## Medio intervalo entre tuberías, en segundos.
+func _medio_intervalo() -> float:
+	return (_separacion / scroll_speed) * 0.5
 
 
 func _on_timeout() -> void:

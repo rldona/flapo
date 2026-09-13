@@ -16,6 +16,7 @@ func _init() -> void:
 	await _los_castigos_dan_puntos()
 	await _la_naranja_no_sale_con_el_hueco_estrecho()
 	await _las_frutas_no_cruzan_partidas()
+	await _nacen_a_mitad_de_camino()
 	SaveManager.clear()
 	Settings.clear()
 	quit(h.resumen("T-047"))
@@ -226,5 +227,43 @@ func _las_frutas_no_cruzan_partidas() -> void:
 		"y Flapo vuelve a su tamaño",
 		is_equal_approx(main.bird.get_node("Sprite").scale.x, 1.0),
 		"escala %.2f" % main.bird.get_node("Sprite").scale.x
+	)
+	main.free()
+
+
+## Las frutas tienen que nacer lejos de cualquier tubería.
+##
+## Es lo que las hace una decisión: si nacen pegadas a un tubo, cogerlas deja
+## de ser opcional y pasa a ser una trampa. Se mide durante 90 s subiendo la
+## puntuación, porque el fallo original solo aparecía al cambiar la dificultad:
+## con un temporizador propio en paralelo, las frutas se desfasaban y llegaban
+## a nacer a 52 px de una tubería en vez de a 85.
+func _nacen_a_mitad_de_camino() -> void:
+	var main: Node = await _partida()
+	main.fruit_spawner.chance = 1.0
+	main.change_state(GameState.State.PLAYING)
+
+	var peor: float = INF
+	for tick in 5400:
+		await physics_frame
+		if tick % 90 == 0:
+			main._on_scored()
+		for f in main.fruit_spawner.get_children():
+			# Solo al nacer, cuando aún está fuera de pantalla.
+			if not f is Fruit or f.position.x < 300.0:
+				continue
+			for p in main.pipe_spawner.get_children():
+				if p is Pipe:
+					peor = minf(peor, absf(f.position.x - p.position.x))
+
+	# El ideal es media separación: entre 80 y 86 px según la dificultad.
+	# Se exige 70 para dejar margen al redondeo de los ticks.
+	h.check(
+		"las frutas nunca nacen pegadas a una tubería",
+		peor >= 70.0,
+		(
+			"distancia mínima en 90 s: %.1f px (media separación: %.0f-%.0f px)"
+			% [peor, GameConfig.PIPE_SPACING / 2.0, GameConfig.PIPE_SPACING_MAX / 2.0]
+		)
 	)
 	main.free()

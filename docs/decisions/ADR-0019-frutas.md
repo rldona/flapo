@@ -60,10 +60,26 @@ que acaba de chocar y moriría en el frame siguiente. Al gastar el escudo deja
 de colisionar durante un segundo, tiempo de sobra para que la tubería lo
 rebase.
 
-### Las frutas nacen entre tuberías
+### Las frutas nacen entre tuberías, y hay que asegurarlo
 A mitad de camino entre dos, y en la franja central de la altura jugable. Así
 son **siempre alcanzables y siempre esquivables**, que es lo que las convierte
 en una decisión. Una fruta pegada a un tubo no se decide, se sufre.
+
+La primera implementación le daba al spawner de frutas **su propio
+temporizador** con el mismo intervalo y medio ciclo de desfase. Sobre el papel
+funcionaba; medido, no: al cambiar la dificultad los dos relojes se
+desincronizan, porque Godot **no reinicia la cuenta en curso** al cambiar
+`wait_time`. En 90 s de partida llegaban a nacer frutas a **52 px** de una
+tubería en vez de a 85.
+
+La forma correcta es no tener reloj propio: `PipeSpawner` emite
+`pipe_spawned` y el spawner de frutas arranca un temporizador de un solo
+disparo a medio intervalo. Enganchado al evento, no puede desfasarse. Medido
+otra vez: **80,7 px** en el peor caso.
+
+Es un recordatorio de lo de siempre: una afirmación de diseño no es cierta
+hasta que se ejecuta. Aquí lo escribí en el propio comentario del código
+—"nacen a mitad de camino"— y era falso.
 
 ## Consecuencias
 - La paleta pasa de 16 a **20 colores**. Los cuatro nuevos son tonos que el
