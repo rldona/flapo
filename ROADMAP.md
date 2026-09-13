@@ -15,7 +15,7 @@ Estado: 🔲 pendiente · 🔄 en curso · ✅ hecho
 
 Objetivo: entorno listo y repo con estructura profesional desde el día uno.
 
-- ✅ Instalar Godot 4.x (versión estable) y verificar que arranca. → 4.7.2.stable
+- ✅ Instalar Godot 4.x (versión estable) y verificar que arranca. → 4.7.2.stable, con export templates y export a Web verificado (T-001)
 - 🔲 Instalar Pixelorama (arte), Audacity (audio), Tiled/LDtk no hace falta para este juego.
 - ✅ Crear el repo público con esta estructura:
 

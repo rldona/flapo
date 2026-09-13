@@ -33,7 +33,7 @@ Un solo fichero:
 | Comprobar que un script compila | `godot --headless --path . --check-only --script scripts/bird.gd` |
 | Importar assets y regenerar el registro de `class_name` | `godot --headless --path . --import` |
 | Ejecutar un script de `SceneTree` | `godot --headless --fixed-fps 60 --path . -s tests/test_x.gd` |
-| Exportar | `godot --headless --path . --export-release Web export/Web/index.html` |
+| Exportar | `godot --headless --path . --export-release "Web" export/Web/index.html` |
 
 En macOS el binario está dentro del `.app` y no en el `PATH`:
 `/Applications/Godot.app/Contents/MacOS/Godot`. Ver `docs/environment.md`.

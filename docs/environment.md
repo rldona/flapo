@@ -7,7 +7,7 @@ y la imagen `barichello/godot-ci` de `.github/workflows/export.yml`.
 | Herramienta | Versión | Notas |
 |---|---|---|
 | Godot | 4.7.2.stable.official (ed1daf0bf) | verificado en el banner de arranque |
-| Export templates | 4.7.2 | siempre la misma que el editor |
+| Export templates | 4.7.2 | instaladas: Web, Web Single-Threaded, Android, macOS, Windows x86_64, Linux x86_64, ICU Data |
 | Pixelorama | | arte (T-050 en adelante) |
 | Audacity | | audio (Fase 5) |
 | gh CLI | | para `scripts/create_issues.py` |
@@ -29,6 +29,37 @@ teclados Apple los captura el sistema).
 | Project Settings | ⌘⇧O |
 
 También están los botones ▶ / ▶-claqueta / ■ arriba a la derecha.
+
+## Exportación
+
+El preset `Web` está en `export_presets.cfg` (versionado, sin secretos). Se
+exporta en 3,6 s sin abrir el editor:
+
+```bash
+/Applications/Godot.app/Contents/MacOS/Godot --headless --path . \
+  --export-release "Web" export/Web/index.html
+```
+
+Para probarlo hay que servirlo por HTTP: el navegador bloquea WebAssembly
+sobre `file://`.
+
+```bash
+cd export/Web && python3 -m http.server 8060
+```
+
+Decisiones del preset:
+
+- `variant/thread_support=false` → usa la plantilla **Web Single-Threaded**,
+  que **no exige las cabeceras COOP/COEP** (`SharedArrayBuffer`). Es lo que
+  hace que el build funcione en itch.io sin configuración extra. Se revisa en
+  T-093 si el rendimiento no da.
+- `variant/extensions_support=false` → no usamos GDExtension; el binario
+  pesa menos y arranca antes.
+- `vram_texture_compression/*=false` → la compresión VRAM es con pérdida y
+  emborrona el pixel art. El arte va en modo lossless (`docs/art-guide.md`).
+- `exclude_filter="tests/*"` → los tests no se envían al jugador.
+
+Faltan los presets de Android, Linux y Windows: son T-090.
 
 ## Notas
 - El binario de Godot no está en el `PATH`; para invocarlo en headless desde
