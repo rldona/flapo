@@ -31,7 +31,7 @@ Un solo fichero:
 | Qué | Comando |
 |---|---|
 | Comprobar que un script compila | `godot --headless --path . --check-only --script scripts/bird.gd` |
-| Importar assets sin abrir el editor | `godot --headless --path . --import` |
+| Importar assets y regenerar el registro de `class_name` | `godot --headless --path . --import` |
 | Ejecutar un script de `SceneTree` | `godot --headless --fixed-fps 60 --path . -s tests/test_x.gd` |
 | Exportar | `godot --headless --path . --export-release Web export/Web/index.html` |
 
@@ -83,12 +83,14 @@ Cuestan una tarde si se descubren solas:
 2. **Hay que soltar la tecla.** Si un caso deja el espacio pulsado, el
    siguiente no genera flanco de subida y falla por un motivo que no es el que
    se está probando.
-3. **Los autoloads no se pueden nombrar en un script `-s`.** El script del
-   test se compila antes de que se registren, así que escribir `GameConfig`
-   da `Identifier not found` y el test no llega ni a arrancar. En ejecución
-   sí existen —el resto del juego los usa con normalidad—, pero hay que
-   pedirlos al árbol y solo después del primer frame: es lo que hace
-   `Harness.config()`.
+3. **Los autoloads no se pueden nombrar en un script `-s`** ni en
+   `--check-only`: se compila antes de registrarlos y da `Identifier not
+   found`. Por eso `GameConfig` es un `class_name` y no un autoload
+   (ADR-0009). Si algún día se añade un autoload de verdad —`SaveManager` en
+   T-070—, sus tests tendrán que pedirlo al árbol tras el primer frame.
+   Relacionado: el registro de `class_name` vive en `.godot/`, que no se
+   versiona; tras clonar o tras añadir una clase nueva sin abrir el editor,
+   `godot --headless --path . --import` lo regenera.
 4. **Los lambdas capturan las locales por valor.** Un
    `var visto := false; señal.connect(func(): visto = true)` no cambia nunca
    `visto`, y el test pasa o falla por el motivo equivocado. El flag tiene que

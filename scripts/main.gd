@@ -17,6 +17,9 @@ signal state_changed(to: GameState.State)
 ## texto: si algún día se mueve o se renombra, Godot actualiza la referencia.
 @export var bird: Bird
 
+## El generador de tuberías.
+@export var pipe_spawner: PipeSpawner
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -74,6 +77,10 @@ func _connect_children() -> void:
 		return
 	state_changed.connect(bird.on_game_state_changed)
 	bird.died.connect(_on_bird_died)
+	if pipe_spawner == null:
+		push_error("Main no tiene asignado el nodo PipeSpawner en el inspector.")
+		return
+	state_changed.connect(pipe_spawner.on_game_state_changed)
 
 
 func _on_bird_died() -> void:

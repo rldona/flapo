@@ -128,7 +128,7 @@ func _no_deja_nodos_huerfanos() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 99
 	var escena: PackedScene = load(PIPE)
-	var intervalo: int = int(round(h.config().pipe_spawn_interval() * 60.0))
+	var intervalo: int = int(round(GameConfig.pipe_spawn_interval() * 60.0))
 	var total_ticks: int = 18000
 	var creadas: int = 0
 	var pico: int = 0
@@ -136,7 +136,7 @@ func _no_deja_nodos_huerfanos() -> void:
 	for tick in total_ticks:
 		if tick % intervalo == 0:
 			var pipe: Node = escena.instantiate()
-			pipe.position = Vector2(float(h.config().VIEWPORT_SIZE.x) + 32.0, 0.0)
+			pipe.position = Vector2(float(GameConfig.VIEWPORT_SIZE.x) + 32.0, 0.0)
 			mundo.add_child(pipe)
 			pipe.randomize_gap(rng)
 			creadas += 1

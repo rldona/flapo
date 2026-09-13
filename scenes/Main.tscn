@@ -2,10 +2,12 @@
 
 [ext_resource type="Script" uid="uid://b8vy5kaocapgc" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/Bird.tscn" id="2_bird"]
+[ext_resource type="PackedScene" path="res://scenes/PipeSpawner.tscn" id="3_spawner"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird")]
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
+pipe_spawner = NodePath("PipeSpawner")
 
 [node name="BackgroundPlaceholder" type="ColorRect" parent="." unique_id=1166350777]
 offset_right = 288.0
@@ -15,3 +17,5 @@ color = Color(0.42, 0.71, 0.86, 1)
 
 [node name="Bird" parent="." unique_id=269885029 instance=ExtResource("2_bird")]
 position = Vector2(72, 256)
+
+[node name="PipeSpawner" parent="." instance=ExtResource("3_spawner")]

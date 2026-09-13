@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/pipe_spawner.gd" id="1_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/Pipe.tscn" id="2_pipe"]
+
+[node name="PipeSpawner" type="Node2D"]
+script = ExtResource("1_spawner")
+pipe_scene = ExtResource("2_pipe")
+
+[node name="Timer" type="Timer" parent="."]

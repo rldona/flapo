@@ -1,7 +1,13 @@
-extends Node
+class_name GameConfig
+extends RefCounted
 ## Constantes de juego compartidas entre varias escenas.
 ##
-## Autoload (`GameConfig`). Aquí vive lo que más de un sistema necesita saber:
+## No es un autoload: es un contenedor de constantes que no se instancia
+## nunca. Un autoload solo se registra al arrancar el juego, así que
+## `--check-only` y los scripts lanzados con `-s` no lo ven (ADR-0009).
+## Como aquí no hay estado, no hace falta que sea un nodo.
+##
+## Aquí vive lo que más de un sistema necesita saber:
 ## si la velocidad de scroll estuviera duplicada en Pipe, Ground y Parallax,
 ## tunearla significaría tocar tres sitios y olvidarse de uno.
 ##
@@ -38,5 +44,5 @@ const MEDAL_GOLD: int = 40
 ## Derivado, no constante suelta: la separación en píxeles es lo que se
 ## percibe al jugar, y el intervalo es su consecuencia. Si se tunea la
 ## velocidad de scroll sin tocar esto, la separación real cambiaría.
-func pipe_spawn_interval() -> float:
+static func pipe_spawn_interval() -> float:
 	return PIPE_SPACING / SCROLL_SPEED
