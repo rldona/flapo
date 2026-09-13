@@ -141,7 +141,7 @@ que por ser la mascota debe dibujarlo una persona.
 - ✅ Pantalla Game Over: puntuación, récord, medalla, reintento y compartir. → T-071
 - ✅ Pausa, y automática al perder el foco. → T-072 (ADR-0014)
 - ✅ Márgenes seguros y letterbox del color del cielo. → T-073. Falta verlo en un emulador con notch.
-- 🔲 Revisión de accesibilidad: contraste, tamaño de botones ≥ 48 px en móvil.
+- ✅ Revisión de accesibilidad: contraste WCAG y 48 dp táctiles verificados en `tests/test_a11y.gd`.
 
 ---
 
@@ -169,9 +169,9 @@ Entregable: `v1.0.0` con builds descargables desde Releases.
 ## Fase 9 — Publicación (1-2 días)
 
 - 🔲 **itch.io**: página con capturas, GIF, descripción, build web embebido y descargas de escritorio.
-- 🔲 **Google Play** (25 $ una vez): ficha, capturas, política de privacidad, clasificación de contenido, prueba cerrada de 14 días con 12+ testers (requisito actual para cuentas nuevas).
+- 🔄 **Google Play** (25 $ una vez): textos y política de privacidad listos en `docs/`. Faltan cuenta, capturas, clasificación de contenido, prueba cerrada de 14 días con 12+ testers (requisito actual para cuentas nuevas).
 - 🔲 (Opcional) **Steam**: no para este proyecto; se documenta el proceso para el siguiente.
-- 🔲 Post en el README: enlaces a las tiendas y badge de la release.
+- 🔄 README con badges y documentación. Faltan los enlaces a las tiendas y la captura. → T-103
 
 ---
 
@@ -179,7 +179,7 @@ Entregable: `v1.0.0` con builds descargables desde Releases.
 
 - 🔲 `docs/retro.md`: qué salió bien, qué mal, qué haría distinto, horas reales por fase.
 - 🔲 Post/hilo público contando el proceso (devlog en itch.io o blog).
-- 🔲 Lista de aprendizajes reutilizables para el siguiente proyecto (metroidvania).
+- ✅ Lista de aprendizajes reutilizables: `docs/aprendizajes.md`.
 
 ---
 
