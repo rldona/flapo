@@ -95,6 +95,9 @@ const _TRANSITIONS: Dictionary = {
 var _state: GameState.State = GameState.State.MENU
 var _score: int = 0
 var _high_score: int = 0
+## El reto del día en curso, si lo hay (T-241).
+var _daily := DailyChallenge.new()
+
 ## El generador de TODA la aleatoriedad de la partida (T-240).
 ##
 ## Uno solo, y lo reparte Main. Huecos, tuberías móviles, giratorias, frutas
@@ -223,6 +226,29 @@ func is_new_high_score() -> bool:
 ## Escalón de confianza acumulado (T-074).
 func get_confidence() -> int:
 	return _confidence
+
+
+## Arranca el reto del día (T-241). Sin argumentos, el de hoy.
+##
+## Solo cambia la SEMILLA: modo de dificultad, frutas y todo lo demás siguen
+## siendo los del juego normal. Un reto que además cambiara las reglas no
+## sería el mismo juego para todos, que es justo lo que lo hace comparable.
+func start_daily(fecha: Array = []) -> void:
+	_daily.empezar(fecha)
+	set_seed(_daily.semilla())
+	change_state(GameState.State.READY)
+
+
+## Vuelve al juego normal, con semilla sorteada (T-241).
+func start_free() -> void:
+	_daily.parar()
+	set_seed(GameConfig.SEED_ALEATORIA)
+	change_state(GameState.State.READY)
+
+
+## El reto del día, para quien necesite su clave o su nombre (T-241).
+func daily() -> DailyChallenge:
+	return _daily
 
 
 ## La semilla de la partida en curso (T-240). La usan T-242 y T-243.
@@ -431,9 +457,11 @@ func _connect_children() -> void:
 		wind.gust_ended.connect(_on_wind_ended)
 	game_over_panel.menu_pressed.connect(to_menu)
 	if menu_panel != null:
-		menu_panel.play_pressed.connect(func() -> void: change_state(GameState.State.READY))
+		menu_panel.play_pressed.connect(start_free)
 		menu_panel.difficulty_selected.connect(set_difficulty)
 		menu_panel.stats_pressed.connect(_abrir_estadisticas)
+		# Jugar normal sortea semilla; el reto usa la de hoy (T-241).
+		menu_panel.daily_pressed.connect(start_daily.bind([]))
 		menu_panel.name_changed.connect(set_player_name)
 	if stats_panel != null:
 		stats_panel.back_pressed.connect(func() -> void: stats_panel.set_open(false))
@@ -464,6 +492,7 @@ func _notification(what: int) -> void:
 func _on_state_changed_results(to: GameState.State) -> void:
 	if to == GameState.State.GAME_OVER:
 		game_over_panel.set_player_name(_player_name)
+		game_over_panel.set_challenge(_daily.nombre())
 		game_over_panel.show_results(_score, _high_score, _is_new_high_score)
 		game_over_panel.set_line(_siguiente_frase())
 
@@ -673,7 +702,15 @@ func _on_bird_died(cause: Bird.DeathCause, sin_aliento: bool) -> void:
 		audio.play_hit()
 	# Se registra ANTES de cambiar de estado: el panel lee el récord al
 	# recibir GAME_OVER y tiene que ver ya el dato de esta partida.
-	_is_new_high_score = SaveManager.record_game(_score)
+	# En el reto, la marca va a SU clave. El récord general no se toca: son
+	# dos cosas que se comparan con gente distinta (T-241).
+	if _daily.activo():
+		_is_new_high_score = SaveManager.record_daily(_daily.clave(), _score)
+		# La partida cuenta igual —suma confianza y tuberías cruzadas—, pero
+		# su marca no toca el récord general.
+		SaveManager.record_game(_score, false)
+	else:
+		_is_new_high_score = SaveManager.record_game(_score)
 	_high_score = SaveManager.get_high_score()
 	_confidence = SaveManager.get_confidence()
 	change_state(GameState.State.GAME_OVER)

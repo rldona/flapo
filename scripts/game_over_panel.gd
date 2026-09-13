@@ -38,6 +38,8 @@ var _score: int = 0
 
 ## Nombre con el que se firma al compartir (T-079). Vacío = sin firmar.
 var _player_name: String = ""
+## "Reto del 8 de septiembre" si esta partida era un reto (T-241).
+var _challenge: String = ""
 
 @onready var _title: Label = $Root/Box/Title
 @onready var _root: Control = $Root
@@ -86,6 +88,11 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_delay_left = delay
 	else:
 		_ocultar()
+
+
+## Prefijo del reto para el texto de compartir (T-241). "" en juego normal.
+func set_challenge(nombre: String) -> void:
+	_challenge = nombre
 
 
 ## Con qué nombre se firma el texto de compartir (T-079). Puede venir vacío:
@@ -151,6 +158,14 @@ func _on_button_pressed() -> void:
 
 func _on_share_pressed() -> void:
 	var pieza: String = "1 tubería" if _score == 1 else "%d tuberías" % _score
+	# En el reto, el texto lleva el día: sin él, comparar marcas no
+	# significaría nada porque cada uno habría jugado tuberías distintas.
+	if _challenge != "":
+		if _player_name == "":
+			share_pressed.emit("%s: %d." % [_challenge, _score])
+			return
+		share_pressed.emit("%s: %d (%s)." % [_challenge, _score, _player_name])
+		return
 	# Sin nombre se comparte en primera persona. Firmar con el nombre por
 	# defecto daría "Flapo ha cruzado 3 tuberías con Flapo", que es ridículo.
 	if _player_name == "":

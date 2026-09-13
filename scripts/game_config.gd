@@ -229,6 +229,24 @@ const CONFIDENCE_BREATH_BONUS: float = 8.0
 ## le tocó se puede leer y volver a jugar (T-242).
 const SEED_ALEATORIA: int = 0
 
+# --- Reto del día (T-241) -----------------------------------------------
+## Nombres de los meses para el texto de compartir. Aquí y no en el panel:
+## es contenido de las reglas del reto, no de la pantalla que lo enseña.
+const MESES: Array[String] = [
+	"enero",
+	"febrero",
+	"marzo",
+	"abril",
+	"mayo",
+	"junio",
+	"julio",
+	"agosto",
+	"septiembre",
+	"octubre",
+	"noviembre",
+	"diciembre",
+]
+
 # --- Descubrir el planeo (T-200) ----------------------------------------
 ## En cuántas primeras partidas puede salir el aviso de planeo. Pocas: el
 ## planeo es la mecánica que ningún clon tiene y hay que enseñarla, pero un
@@ -376,6 +394,28 @@ static func moving_pipe_chance(score: int) -> float:
 	var recorrido: int = maxi(DIFFICULTY_CAP - MOVING_PIPE_MIN_SCORE, 1)
 	var t: float = clampf(float(score - MOVING_PIPE_MIN_SCORE) / float(recorrido), 0.0, 1.0)
 	return lerpf(MOVING_PIPE_CHANCE_MIN, MOVING_PIPE_CHANCE_MAX, t)
+
+
+## La semilla del reto de un día concreto (T-241).
+##
+## Es la fecha como número, AAAAMMDD. Derivada **solo de la fecha**: así todo
+## el mundo juega las mismas tuberías ese día sin que haya un servidor que
+## las reparta. Que sea legible a simple vista es a propósito: un 20260908 se
+## puede comprobar de un vistazo, un hash no.
+static func daily_seed(anio: int, mes: int, dia: int) -> int:
+	return anio * 10000 + mes * 100 + dia
+
+
+## La clave con la que se guarda la marca de ese día (T-241).
+static func daily_key(anio: int, mes: int, dia: int) -> String:
+	return "daily_%d" % daily_seed(anio, mes, dia)
+
+
+## "8 de septiembre", para el texto de compartir (T-241).
+static func daily_name(mes: int, dia: int) -> String:
+	if mes < 1 or mes > MESES.size():
+		return "%d/%d" % [dia, mes]
+	return "%d de %s" % [dia, MESES[mes - 1]]
 
 
 ## Si toca enseñar el pictograma de planeo en READY (T-200).

@@ -15,6 +15,9 @@ signal play_pressed
 ## El jugador ha escrito su nombre (T-079). Ya viene saneado.
 signal name_changed(nombre: String)
 
+## El jugador quiere jugar el reto del día (T-241).
+signal daily_pressed
+
 ## El jugador quiere ver sus estadísticas (T-084).
 signal stats_pressed
 
@@ -27,6 +30,7 @@ var _modo: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 @onready var _difficulty: Button = $Root/Box/Difficulty
 @onready var _record: Label = $Root/Box/Record
 @onready var _stats: Button = $Root/Box/Stats
+@onready var _daily: Button = $Root/Box/Daily
 @onready var _name: LineEdit = $Root/Box/Name
 
 
@@ -36,6 +40,7 @@ func _ready() -> void:
 	# quedan por debajo de los 48 dp táctiles que exige T-030.
 	_difficulty.pressed.connect(_on_difficulty_pressed)
 	_stats.pressed.connect(func() -> void: stats_pressed.emit())
+	_daily.pressed.connect(func() -> void: daily_pressed.emit())
 	_name.max_length = GameConfig.PLAYER_NAME_MAX_LEN
 	_name.placeholder_text = GameConfig.PLAYER_NAME_DEFAULT
 	# `text_changed` y no `text_submitted`: en móvil mucha gente cierra el

@@ -267,6 +267,17 @@ la vez, 6 s de duración; el escudo va aparte y no caduca.
 Las de castigo pagan en puntos: es lo que las convierte en una apuesta en vez
 de en una trampa. Ver ADR-0019.
 
+## Reto del día (T-241)
+Botón en el menú. La semilla es **la fecha local en AAAAMMDD**, así que todo
+el mundo juega las mismas tuberías ese día **sin servidor**. Cambia a
+medianoche del jugador, no en UTC.
+
+Solo cambia la semilla: el modo de dificultad, las frutas y el resto de
+reglas son los del juego normal — un reto con reglas distintas no sería
+comparable. La marca va a **su propia clave** y no toca el récord general,
+pero la partida sí cuenta como jugada (suma confianza y tuberías). Al
+compartir dice de qué día era.
+
 ## Determinismo (T-240)
 Toda la aleatoriedad de una partida —huecos, variantes de tubería, frutas,
 viento— sale de **un solo generador** con semilla conocida. Con la misma

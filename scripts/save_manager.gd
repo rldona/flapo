@@ -127,10 +127,51 @@ static func set_has_glided() -> void:
 		push_warning("No se ha podido guardar el descubrimiento (error %d)." % err)
 
 
-## Registra una partida terminada. Devuelve `true` si ha sido récord.
-static func record_game(score: int) -> bool:
+## Mejor marca conseguida en el reto de ese día (T-241).
+##
+## Clave propia por día, separada del récord general: mezclarlos haría que un
+## buen día de reto contaminara el récord de siempre, y son dos cosas que se
+## comparan con gente distinta.
+static func get_daily_best(clave: String) -> int:
+	return _leer_int(clave)
+
+
+## Guarda la marca del día si mejora. Devuelve `true` si era mejor.
+static func record_daily(clave: String, score: int) -> bool:
+	if score <= get_daily_best(clave):
+		return false
 	var cfg: ConfigFile = _datos()
-	var record: bool = score > get_high_score()
+	cfg.set_value(SECCION, clave, score)
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el reto (error %d)." % err)
+	return true
+
+
+## Los retos jugados, de más reciente a más antiguo (T-241).
+##
+## Se derivan de las claves que ya hay en el fichero: no hace falta una lista
+## aparte que mantener sincronizada, y por tanto no puede desincronizarse.
+static func get_daily_history() -> Array:
+	var cfg: ConfigFile = _datos()
+	if not cfg.has_section(SECCION):
+		return []
+	var retos: Array = []
+	for clave in cfg.get_section_keys(SECCION):
+		if (clave as String).begins_with("daily_"):
+			retos.append([clave, _leer_int(clave)])
+	retos.sort_custom(func(a: Array, b: Array) -> bool: return a[0] > b[0])
+	return retos
+
+
+## Registra una partida terminada. Devuelve `true` si ha sido récord.
+##
+## `cuenta_para_el_record` lo pone a `false` el reto del día (T-241): esa
+## partida cuenta como jugada —y suma confianza y tuberías— pero su marca
+## va a la clave del reto, no al récord general.
+static func record_game(score: int, cuenta_para_el_record: bool = true) -> bool:
+	var cfg: ConfigFile = _datos()
+	var record: bool = cuenta_para_el_record and score > get_high_score()
 	if record:
 		cfg.set_value(SECCION, "high_score", score)
 	var partidas: int = get_games_played() + 1
