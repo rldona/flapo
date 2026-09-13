@@ -157,6 +157,7 @@ func change_state(to: GameState.State) -> void:
 	if to == GameState.State.READY:
 		_score = 0
 		_is_new_high_score = false
+		_apply_difficulty()
 		score_changed.emit(_score)
 	state_changed.emit(to)
 
@@ -231,7 +232,25 @@ func _on_scored() -> void:
 	_score += 1
 	if audio != null:
 		audio.play_point()
+	_apply_difficulty()
 	score_changed.emit(_score)
+
+
+## Empuja la dificultad de la puntuación actual a quien la necesita.
+##
+## "Call down" (ADR-0005): los sistemas no consultan la puntuación, la reciben.
+## Al ser funciones puras de la puntuación (ADR-0018), volver a READY con el
+## marcador a 0 restaura la dificultad inicial sin código de reinicio.
+func _apply_difficulty() -> void:
+	var velocidad: float = GameConfig.scroll_speed_for(_score)
+	if pipe_spawner != null:
+		pipe_spawner.set_difficulty(
+			velocidad, GameConfig.pipe_gap_for(_score), GameConfig.pipe_spacing_for(_score)
+		)
+	if ground != null:
+		ground.scroll_speed = velocidad
+	if background != null:
+		background.scroll_speed = velocidad
 
 
 ## Alterna el silencio y lo cuenta a los dos paneles que lo enseñan.

@@ -59,6 +59,20 @@ Lo que hay que mirar al tunear (T-040):
   pequeña que el dibujo (24 px): Flapo sobresale 4 px por lado sin morir. Eso
   es deliberado y hace el juego generoso.
 
+### Curva de dificultad (T-045)
+
+La dificultad sube con la puntuación y **tiene tope a los 30 puntos**. Todo
+son funciones puras de la puntuación, así que reiniciar la devuelve al inicio.
+
+| Puntos | Velocidad | Hueco | Separación | Aleteos entre tuberías |
+|---|---|---|---|---|
+| 0 | 100 px/s | 100 px | 160 px | 4,57 |
+| 15 | 122 px/s | 91 px | 166 px | 3,87 |
+| 30 y más | 145 px/s | 82 px | 172 px | **3,39** |
+
+La separación sube a propósito: es lo que mantiene los aleteos por encima de
+3. Ver ADR-0018.
+
 - Muerte: contacto con tubería o suelo.
 - Puntuación: +1 al atravesar el hueco. Una vez por tubería.
 - Récord persistente. Medallas: bronce 10, plata 20, oro 40.

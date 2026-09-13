@@ -26,9 +26,32 @@ func _init() -> void:
 	await _ventana_de_reaccion()
 	await _margen_del_hueco()
 	await _dificultad_de_una_partida()
+	_curva_de_dificultad()
 	print("\nLas constantes están en scripts/bird.gd (@export) y")
 	print("scripts/game_config.gd. Cambia, vuelve a ejecutar, compara.")
 	quit()
+
+
+## La curva de T-045, punto por punto. Es la tabla que hay que mirar al
+## tunearla: la columna de aleteos es la que dice si es difícil o injusta.
+func _curva_de_dificultad() -> void:
+	_cab("Curva de dificultad (T-045)")
+	print("  puntos   velocidad   hueco   separación   intervalo   aleteos")
+	for score in [0, 5, 10, 15, 20, 25, 30, 60]:
+		print(
+			(
+				"  %6d   %7.1f     %5.1f   %8.1f     %7.2f   %7.2f"
+				% [
+					score,
+					GameConfig.scroll_speed_for(score),
+					GameConfig.pipe_gap_for(score),
+					GameConfig.pipe_spacing_for(score),
+					GameConfig.pipe_spawn_interval_for(score),
+					GameConfig.flaps_between_pipes(score),
+				]
+			)
+		)
+	print("  por debajo de 3 aleteos el juego pasa de difícil a injusto")
 
 
 func _cab(t: String) -> void:

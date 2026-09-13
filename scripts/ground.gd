@@ -7,6 +7,9 @@ extends Node2D
 ## la colisión con los tiles no aportaría nada y sí podría dejar una costura
 ## por la que Flapo se colara justo en el frame del reciclado. Ver ADR-0010.
 
+## Velocidad de scroll, px/s. La fija Main según la puntuación (ADR-0018).
+@export var scroll_speed: float = GameConfig.SCROLL_SPEED
+
 ## Si está en marcha. Main lo para en GAME_OVER.
 @export var moving: bool = true
 
@@ -33,7 +36,7 @@ func _physics_process(delta: float) -> void:
 	# crece, así que no acumula error de coma flotante por muy larga que sea
 	# la partida, y los dos tiles quedan pegados por construcción. Es lo que
 	# cumple el criterio de "sin salto visible al reciclar".
-	_offset = fmod(_offset + GameConfig.SCROLL_SPEED * delta, _tile_width)
+	_offset = fmod(_offset + scroll_speed * delta, _tile_width)
 	_colocar_tiles()
 
 

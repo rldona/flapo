@@ -91,6 +91,7 @@ comprobar nadie más que una persona con las manos en el teclado.
 
 Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 
+- ✅ Curva de dificultad: velocidad y hueco suben con la puntuación, con tope a los 30 puntos. → T-045 (ADR-0018)
 - 🔲 Ajustar constantes hasta que el salto sea legible (documentar valores finales en el GDD). → T-040, aplazado a petición de Raúl
 - ✅ Animación de aleteo (3 frames) con `AnimatedSprite2D`. → T-041
 - ✅ Flash blanco + sacudida de cámara al morir. → T-042

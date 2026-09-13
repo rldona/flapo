@@ -19,6 +19,16 @@ y la imagen `barichello/godot-ci` de `.github/workflows/export.yml`.
 - macOS (Darwin 25.6), Apple M1 Pro.
 - Render en ejecución: `OpenGL API 4.1 Metal - Compatibility`.
 
+## Trampas de `project.godot`
+
+- **Comenta con `;`, no con `#`.** Una línea que empiece por `#` no se ignora:
+  Godot la funde con la clave siguiente y acaba escribiendo algo como
+  `"#Elsplashsedibuja...boot_splash/bg_color"=Color(...)`. El ajuste queda sin
+  aplicar y **no hay ningún error**. Pasó con el color de fondo del splash.
+- Godot **borra** del fichero todo ajuste que coincida con el valor por
+  defecto del motor, y reescribe la serialización a su gusto. Lo que hay en
+  disco tras abrir el editor es la verdad; ver ADR-0004.
+
 ## Atajos del editor en macOS
 Godot usa atajos distintos a los de Windows/Linux; F5 y F6 no funcionan (y en
 teclados Apple los captura el sistema).

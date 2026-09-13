@@ -13,6 +13,9 @@ extends Node2D
 ## más cercana. Lo lejano se mueve menos: es lo que crea la profundidad.
 @export var layer_speeds: PackedFloat32Array = PackedFloat32Array([0.15, 0.40])
 
+## Velocidad de scroll de referencia, px/s. Cada capa va a su fracción.
+@export var scroll_speed: float = GameConfig.SCROLL_SPEED
+
 ## Si está en marcha. Main lo para en GAME_OVER.
 @export var moving: bool = true
 
@@ -24,7 +27,7 @@ var _offset: float = 0.0
 func _process(delta: float) -> void:
 	if not moving:
 		return
-	_offset += GameConfig.SCROLL_SPEED * delta
+	_offset += scroll_speed * delta
 	_apply_offset()
 
 

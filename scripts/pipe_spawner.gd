@@ -22,6 +22,12 @@ signal scored
 ## Fijarla hace la partida reproducible, que es lo que usan los tests.
 @export var random_seed: int = 0
 
+## Velocidad, hueco y separación en curso. Los fija Main con la curva de
+## dificultad; los valores por defecto son los de puntuación 0.
+var scroll_speed: float = GameConfig.SCROLL_SPEED
+var gap: float = GameConfig.PIPE_GAP
+var spacing: float = GameConfig.PIPE_SPACING
+
 var _rng := RandomNumberGenerator.new()
 
 @onready var _timer: Timer = $Timer
@@ -31,7 +37,7 @@ func _ready() -> void:
 	_timer.timeout.connect(_on_timer_timeout)
 	# El intervalo NO es un número propio: es la separación en píxeles del
 	# GDD dividida por la velocidad de scroll. Ver GameConfig y ADR-0003.
-	_timer.wait_time = GameConfig.pipe_spawn_interval()
+	_timer.wait_time = spacing / scroll_speed
 	_timer.autostart = false
 	# El timer cuenta en frames de física, no de dibujo. Las tuberías se
 	# mueven en `_physics_process`, así que si el spawn contase en el reloj
@@ -58,6 +64,22 @@ func on_game_state_changed(to: GameState.State) -> void:
 			_congelar_todas()
 
 
+## Aplica la dificultad de la puntuación actual (ADR-0018).
+##
+## La velocidad se propaga también a las tuberías YA vivas: si unas fueran
+## más rápidas que otras, la separación entre ellas se deformaría en pantalla
+## y el mundo dejaría de moverse como un bloque.
+func set_difficulty(velocidad: float, hueco: float, separacion: float) -> void:
+	scroll_speed = velocidad
+	gap = hueco
+	spacing = separacion
+	if _timer != null:
+		_timer.wait_time = spacing / scroll_speed
+	for hijo in get_children():
+		if hijo is Pipe:
+			hijo.scroll_speed = scroll_speed
+
+
 ## Número de tuberías vivas. Lo usan los tests y el criterio de T-028.
 func pipe_count() -> int:
 	var n: int = 0
@@ -76,6 +98,8 @@ func _crear_tuberia() -> void:
 		push_error("PipeSpawner no tiene asignada la escena de tubería.")
 		return
 	var pipe: Pipe = pipe_scene.instantiate()
+	pipe.scroll_speed = scroll_speed
+	pipe.gap = gap
 	pipe.position = Vector2(spawn_x, 0.0)
 	pipe.scored.connect(_on_pipe_scored)
 	add_child(pipe)

@@ -155,6 +155,15 @@ Iterar gravedad/impulso/velocidad/hueco hasta que el salto sea legible y transmi
 **Criterios de aceptación**
 - Tabla del GDD actualizada con valores finales y por qué.
 
+### T-045 · Curva de dificultad
+labels: fase:3, area:code · estimate: 2
+La dificultad sube con la puntuación: velocidad de scroll y hueco de las tuberías, con tope. Funciones puras de la puntuación en `GameConfig`, empujadas por `Main` a cada sistema.
+**Criterios de aceptación**
+- Con 0 puntos salen exactamente los valores del GDD.
+- La velocidad nunca baja y el hueco nunca crece al subir la puntuación.
+- **Nunca caben menos de 3 aleteos entre tuberías** en ninguna puntuación.
+- Reiniciar devuelve la dificultad inicial.
+
 ### T-041 · Animación de aleteo
 labels: fase:3, area:code · estimate: 1
 `AnimatedSprite2D` con 3 frames placeholder; velocidad de animación según estado (más rápida al saltar).

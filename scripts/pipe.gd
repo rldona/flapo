@@ -30,6 +30,11 @@ signal scored
 @export var body_length: float = 512.0
 
 @export_group("Movimiento")
+## Velocidad a la que se desplaza, px/s. La fija PipeSpawner al crearla, según
+## la curva de dificultad (ADR-0018). El valor por defecto es el de inicio,
+## para que la escena se pueda probar suelta con F6.
+@export var scroll_speed: float = GameConfig.SCROLL_SPEED
+
 ## Si está en marcha. `PipeSpawner` lo pone a false en GAME_OVER (T-025).
 @export var moving: bool = true
 
@@ -55,7 +60,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not moving:
 		return
-	position.x -= GameConfig.SCROLL_SPEED * delta
+	position.x -= scroll_speed * delta
 	# Se libera cuando su borde derecho ha pasado el borde izquierdo de la
 	# pantalla. Sin esto, cada partida acumularía tuberías invisibles para
 	# siempre: el criterio de nodos huérfanos de T-024 es exactamente esto.

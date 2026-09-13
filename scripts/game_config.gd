@@ -38,13 +38,64 @@ const GROUND_HEIGHT: float = 64.0
 const SCROLL_SPEED: float = 100.0
 ## Distancia horizontal entre dos pares de tuberías consecutivos, px.
 const PIPE_SPACING: float = 160.0
-# El hueco y su rango vertical tampoco están aquí: son `@export` de
-# `scripts/pipe.gd`, porque es lo que se tunea a ojo en T-040.
+
+# --- Curva de dificultad (T-045) ----------------------------------------
+## Puntuación a la que la dificultad llega a su tope. A partir de ahí el juego
+## no sube más: lo que queda es aguantar.
+const DIFFICULTY_CAP: int = 30
+## Velocidad de scroll en el tope, px/s.
+const SCROLL_SPEED_MAX: float = 145.0
+## Hueco en el tope, px. Sigue siendo cinco veces la hitbox de Flapo.
+const PIPE_GAP_MIN: float = 82.0
+## Separación en el tope, px. Sube un poco a propósito: ver ADR-0018.
+const PIPE_SPACING_MAX: float = 172.0
+## Segundos que dura un aleteo completo, medido con tools/medir_feel.gd.
+const FLAP_CYCLE: float = 0.35
+## Alto del hueco al empezar la partida, px. Es la base de la curva de
+## dificultad; el rango vertical del hueco sigue siendo `@export` de Pipe.
+const PIPE_GAP: float = 100.0
 
 # --- Puntuación ---------------------------------------------------------
 const MEDAL_BRONZE: int = 10
 const MEDAL_SILVER: int = 20
 const MEDAL_GOLD: int = 40
+
+
+## Cuánto de dificultad se ha desbloqueado, de 0 a 1.
+##
+## Todas las magnitudes de la curva son funciones puras de la puntuación: no
+## hay estado de dificultad que reiniciar, y con puntuación 0 salen exactamente
+## los valores del GDD. Ver ADR-0018.
+static func difficulty(score: int) -> float:
+	return clampf(float(score) / float(DIFFICULTY_CAP), 0.0, 1.0)
+
+
+## Velocidad de scroll para una puntuación, px/s.
+static func scroll_speed_for(score: int) -> float:
+	return lerpf(SCROLL_SPEED, SCROLL_SPEED_MAX, difficulty(score))
+
+
+## Alto del hueco para una puntuación, px.
+static func pipe_gap_for(score: int) -> float:
+	return lerpf(PIPE_GAP, PIPE_GAP_MIN, difficulty(score))
+
+
+## Separación entre tuberías para una puntuación, px.
+static func pipe_spacing_for(score: int) -> float:
+	return lerpf(PIPE_SPACING, PIPE_SPACING_MAX, difficulty(score))
+
+
+## Segundos entre spawns para una puntuación.
+static func pipe_spawn_interval_for(score: int) -> float:
+	return pipe_spacing_for(score) / scroll_speed_for(score)
+
+
+## Cuántos aleteos caben entre dos tuberías a esa puntuación.
+##
+## Es el número que decide si la curva es difícil o injusta: por debajo de 3
+## no da tiempo a corregir. Ver docs/GDD.md.
+static func flaps_between_pipes(score: int) -> float:
+	return pipe_spawn_interval_for(score) / FLAP_CYCLE
 
 
 ## Segundos entre spawns de tuberías (T-025).

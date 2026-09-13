@@ -115,6 +115,23 @@ El tercer paso no es redundante: un fallo de export —una ruta de recurso
 rota, un `class_name` que no resuelve— no se ve jugando en el editor y
 aparece justo al hacer la release.
 
+## Comprobar la premisa, no solo el resultado
+
+Un test que mide algo tiene que verificar antes que el escenario sigue siendo
+el que cree. Pasó en T-045: se medía cuánto avanza el suelo con la dificultad
+alta, pero a mitad de medición Flapo chocaba con una tubería, el juego pasaba
+a `GAME_OVER` y el suelo se paraba —correctamente—. El test medía la velocidad
+de un juego terminado y fallaba **una de cada tres veces**, que es lo peor que
+puede pasar: un test intermitente se acaba ignorando.
+
+La corrección tiene dos partes y hacen falta las dos:
+
+1. **Aislar de verdad**: durante la medida, Flapo va sin gravedad y con
+   `collision_mask = 0`.
+2. **Afirmar la premisa**: `h.check("la partida sigue viva durante la
+   medición", ...)`. Si algún día vuelve a romperse, el test dirá *por qué*
+   en vez de dar un número raro.
+
 ## Qué NO cubre esto
 
 Headless no tiene ventana ni renderiza. Queda fuera, y lo comprueba Raúl en
