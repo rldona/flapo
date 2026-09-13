@@ -9,6 +9,8 @@ Proyecto de aprendizaje E2E, público. Prioridad: hacerlo bien y explicar por qu
 - docs/GDD.md: reglas y constantes del juego
 - docs/art-guide.md: resolución, paleta, tamaños
 - docs/decisions/: ADRs. Toda decisión técnica relevante genera una nueva ADR.
+- docs/testing.md: cómo se verifica el juego en headless
+- docs/environment.md: versiones y atajos del editor
 
 ## Convenciones
 - Godot 4.x, GDScript tipado, `@export` para constantes tuneables, señales en vez de acoplamiento directo.
@@ -16,6 +18,8 @@ Proyecto de aprendizaje E2E, público. Prioridad: hacerlo bien y explicar por qu
 - Constantes de juego centralizadas en un autoload `GameConfig`.
 - Una rama por ticket (`feat/T-023-bird`), Conventional Commits, `main` siempre exportable.
 - Un ticket por vez. Antes de empezar: leer el ticket y sus criterios. Al terminar: repasar los criterios uno a uno y decir cuáles quedan verificados por ti y cuáles necesita comprobar Raúl en el editor.
-- No puedes ejecutar el juego: cuando algo requiera probarlo, di exactamente qué probar y qué debería verse.
+- Puedes ejecutar Godot en headless: `./tests/run.sh` y `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . -s tests/test_x.gd`. Ver docs/testing.md.
+- Todo criterio de aceptación comprobable sin ventana (física, estados, señales, colisiones, puntuación, persistencia, fugas de nodos) lo verificas tú con un test en `tests/`, un fichero por ticket. No lo delegues en Raúl.
+- Lo que headless no ve (escalado y píxeles, arte, audio, y cómo se siente el juego) sí lo comprueba Raúl: di exactamente qué probar y qué debería verse.
 - Explica las decisiones de diseño de Godot (por qué CharacterBody2D y no RigidBody2D, etc.); es un proyecto de aprendizaje.
 - Responder en español, conciso.

@@ -45,6 +45,14 @@ Añadir `.github/ISSUE_TEMPLATE/task.md`, `bug.md` y `PULL_REQUEST_TEMPLATE.md` 
 **Criterios de aceptación**
 - Al crear una issue en GitHub aparecen las plantillas.
 
+### T-006 · Verificación headless
+labels: fase:0, area:qa · estimate: 2
+Godot admite `--headless` y `-s script.gd`: el juego se puede comprobar desde la terminal sin ventana ni GPU. Montar un arnés mínimo en `tests/` y documentarlo, para que los criterios de aceptación se cierren con evidencia ejecutable en vez de con inspección manual.
+**Criterios de aceptación**
+- `./tests/run.sh` ejecuta todos los `tests/test_*.gd` y sale con 0 solo si pasan.
+- `docs/testing.md` explica cómo ejecutar, cómo escribir un test y qué NO cubre.
+- ADR-0007 y `CLAUDE.md` reflejan el nuevo reparto de responsabilidades.
+
 ---
 
 ## Fase 1 — Diseño
@@ -269,9 +277,10 @@ HUD respeta `DisplayServer.get_display_safe_area()`; fondo cubre relaciones 16:9
 
 ### T-080 · Tests unitarios
 labels: fase:7, area:qa · estimate: 2
-Instalar GUT o gdUnit4. Tests para: máquina de estados, puntuación única por tubería, `SaveManager` con fichero ausente/corrupto.
+Instalar GUT o gdUnit4 y **migrar a su formato los tests de `tests/`** escritos desde T-006; `harness.gd` desaparece. Cubrir además: máquina de estados, puntuación única por tubería, `SaveManager` con fichero ausente/corrupto.
 **Criterios de aceptación**
 - Tests ejecutables en headless: `godot --headless -s addons/gut/gut_cmdln.gd`.
+- Ningún test de `tests/` se pierde en la migración.
 
 ### T-081 · Checklist de QA manual
 labels: fase:7, area:qa · estimate: 1
@@ -303,7 +312,7 @@ labels: fase:8, area:ci · estimate: 1
 
 ### T-091 · Workflow de export en GitHub Actions
 labels: fase:8, area:ci · estimate: 3
-`export.yml`: en push a `main` ejecuta tests y lint; en tag `v*` exporta los 4 presets con imagen godot-ci y publica en GitHub Releases.
+`export.yml`: en push a `main` ejecuta los tests headless (`tests/run.sh` dentro del contenedor godot-ci, ver ADR-0007) y lint; en tag `v*` exporta los 4 presets con imagen godot-ci y publica en GitHub Releases.
 **Criterios de aceptación**
 - Un tag `v0.1.0` genera una release con 4 artefactos descargables.
 

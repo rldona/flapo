@@ -34,5 +34,8 @@ También están los botones ▶ / ▶-claqueta / ■ arriba a la derecha.
 - El binario de Godot no está en el `PATH`; para invocarlo en headless desde
   la terminal hay que usar la ruta del `.app`:
   `/Applications/Godot.app/Contents/MacOS/Godot --headless ...`
+- Godot corre **sin ventana ni GPU** con `--headless`, así que el juego se
+  puede verificar desde la terminal y desde CI: ver `docs/testing.md` y
+  ADR-0007. Es la base de `./tests/run.sh`.
 - Renderizador objetivo: **Compatibility** (OpenGL/WebGL2). Es el único que
   garantiza Web y Android de gama baja; Forward+ no exporta a Web.
