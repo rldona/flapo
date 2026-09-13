@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Flapo"
 ; La escribe tools/versionar.gd en cada release (T-271). A mano, nunca.
-config/version="0.1.0"
+config/version="0.1.1"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/sprites/icon_app.png"
