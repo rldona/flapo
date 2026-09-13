@@ -96,6 +96,17 @@ def main():
     # Caída: barrido largo hacia abajo, para el rato entre el golpe y el suelo.
     guardar(mezcla(tono(500, 90, 0.45, "sierra", 0.3)), "fall")
 
+    # Fruta buena: arpegio corto hacia arriba. Se distingue del punto por ser
+    # tres notas en vez de dos y por acabar más agudo.
+    guardar(mezcla(tono(520, 520, 0.05, "cuadrada", 0.35),
+                   [0.0] * int(TASA * 0.04) + tono(780, 780, 0.05, "cuadrada", 0.35),
+                   [0.0] * int(TASA * 0.08) + tono(1040, 1040, 0.08, "cuadrada", 0.35)),
+            "fruit_good")
+
+    # Fruta mala: la misma idea al revés y con la onda más sucia. Tiene que
+    # reconocerse como "algo ha ido mal" sin sonar a muerte.
+    guardar(mezcla(tono(560, 220, 0.22, "sierra", 0.35, ruido=0.25)), "fruit_bad")
+
     # Botón: click seco y neutro.
     guardar(mezcla(tono(880, 700, 0.05, "cuadrada", 0.3)), "button")
 

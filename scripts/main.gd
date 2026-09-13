@@ -57,6 +57,16 @@ const _TRANSITIONS: Dictionary = {
 ## Los sonidos del juego.
 @export var audio: AudioDirector
 
+## Los efectos temporales de las frutas (T-047).
+@export var effects: Effects
+
+## El generador de frutas.
+@export var fruit_spawner: FruitSpawner
+
+## Segundos sin colisiones tras gastar un escudo, para poder salir de la
+## tubería con la que se acaba de chocar.
+@export var shield_grace: float = 1.0
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -157,6 +167,10 @@ func change_state(to: GameState.State) -> void:
 	if to == GameState.State.READY:
 		_score = 0
 		_is_new_high_score = false
+		effects.clear()
+		bird.gravity_mult = 1.0
+		bird.size_mult = 1.0
+		bird.hitbox_mult = 1.0
 		_apply_difficulty()
 		score_changed.emit(_score)
 	state_changed.emit(to)
@@ -177,6 +191,7 @@ func _connect_children() -> void:
 		"Juice": juice,
 		"Background": background,
 		"Fade": fade,
+		"FruitSpawner": fruit_spawner,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
@@ -188,6 +203,12 @@ func _connect_children() -> void:
 	pause_panel.mute_pressed.connect(_on_mute_pressed)
 	game_over_panel.mute_pressed.connect(_on_mute_pressed)
 	bird.flapped.connect(audio.play_flap)
+	if effects == null:
+		push_error("Main no tiene asignado el nodo Effects en el inspector.")
+		return
+	fruit_spawner.taken.connect(_on_fruit_taken)
+	effects.changed.connect(_on_effects_changed)
+	effects.shield_changed.connect(hud.set_shield)
 	for nombre in piezas:
 		if piezas[nombre] == null:
 			push_error("Main no tiene asignado el nodo %s en el inspector." % nombre)
@@ -242,7 +263,9 @@ func _on_scored() -> void:
 ## Al ser funciones puras de la puntuación (ADR-0018), volver a READY con el
 ## marcador a 0 restaura la dificultad inicial sin código de reinicio.
 func _apply_difficulty() -> void:
-	var velocidad: float = GameConfig.scroll_speed_for(_score)
+	# La velocidad del mundo es la curva de dificultad POR el modificador de
+	# la fruta violeta: una cosa sube con la puntuación y la otra es temporal.
+	var velocidad: float = GameConfig.scroll_speed_for(_score) * effects.speed_mult()
 	if pipe_spawner != null:
 		pipe_spawner.set_difficulty(
 			velocidad, GameConfig.pipe_gap_for(_score), GameConfig.pipe_spacing_for(_score)
@@ -251,6 +274,10 @@ func _apply_difficulty() -> void:
 		ground.scroll_speed = velocidad
 	if background != null:
 		background.scroll_speed = velocidad
+	if fruit_spawner != null:
+		fruit_spawner.set_difficulty(
+			velocidad, GameConfig.pipe_gap_for(_score), GameConfig.pipe_spacing_for(_score)
+		)
 
 
 ## Alterna el silencio y lo cuenta a los dos paneles que lo enseñan.
@@ -263,7 +290,41 @@ func _on_mute_pressed() -> void:
 	game_over_panel.set_muted(muted)
 
 
+## Flapo ha cogido una fruta.
+func _on_fruit_taken(kind: Effects.Kind, puntos: int) -> void:
+	effects.apply(kind)
+	bird.gravity_mult = effects.gravity_mult()
+	bird.size_mult = effects.size_mult()
+	bird.hitbox_mult = effects.hitbox_mult()
+	_apply_difficulty()
+	if audio != null:
+		if puntos > 0:
+			audio.play_fruit_bad()
+		else:
+			audio.play_fruit_good()
+	# Los castigos pagan en puntos: es lo que los convierte en una decisión
+	# en vez de en un obstáculo disfrazado de premio (ADR-0019).
+	for i in puntos:
+		_on_scored()
+
+
+## El efecto activo ha cambiado o ha caducado: hay que reflejarlo en el mundo.
+func _on_effects_changed(kind: Effects.Kind, restante: float) -> void:
+	if hud != null:
+		hud.set_effect(effects.kind_name(kind), restante)
+	bird.gravity_mult = effects.gravity_mult()
+	bird.size_mult = effects.size_mult()
+	bird.hitbox_mult = effects.hitbox_mult()
+	_apply_difficulty()
+
+
 func _on_bird_died() -> void:
+	# El escudo de la fruta azul absorbe el golpe antes que nada más.
+	if effects != null and effects.consume_shield():
+		bird.survive(shield_grace)
+		if audio != null:
+			audio.play_fruit_good()
+		return
 	if juice != null:
 		juice.punch()
 	if audio != null:

@@ -15,12 +15,16 @@ extends Node
 @export var hit_db: float = 0.0
 @export var fall_db: float = -6.0
 @export var button_db: float = -8.0
+@export var fruit_good_db: float = -4.0
+@export var fruit_bad_db: float = -4.0
 
 @onready var _flap: AudioStreamPlayer = $Flap
 @onready var _point: AudioStreamPlayer = $Point
 @onready var _hit: AudioStreamPlayer = $Hit
 @onready var _fall: AudioStreamPlayer = $Fall
 @onready var _button: AudioStreamPlayer = $Button
+@onready var _fruit_good: AudioStreamPlayer = $FruitGood
+@onready var _fruit_bad: AudioStreamPlayer = $FruitBad
 
 
 func _ready() -> void:
@@ -29,6 +33,8 @@ func _ready() -> void:
 	_hit.volume_db = hit_db
 	_fall.volume_db = fall_db
 	_button.volume_db = button_db
+	_fruit_good.volume_db = fruit_good_db
+	_fruit_bad.volume_db = fruit_bad_db
 	# El silencio se lee del disco al arrancar: el criterio de T-061 es que
 	# sobreviva a cerrar y abrir el juego.
 	apply_muted(Settings.is_muted())
@@ -47,6 +53,14 @@ func play_point() -> void:
 func play_hit() -> void:
 	_hit.play()
 	_fall.play()
+
+
+func play_fruit_good() -> void:
+	_fruit_good.play()
+
+
+func play_fruit_bad() -> void:
+	_fruit_bad.play()
 
 
 func play_button() -> void:

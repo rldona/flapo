@@ -55,6 +55,7 @@ pause={
 2d_physics/layer_2="flapo"
 2d_physics/layer_3="obstaculos"
 2d_physics/layer_4="puntuacion"
+2d_physics/layer_5="frutas"
 
 [physics]
 

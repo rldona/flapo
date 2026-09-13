@@ -93,5 +93,24 @@ Sonidos: aleteo, punto, golpe, caída, botón. Al morir: flash blanco, sacudida 
 ## Estilo
 288×512 vertical, pixel art, paleta propia de 16 colores (ver `docs/art-guide.md`). Flapo 24×24 px (hitbox: círculo de radio 8, más generosa que el dibujo).
 
+## Frutas (T-047)
+Aparecen flotando entre tuberías, en la franja central. Un solo efecto activo a
+la vez, 6 s de duración; el escudo va aparte y no caduca.
+
+| Fruta | Efecto | Puntos |
+|---|---|---|
+| Azul | Inmunidad a un toque | — |
+| Verde | Flapo pesa la mitad | — |
+| Violeta | El mundo va al 60 % | — |
+| Roja | Flapo pesa el doble | **+3** |
+| Naranja | Flapo es el doble de grande (hitbox ×1,6) | **+3** |
+
+Las de castigo pagan en puntos: es lo que las convierte en una apuesta en vez
+de en una trampa. Ver ADR-0019.
+
 ## Fuera de alcance en v1
-Skins, ranking online, power-ups, anuncios, compras, modos de juego.
+Skins, ranking online, anuncios, compras, modos de juego.
+
+Los **power-ups estaban aquí** hasta T-047: se sacaron de la lista a
+propósito, con ADR-0019, cuando el juego ya estaba completo y se vio que
+aguantaba más sustancia.

@@ -15,3 +15,21 @@ theme_override_fonts/font = ExtResource("2_font")
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Effect" type="Label" parent="."]
+anchor_right = 1.0
+offset_top = 62.0
+offset_bottom = 78.0
+mouse_filter = 2
+text = ""
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Shield" type="Label" parent="."]
+anchor_right = 1.0
+offset_top = 80.0
+offset_bottom = 96.0
+mouse_filter = 2
+text = "Escudo"
+horizontal_alignment = 1
+vertical_alignment = 1

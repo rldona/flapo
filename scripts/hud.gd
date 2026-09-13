@@ -17,10 +17,14 @@ extends CanvasLayer
 @export var margen_superior: float = 24.0
 
 @onready var _score_label: Label = $Score
+@onready var _effect_label: Label = $Effect
+@onready var _shield_label: Label = $Shield
 
 
 func _ready() -> void:
 	visible = false
+	_effect_label.visible = false
+	_shield_label.visible = false
 	_aplicar_margen_seguro()
 	# En móvil el área segura puede cambiar al rotar o al aparecer barras.
 	get_tree().root.size_changed.connect(_aplicar_margen_seguro)
@@ -64,3 +68,17 @@ func on_game_state_changed(to: GameState.State) -> void:
 
 func set_score(score: int) -> void:
 	_score_label.text = str(score)
+
+
+## Qué efecto de fruta está activo y cuánto le queda (T-047).
+##
+## Se enseña el nombre y los segundos porque un efecto invisible es un efecto
+## que el jugador cree que es un bug: "¿por qué caigo más rápido de golpe?".
+func set_effect(nombre: String, restante: float) -> void:
+	_effect_label.visible = nombre != ""
+	if _effect_label.visible:
+		_effect_label.text = "%s %.0f" % [nombre, ceilf(restante)]
+
+
+func set_shield(activo: bool) -> void:
+	_shield_label.visible = activo

@@ -15,6 +15,10 @@ signal died
 ## decide que eso suena es Main.
 signal flapped
 
+## Capa de obstáculos (tuberías y suelo). Se guarda porque la inmunidad la
+## apaga temporalmente y hay que saber a qué volver.
+const OBSTACULOS: int = 4
+
 @export_group("Física")
 ## Aceleración de caída, px/s². Flapo pesa; ver GDD, "Concepto y tono".
 @export var gravity: float = 1200.0
@@ -60,16 +64,38 @@ signal flapped
 ## Cuánto tarda en alcanzar el ángulo objetivo. Más bajo, más perezoso.
 @export_range(1.0, 30.0) var rotation_speed: float = 9.0
 
+## Multiplicadores que vienen de las frutas (T-047). Los fija Main; el valor
+## neutro es 1.0, así que sin frutas todo se comporta como antes.
+var gravity_mult: float = 1.0
+var size_mult: float = 1.0:
+	set(valor):
+		size_mult = valor
+		_aplicar_tamano()
+var hitbox_mult: float = 1.0:
+	set(valor):
+		hitbox_mult = valor
+		_aplicar_tamano()
+
 var _state: GameState.State = GameState.State.READY
 var _dead: bool = false
 ## Segundos que le quedan al acelerón de la animación.
 var _burst_left: float = 0.0
+## Radio original de la hitbox, para poder escalarla y devolverla.
+var _radio_base: float = 8.0
+## Segundos que le quedan de no colisionar tras gastar un escudo.
+var _invulnerable_left: float = 0.0
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
+@onready var _shape: CollisionShape2D = $CollisionShape2D
 
 
 func _ready() -> void:
 	start_position = position
+	# La forma viene del .tscn y por tanto es el MISMO recurso en todas las
+	# instancias (la trampa de la ADR-0008). Como la fruta naranja la
+	# redimensiona, hay que quedarse con una copia propia.
+	_shape.shape = _shape.shape.duplicate()
+	_radio_base = (_shape.shape as CircleShape2D).radius
 	_sprite.play("flap")
 
 
@@ -106,6 +132,11 @@ func _physics_process(delta: float) -> void:
 	if _state == GameState.State.PLAYING:
 		_update_rotation(delta)
 
+	if _invulnerable_left > 0.0:
+		_invulnerable_left = maxf(_invulnerable_left - delta, 0.0)
+		if _invulnerable_left <= 0.0:
+			collision_mask = OBSTACULOS
+
 	_update_animation(delta)
 
 	if _state == GameState.State.PLAYING:
@@ -123,6 +154,10 @@ func on_game_state_changed(to: GameState.State) -> void:
 		rotation = 0.0
 		position = start_position
 		_burst_left = 0.0
+		gravity_mult = 1.0
+		size_mult = 1.0
+		hitbox_mult = 1.0
+		collision_mask = OBSTACULOS
 		_sprite.play("flap")
 
 
@@ -146,8 +181,26 @@ func _update_animation(delta: float) -> void:
 	_sprite.speed_scale = fps / 10.0
 
 
+## Sobrevive a un golpe: el escudo de la fruta azul (T-047).
+##
+## Además de no morir, deja de colisionar unos instantes. Si no, seguiría
+## dentro de la tubería con la que acaba de chocar y moriría en el frame
+## siguiente: el escudo no habría servido de nada.
+func survive(segundos: float) -> void:
+	_dead = false
+	collision_mask = 0
+	_invulnerable_left = segundos
+
+
+func _aplicar_tamano() -> void:
+	if _sprite != null:
+		_sprite.scale = Vector2(size_mult, size_mult)
+	if _shape != null and _shape.shape is CircleShape2D:
+		(_shape.shape as CircleShape2D).radius = _radio_base * hitbox_mult
+
+
 func _apply_gravity(delta: float) -> void:
-	velocity.y = minf(velocity.y + gravity * delta, max_fall_speed)
+	velocity.y = minf(velocity.y + gravity * gravity_mult * delta, max_fall_speed)
 
 
 func _clamp_to_ceiling() -> void:

@@ -1,7 +1,7 @@
 # Guía de arte
 
 - Resolución base: 288×512 (vertical). Stretch `viewport` + `integer`.
-- Paleta: 16 colores, propia. En `assets/sprites/src/palette.hex` y `.gpl`.
+- Paleta: **20 colores** (16 del mundo + 4 de frutas), propia. En `assets/sprites/src/palette.hex` y `.gpl`.
 
 | Uso | Hex | | Uso | Hex |
 |---|---|---|---|---|
@@ -14,6 +14,22 @@
 | Pico y patas | `#E6B84A` | | Suelo | `#D0AE62` |
 | Pico sombra | `#B88632` | | Patas sombra | `#D49A3A` |
 | | | | Edificios lejanos | `#7C9AB5` |
+
+### Colores de fruta (T-047)
+
+| Fruta | Hex | Efecto |
+|---|---|---|
+| Azul | `#4FA3C7` | inmunidad a un toque |
+| Roja | `#C4553F` | pesa el doble |
+| Verde | `#6E9E4F` | el doble de ligero |
+| Naranja | `#E6B84A` (mostaza, ya en paleta) | el doble de tamaño |
+| Violeta | `#8A6FA8` | el mundo va más lento |
+
+Rompen los 16 colores a propósito: son **tonos que el escenario no usa**, y eso
+es justo lo que hace que se lean como objetos ajenos al mundo y no como
+decorado. Un rojo o un violeta en un fondo de azules y arenas se ve de
+inmediato, que es lo que necesita algo que hay que decidir coger o esquivar en
+menos de un segundo.
 
 **El sprite de Flapo usa solo 7**: outline, cuerpo, cuerpo sombra, tripa,
 tripa sombra, pico/patas y ojo. Cuantos menos colores, más legible a tamaño

@@ -31,6 +31,16 @@ SUELO = (0xD0, 0xAE, 0x62, 255)
 SUELO_S = (0xB8, 0x86, 0x32, 255)
 NADA = (0, 0, 0, 0)
 
+# Frutas (T-047). Tonos que el escenario no usa, para que se lean como
+# objetos ajenos al mundo. Ver docs/art-guide.md.
+FRUTAS = {
+    "azul": (0x4F, 0xA3, 0xC7, 255),
+    "roja": (0xC4, 0x55, 0x3F, 255),
+    "verde": (0x6E, 0x9E, 0x4F, 255),
+    "naranja": (0xE6, 0xB8, 0x4A, 255),
+    "violeta": (0x8A, 0x6F, 0xA8, 255),
+}
+
 DESTINO = "assets/sprites"
 
 
@@ -278,6 +288,29 @@ def fuente_fnt(gw, gh):
     return "\n".join(lineas) + "\n"
 
 
+# --- Frutas (T-047) ------------------------------------------------------
+def fruta(color):
+    """Baya de 12x12: círculo con contorno, brillo arriba y hojita.
+
+    12 px es lo justo para que se distinga el color de un vistazo sin competir
+    con Flapo, que mide 24.
+    """
+    img = lienzo(12, 12)
+    cx, cy, r = 5.5, 6.5, 4.6
+    for y in range(12):
+        for x in range(12):
+            d = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
+            if d <= r:
+                img.putpixel((x, y), color if d <= r - 1.2 else OUTLINE)
+    # Brillo: dos píxeles arriba a la izquierda. Da volumen sin gastar color.
+    img.putpixel((4, 4), BRILLO)
+    img.putpixel((3, 5), BRILLO)
+    # Hojita, para que se lea como fruta y no como bola.
+    rect(img, 6, 1, 7, 2, TUBERIA)
+    rect(img, 5, 2, 5, 2, OUTLINE)
+    return img
+
+
 def main():
     print("Generando arte en %s/" % DESTINO)
     guardar(tuberia_cuerpo(), "pipe_body")
@@ -292,6 +325,8 @@ def main():
     guardar(logo(), "logo")
     guardar(icono(), "icon_app")
     guardar(splash(), "splash")
+    for nombre, color in FRUTAS.items():
+        guardar(fruta(color), "fruit_%s" % nombre)
     atlas, gw, gh = digitos()
     guardar(atlas, "score_digits")
     with open("%s/score_digits.fnt" % DESTINO, "w") as f:

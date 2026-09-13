@@ -91,6 +91,7 @@ comprobar nadie más que una persona con las manos en el teclado.
 
 Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 
+- ✅ Frutas con efectos: inmunidad, pesado, ligero, grande y lento, con castigos que pagan en puntos. → T-047 (ADR-0019)
 - ✅ Curva de dificultad: velocidad sube y hueco se estrecha con la puntuación, con tope a los 30 puntos. Hueco de salida ancho (118 px) como rampa de entrada. → T-045 y T-046 (ADR-0018)
 - 🔲 Ajustar constantes hasta que el salto sea legible (documentar valores finales en el GDD). → T-040, aplazado a petición de Raúl
 - ✅ Animación de aleteo (3 frames) con `AnimatedSprite2D`. → T-041

@@ -164,6 +164,17 @@ La dificultad sube con la puntuación: velocidad de scroll y hueco de las tuber�
 - **Nunca caben menos de 3 aleteos entre tuberías** en ninguna puntuación.
 - Reiniciar devuelve la dificultad inicial.
 
+### T-047 · Frutas con efectos
+labels: fase:3, area:code · estimate: 5
+Frutas flotantes entre tuberías con cinco efectos: inmunidad, pesado, ligero, grande y lento. Sistema de efectos temporales, spawner, arte, audio y HUD.
+**Criterios de aceptación**
+- Un solo efecto temporal a la vez; el escudo va aparte y no caduca.
+- Las frutas de castigo dan puntos.
+- La fruta que agranda a Flapo no sale cuando el hueco es estrecho.
+- El escudo absorbe un golpe y solo uno.
+- Ni las frutas ni sus efectos sobreviven a un reinicio.
+- El HUD enseña qué efecto está activo y cuánto le queda.
+
 ### T-046 · Hueco de salida más ancho
 labels: fase:3, area:code · estimate: 1
 Subir el hueco inicial de 100 a 118 px para que los primeros puntos perdonen más, manteniendo el mínimo de 82 en el tope de la curva.
