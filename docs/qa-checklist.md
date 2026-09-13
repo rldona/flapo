@@ -51,6 +51,8 @@ Fecha de la última pasada: _(sin ejecutar)_ · Versión: _(—)_
 - [ ] Borrar `user://save.cfg` a mano no rompe el juego: empieza a 0.
 
 ## 8. Web (itch.io)
+- [ ] El build es **de ahora**: servido con `./tools/servir_web.sh`, no a mano.
+- [ ] Recarga forzada (⌘⇧R) antes de dar nada por bueno.
 - [ ] Carga en Chrome, Firefox y Safari móvil.
 - [ ] El toque en móvil funciona igual que el click.
 - [ ] No hay errores en la consola del navegador.

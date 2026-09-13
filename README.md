@@ -33,8 +33,8 @@ Primer proyecto de [Plazoleta](https://plazoleta.dev) en desarrollo de videojueg
 # Tests: compila todos los .gd y ejecuta las comprobaciones
 ./tests/run.sh
 
-# Export a Web
-godot --headless --path . --export-release "Web" export/Web/index.html
+# Export a Web y servirlo (exporta siempre antes de servir)
+./tools/servir_web.sh
 
 # Regenerar el arte y el audio desde la paleta
 ./.venv/bin/python tools/generar_arte.py

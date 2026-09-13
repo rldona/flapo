@@ -73,12 +73,18 @@ exporta en 3,6 s sin abrir el editor:
   --export-release "Web" export/Web/index.html
 ```
 
-Para probarlo hay que servirlo por HTTP: el navegador bloquea WebAssembly
-sobre `file://`.
+Para probarlo, **usa el script**, que exporta y sirve en ese orden:
 
 ```bash
-cd export/Web && python3 -m http.server 8060
+./tools/servir_web.sh          # http://localhost:8060
 ```
+
+No sirvas `export/Web/` a mano. Servir un build viejo no da ningún error: el
+juego carga, funciona, y le faltan las últimas features. Pasó con las frutas
+de T-047 y costó un rato de diagnóstico.
+
+Y **recarga forzada en el navegador** (⌘⇧R): el `.wasm` y el `.pck` se cachean
+con ganas y una recarga normal puede seguir sirviendo el anterior.
 
 Decisiones del preset:
 
