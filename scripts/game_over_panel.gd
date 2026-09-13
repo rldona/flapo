@@ -36,6 +36,9 @@ var _delay_left: float = -1.0
 var _fade_left: float = 0.0
 var _score: int = 0
 
+## Nombre con el que se firma al compartir (T-079). Vacío = sin firmar.
+var _player_name: String = ""
+
 @onready var _title: Label = $Root/Box/Title
 @onready var _root: Control = $Root
 @onready var _box: VBoxContainer = $Root/Box
@@ -83,6 +86,12 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_delay_left = delay
 	else:
 		_ocultar()
+
+
+## Con qué nombre se firma el texto de compartir (T-079). Puede venir vacío:
+## quien no ha puesto nombre comparte sin firmar.
+func set_player_name(nombre: String) -> void:
+	_player_name = nombre
 
 
 ## Cambia la frase de cabecera (T-056).
@@ -142,7 +151,12 @@ func _on_button_pressed() -> void:
 
 func _on_share_pressed() -> void:
 	var pieza: String = "1 tubería" if _score == 1 else "%d tuberías" % _score
-	share_pressed.emit("He cruzado %s con Flapo." % pieza)
+	# Sin nombre se comparte en primera persona. Firmar con el nombre por
+	# defecto daría "Flapo ha cruzado 3 tuberías con Flapo", que es ridículo.
+	if _player_name == "":
+		share_pressed.emit("He cruzado %s con Flapo." % pieza)
+		return
+	share_pressed.emit("%s ha cruzado %s con Flapo." % [_player_name, pieza])
 
 
 ## Refleja el estado del silencio en el botón.

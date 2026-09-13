@@ -86,6 +86,26 @@ static func set_difficulty(modo: GameConfig.Difficulty) -> void:
 		push_warning("No se ha podido guardar la dificultad (error %d)." % err)
 
 
+## Nombre del jugador (T-079). Vacío si no ha puesto ninguno: quien decide
+## qué enseñar entonces es `GameConfig.display_player_name`.
+static func get_player_name() -> String:
+	var valor: Variant = _datos().get_value(SECCION, "player_name", "")
+	if typeof(valor) != TYPE_STRING:
+		return ""
+	# Se sanea también al LEER, no solo al escribir: el fichero es texto
+	# editable a mano y puede traer un nombre de 300 caracteres.
+	return GameConfig.sanitize_player_name(valor)
+
+
+## Guarda el nombre, ya saneado.
+static func set_player_name(nombre: String) -> void:
+	var cfg: ConfigFile = _datos()
+	cfg.set_value(SECCION, "player_name", GameConfig.sanitize_player_name(nombre))
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el nombre (error %d)." % err)
+
+
 ## Registra una partida terminada. Devuelve `true` si ha sido récord.
 static func record_game(score: int) -> bool:
 	var cfg: ConfigFile = _datos()

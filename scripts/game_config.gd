@@ -101,6 +101,16 @@ const DIFFICULTY_GAP_MULT: Array[float] = [1.18, 1.0, 0.88]
 ## desde que la tubería entra en pantalla: 2,5 s en fácil, 1,9 s en difícil.
 const DIFFICULTY_SPEED_MULT: Array[float] = [0.85, 1.0, 1.15]
 
+# --- Nombre de jugador (T-079) ------------------------------------------
+## Cuántos caracteres caben. Corto a propósito: el nombre va en el texto de
+## compartir y en el menú, a 288 px de ancho, y un nombre largo desborda las
+## dos cosas.
+const PLAYER_NAME_MAX_LEN: int = 12
+
+## El que se usa cuando no hay nombre. No se pide nunca: jugar sin poner
+## nombre tiene que ser posible, y este es el nombre de quien no lo pone.
+const PLAYER_NAME_DEFAULT: String = "Flapo"
+
 # --- Confianza (T-074) --------------------------------------------------
 ## Partidas jugadas por cada escalón de confianza. Se cuentan PARTIDAS, no
 ## puntos: mejora quien insiste, no quien ya juega bien. Es lo que hace la
@@ -184,6 +194,35 @@ static func pipe_spawn_interval_for(score: int, modo: Difficulty = Difficulty.NO
 ## no da tiempo a corregir. Ver docs/GDD.md.
 static func flaps_between_pipes(score: int, modo: Difficulty = Difficulty.NORMAL) -> float:
 	return pipe_spawn_interval_for(score, modo) / FLAP_CYCLE
+
+
+## Deja un nombre en condiciones (T-079).
+##
+## Se quita todo lo que rompa el texto de compartir o la línea del menú:
+## saltos de línea, tabuladores y controles. Los espacios de los extremos se
+## recortan y los de dentro se colapsan, porque "a         b" desborda igual
+## que un nombre largo. Vacío devuelve vacío, y quien llame decide: no es
+## trabajo de esta función inventar un nombre por defecto.
+static func sanitize_player_name(texto: String) -> String:
+	var limpio: String = ""
+	for c in texto:
+		# Todo lo que no se ve pero ocupa: \n, \t, \r y demás controles.
+		if c.unicode_at(0) < 32 or c.unicode_at(0) == 127:
+			limpio += " "
+		else:
+			limpio += c
+	while limpio.contains("  "):
+		limpio = limpio.replace("  ", " ")
+	limpio = limpio.strip_edges()
+	if limpio.length() > PLAYER_NAME_MAX_LEN:
+		limpio = limpio.substr(0, PLAYER_NAME_MAX_LEN).strip_edges()
+	return limpio
+
+
+## El nombre a enseñar: el del jugador, o el de siempre si no puso ninguno.
+static func display_player_name(texto: String) -> String:
+	var limpio: String = sanitize_player_name(texto)
+	return limpio if limpio != "" else PLAYER_NAME_DEFAULT
 
 
 ## Nombre del modo para la interfaz. Vive aquí y no en el menú porque es
