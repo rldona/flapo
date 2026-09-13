@@ -75,6 +75,9 @@ const _TRANSITIONS: Dictionary = {
 ## El compañero silencioso (T-058). No colisiona, no puntúa, no decide nada.
 @export var buddy: Buddy
 
+## La captura del mejor salto (T-077). Solo mira; no toca el juego.
+@export var snapshot: Snapshot
+
 ## Las ráfagas de viento (T-064).
 @export var wind: Wind
 
@@ -377,6 +380,8 @@ func _aplicar_escenario() -> void:
 		sky.color = GameConfig.scenery_sky(variante)
 	if background != null:
 		background.set_variant(variante)
+	if snapshot != null:
+		snapshot.set_sky(GameConfig.scenery_sky(variante))
 
 
 ## Traslada la confianza guardada a Flapo (T-074).
@@ -472,6 +477,7 @@ func _connect_children() -> void:
 		"Ghost": ghost,
 		"ReplayRecorder": replay_recorder,
 		"Buddy": buddy,
+		"Snapshot": snapshot,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
@@ -846,6 +852,10 @@ func _on_bird_died(cause: Bird.DeathCause, sin_aliento: bool) -> void:
 	# grabado cuando apareció el bug (T-261).
 	if replay_recorder != null:
 		replay_recorder.terminar(_score)
+	# Solo al batir el récord (T-077). En un Game Over cualquiera no se pide
+	# siquiera: componer una imagen que nadie va a compartir es trabajo tirado.
+	if snapshot != null and _is_new_high_score:
+		snapshot.capturar()
 	change_state(GameState.State.GAME_OVER)
 
 

@@ -344,6 +344,27 @@ const SCENERY_TINT: Array[Color] = [
 ## que haya una variante más, esto sigue diciendo la verdad.
 const SCENERY_LLUEVE: Array[bool] = [false, false, false, true]
 
+## --- Captura del mejor salto (T-077) ---
+
+## Cuántos segundos de vuelo entran en la captura.
+const SNAPSHOT_SECONDS: float = 2.0
+
+## Cuántas siluetas de Flapo se dibujan en esos segundos. Seis: suficientes
+## para que se lea el arco del vuelo, pocas para que no sea una mancha.
+const SNAPSHOT_SAMPLES: int = 6
+
+## A cuánto se amplía la imagen final. x3 sobre 288×512 da 864×1536, que es
+## lo que una red social necesita para no reescalarla y emborronarla.
+const SNAPSHOT_SCALE: int = 3
+
+## Transparencia de la silueta más antigua. La más reciente va opaca; las de
+## en medio interpolan. Es lo que convierte seis copias en un movimiento.
+const SNAPSHOT_FADE_MIN: float = 0.22
+
+## Color de las tuberías en la captura. La silueta, no el dibujo: la captura
+## cuenta un vuelo, no enseña arte.
+const SNAPSHOT_PIPE_COLOR: Color = Color("#3A5468")
+
 ## --- Modo espejo (T-076) ---
 
 ## Récord a partir del cual se ofrece el modo espejo.
