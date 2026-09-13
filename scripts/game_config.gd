@@ -223,6 +223,16 @@ const CONFIDENCE_MAX_LEVEL: int = 5
 ## una partida, pero la barra es visiblemente más larga a las 50.
 const CONFIDENCE_BREATH_BONUS: float = 8.0
 
+# --- Descubrir el planeo (T-200) ----------------------------------------
+## En cuántas primeras partidas puede salir el aviso de planeo. Pocas: el
+## planeo es la mecánica que ningún clon tiene y hay que enseñarla, pero un
+## cartel que sigue saliendo a la décima partida es un cartel que molesta.
+const GLIDE_HINT_MAX_GAMES: int = 5
+
+## Cuántos huecos se cruzan sin planear antes de sugerirlo dentro de la
+## partida. Tres: uno es casualidad, tres es que no se ha descubierto.
+const GLIDE_HINT_AFTER_GAPS: int = 3
+
 # --- Bocanada (T-202) ---------------------------------------------------
 ## Color del brillo que marca la franja que recupera aliento. El mismo crema
 ## de la tripa de Flapo (docs/art-guide.md), muy transparente: tiene que
@@ -360,6 +370,29 @@ static func moving_pipe_chance(score: int) -> float:
 	var recorrido: int = maxi(DIFFICULTY_CAP - MOVING_PIPE_MIN_SCORE, 1)
 	var t: float = clampf(float(score - MOVING_PIPE_MIN_SCORE) / float(recorrido), 0.0, 1.0)
 	return lerpf(MOVING_PIPE_CHANCE_MIN, MOVING_PIPE_CHANCE_MAX, t)
+
+
+## Si toca enseñar el pictograma de planeo en READY (T-200).
+##
+## Función pura de lo guardado: en cuanto Flapo ha planeado una vez, no
+## vuelve a salir nunca. Un guardado ausente o corrupto devuelve 0 partidas y
+## `false` en `ha_planeado`, así que cuenta como primera vez — que es lo que
+## queremos: ante la duda, se enseña.
+static func show_glide_pictogram(ha_planeado: bool, partidas: int) -> bool:
+	if ha_planeado:
+		return false
+	return partidas < GLIDE_HINT_MAX_GAMES
+
+
+## Si toca sugerir el planeo en mitad de la partida (T-200).
+##
+## Además de las condiciones del pictograma, hace falta llevar unos cuantos
+## huecos sin haber planeado: el aviso es para quien ya está jugando y no ha
+## dado con ello, no para quien acaba de empezar.
+static func show_glide_hint(ha_planeado: bool, partidas: int, huecos: int) -> bool:
+	if not show_glide_pictogram(ha_planeado, partidas):
+		return false
+	return huecos >= GLIDE_HINT_AFTER_GAPS
 
 
 ## Media altura de la franja que recupera aliento, px (T-202).

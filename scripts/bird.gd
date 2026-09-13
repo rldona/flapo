@@ -14,6 +14,11 @@ extends CharacterBody2D
 ## momento del golpe y nadie más puede reconstruirlo después.
 signal died(cause: DeathCause, sin_aliento: bool)
 
+## Flapo ha empezado a planear (T-200). Es lo que apaga el aviso de
+## descubrimiento; se emite en cada planeo y quien decide qué significa la
+## primera vez es Main.
+signal glided
+
 ## Flapo ha cogido aire al cruzar por la franja central (T-202). Va aparte
 ## de `breath_changed` porque son cosas distintas: una es el número, esta es
 ## el momento — y el momento es lo que se puede celebrar.
@@ -341,6 +346,8 @@ func _actualizar_planeo(delta: float) -> void:
 	var quiere: bool = _held >= glide_hold_time
 	var antes: bool = _gliding
 	_gliding = quiere and _breath > 0.0
+	if _gliding and not antes:
+		glided.emit()
 	if _gliding:
 		_gastar_aliento(GameConfig.BREATH_DRAIN_GLIDE * delta)
 		# Planear descansa: es la salida deliberada a la fatiga, y lo que

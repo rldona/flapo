@@ -59,6 +59,9 @@ const _TRANSITIONS: Dictionary = {
 ## La pantalla de inicio (T-078).
 @export var menu_panel: MenuPanel
 
+## El aviso que enseña a planear (T-200).
+@export var glide_hint: GlideHint
+
 ## Las ráfagas de viento (T-064).
 @export var wind: Wind
 
@@ -92,6 +95,11 @@ const _TRANSITIONS: Dictionary = {
 var _state: GameState.State = GameState.State.MENU
 var _score: int = 0
 var _high_score: int = 0
+## Si el jugador ya sabe planear (T-200). Del guardado, no se calcula aquí.
+var _has_glided: bool = false
+## Huecos cruzados en esta partida sin haber planeado nunca (T-200).
+var _huecos_sin_planear: int = 0
+
 ## Escalón de confianza (T-074). Se lee del guardado, no se calcula aquí.
 var _confidence: int = 0
 ## Nombre del jugador (T-079). Vacío significa "no ha puesto ninguno".
@@ -113,6 +121,7 @@ func _ready() -> void:
 	_rng_frases.randomize()
 	_high_score = SaveManager.get_high_score()
 	_confidence = SaveManager.get_confidence()
+	_has_glided = SaveManager.get_has_glided()
 	_difficulty = SaveManager.get_difficulty()
 	_player_name = SaveManager.get_player_name()
 	if log_transitions:
@@ -311,11 +320,13 @@ func change_state(to: GameState.State) -> void:
 		_is_new_high_score = false
 		effects.clear()
 		_aplicar_confianza()
+		_huecos_sin_planear = 0
 		bird.gravity_mult = 1.0
 		bird.size_mult = 1.0
 		bird.hitbox_mult = 1.0
 		_apply_difficulty()
 		score_changed.emit(_score)
+	_actualizar_aviso_planeo()
 	state_changed.emit(to)
 
 
@@ -364,6 +375,7 @@ func _connect_children() -> void:
 	bird.died.connect(_on_bird_died)
 	bird.soft_hit.connect(_on_soft_hit)
 	bird.breath_recovered.connect(_on_breath_recovered)
+	bird.glided.connect(_on_glided)
 	if wind != null:
 		wind.warning_started.connect(_on_wind_warning)
 		wind.gust_started.connect(_on_wind_gust)
@@ -429,6 +441,9 @@ func _on_share_pressed(texto: String) -> void:
 
 func _on_scored() -> void:
 	_score += 1
+	if not _has_glided:
+		_huecos_sin_planear += 1
+		_actualizar_aviso_planeo()
 	if wind != null:
 		wind.enabled = _score >= GameConfig.WIND_MIN_SCORE
 	if audio != null:
@@ -456,6 +471,34 @@ func _on_wind_ended() -> void:
 	if hud != null:
 		hud.set_wind("", true)
 	_apply_difficulty()
+
+
+## Flapo ha planeado (T-200). La primera vez es la que importa: se guarda y
+## el aviso no vuelve a salir jamás.
+func _on_glided() -> void:
+	if not _has_glided:
+		_has_glided = true
+		SaveManager.set_has_glided()
+	_actualizar_aviso_planeo()
+
+
+## Decide qué aviso de planeo toca, si es que toca alguno (T-200).
+##
+## Todo el "¿toca?" son funciones puras de GameConfig; aquí solo se junta el
+## estado y se llama. Así la regla se puede probar sin montar el juego.
+func _actualizar_aviso_planeo() -> void:
+	if glide_hint == null:
+		return
+	var partidas: int = SaveManager.get_games_played()
+	if _state == GameState.State.READY:
+		var pict: bool = GameConfig.show_glide_pictogram(_has_glided, partidas)
+		glide_hint.mostrar("pictograma" if pict else "")
+		return
+	if _state == GameState.State.PLAYING:
+		var aviso: bool = GameConfig.show_glide_hint(_has_glided, partidas, _huecos_sin_planear)
+		glide_hint.mostrar("aviso" if aviso else "")
+		return
+	glide_hint.mostrar("")
 
 
 ## Flapo ha cogido aire (T-202). El sonido va aquí y no en Flapo porque el

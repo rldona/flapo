@@ -224,6 +224,16 @@ días. Por eso la lista de "fuera de alcance en v1" sigue intacta. Mejora
 quien insiste, no quien ya juega bien, y solo mejora el **planeo**: el
 aleteo, que es el control, no cambia nunca. Ver ADR-0021.
 
+### Enseñar el planeo (T-200)
+El planeo es la mecánica que ningún clon tiene, y nadie la descubre solo. En
+`READY`, durante las **5 primeras partidas**, un cartel dice "mantén pulsado
+para planear"; dentro de la partida vuelve a salir si a los **3 huecos** no se
+ha planeado nunca. **En cuanto se plana una vez, desaparece para siempre** y
+queda guardado.
+
+Nunca bloquea ni pausa: aletear con el cartel puesto funciona igual. Un
+tutorial que hay que cerrar es un tutorial que estorba.
+
 ### Jadeo visible (T-201)
 La barra de aliento es UI; el aliento **también se ve en Flapo**. Por debajo
 del **30 %** (`BREATH_LOW_RATIO`): alas temblando (aleteo ×1,6), mejillas

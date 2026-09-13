@@ -106,6 +106,27 @@ static func set_player_name(nombre: String) -> void:
 		push_warning("No se ha podido guardar el nombre (error %d)." % err)
 
 
+## Si el jugador ha planeado alguna vez (T-200).
+##
+## Es lo que apaga el aviso para siempre. Ausente o corrupto devuelve
+## `false`, o sea "todavía no": ante la duda se enseña, que es el error
+## barato — el caro sería que alguien no descubra nunca el planeo.
+static func get_has_glided() -> bool:
+	return _leer_int("has_glided") > 0
+
+
+## Lo marca. Se guarda en cuanto ocurre, no al morir: si el jugador cierra el
+## juego justo después de descubrirlo, no tiene que volver a descubrirlo.
+static func set_has_glided() -> void:
+	if get_has_glided():
+		return
+	var cfg: ConfigFile = _datos()
+	cfg.set_value(SECCION, "has_glided", 1)
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el descubrimiento (error %d)." % err)
+
+
 ## Registra una partida terminada. Devuelve `true` si ha sido récord.
 static func record_game(score: int) -> bool:
 	var cfg: ConfigFile = _datos()
