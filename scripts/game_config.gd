@@ -101,6 +101,27 @@ const DIFFICULTY_GAP_MULT: Array[float] = [1.18, 1.0, 0.88]
 ## desde que la tubería entra en pantalla: 2,5 s en fácil, 1,9 s en difícil.
 const DIFFICULTY_SPEED_MULT: Array[float] = [0.85, 1.0, 1.15]
 
+# --- Tuberías móviles (T-063) -------------------------------------------
+## A partir de qué puntuación puede salir un par oscilante. Coincide con el
+## final de la rampa de entrada del GDD: los primeros quince puntos son para
+## aprender a volar, y meter aquí una tubería que se mueve rompería eso.
+const MOVING_PIPE_MIN_SCORE: int = 15
+
+## Probabilidad de par móvil al llegar al mínimo y en el tope de la curva.
+## Nunca llega a 1: un tramo entero de tuberías móviles deja de ser una
+## variante y pasa a ser otro juego.
+const MOVING_PIPE_CHANCE_MIN: float = 0.15
+const MOVING_PIPE_CHANCE_MAX: float = 0.45
+
+## Amplitud máxima de la oscilación, px (la mitad del recorrido total). Se
+## recorta por tubería si el hueco se saldría de la zona jugable.
+const MOVING_PIPE_AMPLITUDE: float = 22.0
+
+## Segundos que tarda en dar una oscilación completa. 2,4 s con 22 px de
+## amplitud son 58 px/s de punta, un 15 % de lo que da un aleteo (380 px/s):
+## Flapo siempre puede más que la tubería, que es lo que la hace justa.
+const MOVING_PIPE_PERIOD: float = 2.4
+
 # --- Nombre de jugador (T-079) ------------------------------------------
 ## Cuántos caracteres caben. Corto a propósito: el nombre va en el texto de
 ## compartir y en el menú, a 288 px de ancho, y un nombre largo desborda las
@@ -223,6 +244,43 @@ static func sanitize_player_name(texto: String) -> String:
 static func display_player_name(texto: String) -> String:
 	var limpio: String = sanitize_player_name(texto)
 	return limpio if limpio != "" else PLAYER_NAME_DEFAULT
+
+
+## Probabilidad de que un par de tuberías oscile, a esa puntuación (T-063).
+##
+## Función pura de la puntuación, como el resto de la curva (ADR-0018): al
+## reiniciar vuelve sola a 0 sin código de reinicio. Por debajo del mínimo es
+## exactamente 0, no "muy poco": la rampa de entrada tiene que ser limpia.
+static func moving_pipe_chance(score: int) -> float:
+	if score < MOVING_PIPE_MIN_SCORE:
+		return 0.0
+	var recorrido: int = maxi(DIFFICULTY_CAP - MOVING_PIPE_MIN_SCORE, 1)
+	var t: float = clampf(float(score - MOVING_PIPE_MIN_SCORE) / float(recorrido), 0.0, 1.0)
+	return lerpf(MOVING_PIPE_CHANCE_MIN, MOVING_PIPE_CHANCE_MAX, t)
+
+
+## Cuánto puede oscilar un hueco de alto `gap` centrado en `centro` sin que se
+## salga de la zona jugable (T-063).
+##
+## Es la garantía del ticket, y por eso se calcula aquí y no en la tubería:
+## el hueco COMPLETO tiene que caber en pantalla en todo momento, no solo su
+## centro. Si no cabe margen, devuelve 0 y el par sale quieto — nunca un
+## hueco a medias fuera de pantalla.
+static func moving_pipe_amplitude(gap: float, centro: float) -> float:
+	var media_luz: float = gap * 0.5
+	var margen_arriba: float = centro - media_luz
+	var margen_abajo: float = playable_height() - centro - media_luz
+	var margen: float = minf(margen_arriba, margen_abajo)
+	return clampf(minf(MOVING_PIPE_AMPLITUDE, margen), 0.0, MOVING_PIPE_AMPLITUDE)
+
+
+## Velocidad vertical de punta de un par móvil, px/s (T-063).
+##
+## Existe para poder compararla con el impulso de aleteo en un test: si algún
+## día la oscilación se acelerara hasta acercarse a lo que Flapo puede subir,
+## el movimiento pasaría de exigente a inevitable.
+static func moving_pipe_peak_speed(amplitud: float) -> float:
+	return amplitud * TAU / MOVING_PIPE_PERIOD
 
 
 ## Nombre del modo para la interfaz. Vive aquí y no en el menú porque es
