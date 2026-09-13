@@ -27,6 +27,81 @@ un 0,45 % del presupuesto: todo lo demás será dibujado.
 - El reinicio es en sitio y cada sistema se limpia al recibir `READY`
   (ADR-0011); no se reconstruye el árbol.
 
+## Métrica de justicia del bot (T-260)
+
+Línea base del 8 de septiembre de 2026, con `GameConfig` tal y como está hoy.
+200 partidas, semillas 1000-1199:
+
+| Medida | Valor |
+|---|---|
+| Media | **14,77** |
+| Mediana | **14** |
+| Peor / mejor | 1 / 40 |
+
+Muertes por índice de tubería:
+
+```
+    2 | ###################### 6
+    3 | #################################### 10
+    4 | ################################# 9
+    5 | ############### 4
+    6 | ################################# 9
+    7 | ######################### 7
+    8 | ################################# 9
+    9 | #### 1
+   10 | ######################################## 11
+   11 | ############################# 8
+   12 | ############### 4
+   13 | ############################# 8
+   14 | ######################################## 11
+   15 | ################## 5
+   16 | ######################### 7
+   17 | ######################### 7
+   18 | ######################### 7
+   19 | #################################### 10
+   20 | ################################# 9
+   21 | ###################### 6
+   22 | ################################# 9
+   23 | ###################### 6
+   24 | ########### 3
+   25 | ############################# 8
+   26 | ########### 3
+   27 | ####### 2
+   28 | ####### 2
+   29 | ####### 2
+   30 | #### 1
+   31 | ####### 2
+   32 | ############### 4
+   33 | ####### 2
+   34 | #### 1
+   35 | #### 1
+   36 | #### 1
+   37 | ####### 2
+   39 | #### 1
+   40 | #### 1
+   41 | #### 1
+```
+
+**Lectura: no hay un pico, hay una meseta larga.** Ninguna tubería mata
+desproporcionadamente: las barras oscilan entre 1 y 11 muertes sin que ninguna
+destaque, y la cola se adelgaza suave a partir de la 25. Eso es lo que se
+espera de una curva sin escalones — si una tubería tuviera algo que las de al
+lado no tienen, su barra sobresaldría del resto.
+
+Lo único con forma es que **la mortalidad no baja hasta la 24**: el bot muere
+casi igual en la tubería 5 que en la 20. Con la curva de T-045 apretando el
+hueco a la vez que el bot va mejorando, las dos cosas se compensan. No es un
+defecto; es un dato para T-040.
+
+El número no es una nota. **Sirve para compararlo consigo mismo** después de
+tocar una constante, que es exactamente para lo que existe.
+
+Reproducir:
+
+```
+godot --headless --fixed-fps 60 --path . -s tools/bot_flapo.gd -- 200
+```
+
 ## Qué NO cubre esto
 
 Headless no dibuja. Queda fuera y hay que medirlo en un dispositivo real:

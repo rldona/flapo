@@ -34,9 +34,25 @@ Un solo fichero:
 | Importar assets y regenerar el registro de `class_name` | `godot --headless --path . --import` |
 | Ejecutar un script de `SceneTree` | `godot --headless --fixed-fps 60 --path . -s tests/test_x.gd` |
 | Exportar | `godot --headless --path . --export-release "Web" export/Web/index.html` |
+| Métrica de justicia con el bot (T-260, lento) | `godot --headless --fixed-fps 60 --path . -s tools/bot_flapo.gd -- 200` |
 
 En macOS el binario está dentro del `.app` y no en el `PATH`:
 `/Applications/Godot.app/Contents/MacOS/Godot`. Ver `docs/environment.md`.
+
+## El bot de justicia (T-260)
+
+`tools/bot_flapo.gd` pone a jugar a un piloto automático 200 veces con
+semillas fijas y saca media, mediana y el histograma de muertes por índice de
+tubería. **`tests/run.sh` no lo ejecuta**: tarda minutos y lo que devuelve es
+una medida, no un veredicto.
+
+Se usa así: se anota el resultado, se toca `GameConfig`, se vuelve a correr
+con las mismas semillas y se compara. Lo que significa algo no es el número
+sino su movimiento, y sobre todo si aparece o desaparece un pico en el
+histograma. La línea base está en `docs/perf.md`.
+
+Qué NO mide: si el juego es divertido, y si es justo para un humano — el bot
+no tiene tiempo de reacción ni se pone nervioso. Ver ADR-0035.
 
 ## Cómo se escribe una comprobación
 

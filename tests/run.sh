@@ -23,7 +23,7 @@ fallos=0
 # `Main._on_scored()` y el `connect` se quedó colgando; los tests siguieron
 # en verde.
 echo "== Compilando scripts =="
-for gd in "$RAIZ"/scripts/*.gd "$RAIZ"/tests/*.gd; do
+for gd in "$RAIZ"/scripts/*.gd "$RAIZ"/tests/*.gd "$RAIZ"/tools/*.gd; do
   if ! salida="$("$GODOT" --headless --path "$RAIZ" --check-only --script "$gd" 2>&1)"; then
     echo "$salida"
     fallos=$((fallos + 1))
