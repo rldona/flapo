@@ -17,6 +17,15 @@ signal state_changed(to: GameState.State)
 ## (T-029) se cuelga de aquí en vez de preguntar cada frame.
 signal score_changed(score: int)
 
+## Transiciones legales. Tenerlas en una tabla en vez de repartidas en `if`
+## convierte un bug de lógica (reiniciar desde PLAYING, morir dos veces) en
+## un aviso en consola en lugar de en un estado imposible.
+const _TRANSITIONS: Dictionary = {
+	GameState.State.READY: [GameState.State.PLAYING],
+	GameState.State.PLAYING: [GameState.State.GAME_OVER],
+	GameState.State.GAME_OVER: [GameState.State.READY],
+}
+
 ## Flapo. Se asigna arrastrando el nodo en el inspector, no con una ruta de
 ## texto: si algún día se mueve o se renombra, Godot actualiza la referencia.
 @export var bird: Bird
@@ -44,15 +53,6 @@ signal score_changed(score: int)
 
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
-
-## Transiciones legales. Tenerlas en una tabla en vez de repartidas en `if`
-## convierte un bug de lógica (reiniciar desde PLAYING, morir dos veces) en
-## un aviso en consola en lugar de en un estado imposible.
-const _TRANSITIONS: Dictionary = {
-	GameState.State.READY: [GameState.State.PLAYING],
-	GameState.State.PLAYING: [GameState.State.GAME_OVER],
-	GameState.State.GAME_OVER: [GameState.State.READY],
-}
 
 var _state: GameState.State = GameState.State.READY
 var _score: int = 0
@@ -100,9 +100,7 @@ func change_state(to: GameState.State) -> void:
 	if to == _state:
 		return
 	if not _TRANSITIONS[_state].has(to):
-		push_warning(
-			"Transición ilegal: %s -> %s" % [_state_name(_state), _state_name(to)]
-		)
+		push_warning("Transición ilegal: %s -> %s" % [_state_name(_state), _state_name(to)])
 		return
 	_state = to
 	# La puntuación se reinicia al volver a READY, no al morir: el panel de
@@ -114,49 +112,32 @@ func change_state(to: GameState.State) -> void:
 
 
 ## "Call down, signal up": el padre cablea, los hijos no se buscan entre sí.
+##
+## Todas las piezas escuchan `state_changed` por igual, así que el cableado
+## común es un bucle sobre una tabla. Lo que va aparte son las conexiones
+## propias de cada una, abajo.
 func _connect_children() -> void:
-	if bird == null:
-		push_error("Main no tiene asignado el nodo Bird en el inspector.")
-		return
-	state_changed.connect(bird.on_game_state_changed)
+	var piezas: Dictionary = {
+		"Bird": bird,
+		"PipeSpawner": pipe_spawner,
+		"Ground": ground,
+		"GameOverPanel": game_over_panel,
+		"Hud": hud,
+		"Juice": juice,
+		"Background": background,
+		"Fade": fade,
+	}
+	for nombre in piezas:
+		if piezas[nombre] == null:
+			push_error("Main no tiene asignado el nodo %s en el inspector." % nombre)
+			return
+		state_changed.connect(piezas[nombre].on_game_state_changed)
+
 	bird.died.connect(_on_bird_died)
-	if pipe_spawner == null:
-		push_error("Main no tiene asignado el nodo PipeSpawner en el inspector.")
-		return
-	state_changed.connect(pipe_spawner.on_game_state_changed)
 	pipe_spawner.scored.connect(_on_scored)
-	if ground == null:
-		push_error("Main no tiene asignado el nodo Ground en el inspector.")
-		return
-	state_changed.connect(ground.on_game_state_changed)
-	if game_over_panel == null:
-		push_error("Main no tiene asignado el nodo GameOverPanel en el inspector.")
-		return
-	state_changed.connect(game_over_panel.on_game_state_changed)
+	score_changed.connect(hud.set_score)
 	score_changed.connect(game_over_panel.set_score)
 	game_over_panel.restart_pressed.connect(restart)
-	if hud == null:
-		push_error("Main no tiene asignado el nodo Hud en el inspector.")
-		return
-	state_changed.connect(hud.on_game_state_changed)
-	score_changed.connect(hud.set_score)
-	if juice == null:
-		push_error("Main no tiene asignado el nodo Juice en el inspector.")
-		return
-	state_changed.connect(juice.on_game_state_changed)
-	if background == null:
-		push_error("Main no tiene asignado el nodo Background en el inspector.")
-		return
-	state_changed.connect(background.on_game_state_changed)
-	if fade == null:
-		push_error("Main no tiene asignado el nodo Fade en el inspector.")
-		return
-	state_changed.connect(fade.on_game_state_changed)
-
-
-func _on_scored() -> void:
-	_score += 1
-	score_changed.emit(_score)
 
 
 func _on_bird_died() -> void:

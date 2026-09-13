@@ -22,9 +22,9 @@ signal scored
 ## Fijarla hace la partida reproducible, que es lo que usan los tests.
 @export var random_seed: int = 0
 
-@onready var _timer: Timer = $Timer
-
 var _rng := RandomNumberGenerator.new()
+
+@onready var _timer: Timer = $Timer
 
 
 func _ready() -> void:

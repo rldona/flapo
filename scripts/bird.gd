@@ -56,12 +56,12 @@ signal died
 ## Cuánto tarda en alcanzar el ángulo objetivo. Más bajo, más perezoso.
 @export_range(1.0, 30.0) var rotation_speed: float = 9.0
 
-@onready var _sprite: AnimatedSprite2D = $Sprite
-
 var _state: GameState.State = GameState.State.READY
 var _dead: bool = false
 ## Segundos que le quedan al acelerón de la animación.
 var _burst_left: float = 0.0
+
+@onready var _sprite: AnimatedSprite2D = $Sprite
 
 
 func _ready() -> void:
@@ -156,12 +156,8 @@ func _clamp_to_ceiling() -> void:
 func _update_rotation(delta: float) -> void:
 	# La velocidad vertical se mapea a un ángulo: subiendo, morro arriba;
 	# cayendo, picado. Es el truco que hace legible el salto sin animación.
-	var fall_ratio: float = clampf(
-		inverse_lerp(flap_impulse, max_fall_speed, velocity.y), 0.0, 1.0
-	)
-	var target: float = deg_to_rad(
-		lerpf(rotation_up_degrees, rotation_down_degrees, fall_ratio)
-	)
+	var fall_ratio: float = clampf(inverse_lerp(flap_impulse, max_fall_speed, velocity.y), 0.0, 1.0)
+	var target: float = deg_to_rad(lerpf(rotation_up_degrees, rotation_down_degrees, fall_ratio))
 	# Interpolación exponencial: independiente de los fps, a diferencia de un
 	# `lerp(rotation, target, 0.2)` a pelo, que va más rápido cuantos más fps.
 	rotation = lerp_angle(rotation, target, 1.0 - exp(-rotation_speed * delta))

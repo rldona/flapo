@@ -30,7 +30,9 @@ func _idle(n: int) -> void:
 
 func _fundido_al_empezar() -> void:
 	var main: Node = await _partida()
-	h.check("en READY no hay velo", is_zero_approx(main.fade.alpha()), "alfa %.3f" % main.fade.alpha())
+	h.check(
+		"en READY no hay velo", is_zero_approx(main.fade.alpha()), "alfa %.3f" % main.fade.alpha()
+	)
 	main.change_state(GameState.State.PLAYING)
 	h.check("al empezar aparece el velo", main.fade.alpha() > 0.0, "alfa %.3f" % main.fade.alpha())
 	var frames: int = 0
@@ -94,9 +96,10 @@ func _ninguna_transicion_bloquea_la_entrada() -> void:
 	h.check(
 		"morir -> poder reintentar en menos de 1 s",
 		main.game_over_panel.is_ready_for_input() and segundos < 1.0,
-		"%.2f s (retardo %.2f + fundido %.2f)" % [
-			segundos, main.game_over_panel.delay, main.game_over_panel.fade_time
-		]
+		(
+			"%.2f s (retardo %.2f + fundido %.2f)"
+			% [segundos, main.game_over_panel.delay, main.game_over_panel.fade_time]
+		)
 	)
 
 	# Y la acción `restart` funciona aunque el panel aún esté entrando: el
@@ -133,7 +136,9 @@ func _las_transiciones_no_sobreviven_al_reinicio() -> void:
 		main.restart()
 		await h.ticks(1)
 		main.bird.gravity = 0.0
-	h.check("tras 5 reinicios a destiempo el panel está oculto", not main.game_over_panel.visible, "")
+	h.check(
+		"tras 5 reinicios a destiempo el panel está oculto", not main.game_over_panel.visible, ""
+	)
 	h.check("y sin velo pegado", is_zero_approx(main.fade.alpha()), "alfa %.3f" % main.fade.alpha())
 	h.check(
 		"y en READY",

@@ -58,18 +58,15 @@ jobs:
           path: export/Web
           retention-days: 7
 
-  # Estilo. Sigue sin bloquear: se endurece en T-083, cuando gdformat pase
-  # limpio sobre todo el código y haya pre-commit.
+  # Estilo. Bloquea desde T-083: el mismo pre-commit que corre en local.
   lint:
-    name: Formato y lint (informativo)
+    name: Formato y lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install gdtoolkit
-      - run: gdformat --check scripts/ tests/ || true # quitar `|| true` en T-083
-      - run: gdlint scripts/ tests/ || true
+      - uses: pre-commit/action@v3.0.1
 
   # Solo en tags. De momento un único preset: los de Android, Linux y
   # Windows son T-090, y una matriz con presets inexistentes fallaría.

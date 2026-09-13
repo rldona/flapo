@@ -10,12 +10,12 @@ extends Node2D
 ## Si está en marcha. Main lo para en GAME_OVER.
 @export var moving: bool = true
 
-@onready var _tiles: Array[Node2D] = [$Tile0, $Tile1]
-@onready var _body: StaticBody2D = $StaticBody2D
-
 ## Desplazamiento acumulado dentro de un tile, px. Siempre en [0, ancho).
 var _offset: float = 0.0
 var _tile_width: float = 0.0
+
+@onready var _tiles: Array[Node2D] = [$Tile0, $Tile1]
+@onready var _body: StaticBody2D = $StaticBody2D
 
 
 func _ready() -> void:

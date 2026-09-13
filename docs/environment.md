@@ -11,6 +11,8 @@ y la imagen `barichello/godot-ci` de `.github/workflows/export.yml`.
 | Pixelorama | | arte (T-050 en adelante) |
 | Audacity | | audio (Fase 5) |
 | gh CLI | | para `scripts/create_issues.py` |
+| gdtoolkit | 4.5.0 | `gdformat` y `gdlint`, en `.venv/` |
+| pre-commit | 4.6.2 | hooks de formato y lint, en `.venv/` |
 | Python | 3.12 | scripts de utilidad y gdtoolkit en CI |
 
 ## Sistema de desarrollo
@@ -29,6 +31,27 @@ teclados Apple los captura el sistema).
 | Project Settings | ⌘⇧O |
 
 También están los botones ▶ / ▶-claqueta / ■ arriba a la derecha.
+
+## Formato y lint
+
+Las herramientas de Python viven en un `.venv/` del proyecto (ignorado por
+git), para no tocar el Python del sistema. Tras clonar:
+
+```bash
+python3 -m venv .venv
+./.venv/bin/pip install gdtoolkit pre-commit
+./.venv/bin/pre-commit install
+```
+
+A partir de ahí cada commit pasa `gdformat` y `gdlint`. Para lanzarlo a mano
+sobre todo el repo:
+
+```bash
+./.venv/bin/pre-commit run --all-files
+```
+
+El mismo `.pre-commit-config.yaml` lo ejecuta el CI, así que local y CI no
+pueden discrepar.
 
 ## Exportación
 

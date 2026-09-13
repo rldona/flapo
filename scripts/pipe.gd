@@ -33,12 +33,12 @@ signal scored
 ## Si está en marcha. `PipeSpawner` lo pone a false en GAME_OVER (T-025).
 @export var moving: bool = true
 
+var _gap_center: float = 256.0
+var _ya_puntuada: bool = false
+
 @onready var _top: StaticBody2D = $Top
 @onready var _bottom: StaticBody2D = $Bottom
 @onready var _score_zone: Area2D = $ScoreZone
-
-var _gap_center: float = 256.0
-var _ya_puntuada: bool = false
 
 
 func _ready() -> void:

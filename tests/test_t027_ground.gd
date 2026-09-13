@@ -38,9 +38,7 @@ func _cubre_la_pantalla_siempre() -> void:
 		var izq: float = minf(t0.position.x, t1.position.x)
 		var der: float = maxf(t0.position.x, t1.position.x) + ancho
 		peor_hueco = maxf(peor_hueco, maxf(izq - 0.0, 0.0) + maxf(ancho - der, 0.0))
-		peor_separacion = maxf(
-			peor_separacion, absf(absf(t0.position.x - t1.position.x) - ancho)
-		)
+		peor_separacion = maxf(peor_separacion, absf(absf(t0.position.x - t1.position.x) - ancho))
 		if t0.position.x > x0_anterior:
 			reciclados += 1
 		x0_anterior = t0.position.x
@@ -94,18 +92,17 @@ func _flapo_muere_en_el_suelo() -> void:
 	h.check(
 		"muere por colisión, no por la red de seguridad",
 		bird.position.y < bird.fall_death_y,
-		"y al morir: %.1f (superficie %.1f, red %.1f)" % [
-			bird.position.y, main.ground.surface_y(), bird.fall_death_y
-		]
+		(
+			"y al morir: %.1f (superficie %.1f, red %.1f)"
+			% [bird.position.y, main.ground.surface_y(), bird.fall_death_y]
+		)
 	)
 	# Y se queda encima del suelo, no lo atraviesa.
 	await h.ticks(120)
 	h.check(
 		"Flapo se queda sobre el suelo",
 		bird.position.y <= main.ground.surface_y() + 1.0,
-		"y tras 2 s muerto: %.1f (superficie %.1f)" % [
-			bird.position.y, main.ground.surface_y()
-		]
+		"y tras 2 s muerto: %.1f (superficie %.1f)" % [bird.position.y, main.ground.surface_y()]
 	)
 	main.free()
 

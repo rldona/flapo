@@ -34,9 +34,10 @@ func _intervalo_desde_gameconfig() -> void:
 	h.check(
 		"el intervalo sale de GameConfig",
 		is_equal_approx(timer.wait_time, GameConfig.pipe_spawn_interval()),
-		"wait_time %.3f s = %.0f px / %.0f px/s" % [
-			timer.wait_time, GameConfig.PIPE_SPACING, GameConfig.SCROLL_SPEED
-		]
+		(
+			"wait_time %.3f s = %.0f px / %.0f px/s"
+			% [timer.wait_time, GameConfig.PIPE_SPACING, GameConfig.SCROLL_SPEED]
+		)
 	)
 	main.free()
 

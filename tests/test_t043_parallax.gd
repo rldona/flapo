@@ -35,7 +35,11 @@ func _dos_capas_a_distinta_velocidad() -> void:
 	await _idle(60)
 	var lejos: float = absf(bg.layer_offset(0))
 	var cerca: float = absf(bg.layer_offset(1))
-	h.check("las dos capas se mueven", lejos > 0.0 and cerca > 0.0, "lejos %.1f, cerca %.1f" % [lejos, cerca])
+	h.check(
+		"las dos capas se mueven",
+		lejos > 0.0 and cerca > 0.0,
+		"lejos %.1f, cerca %.1f" % [lejos, cerca]
+	)
 	h.check(
 		"la capa lejana se mueve menos que la cercana",
 		lejos < cerca,
@@ -88,10 +92,10 @@ func _se_para_en_game_over() -> void:
 			is_equal_approx(main.background.layer_offset(0), antes[0])
 			and is_equal_approx(main.background.layer_offset(1), antes[1])
 		),
-		"lejos %.3f -> %.3f, cerca %.3f -> %.3f" % [
-			antes[0], main.background.layer_offset(0),
-			antes[1], main.background.layer_offset(1)
-		]
+		(
+			"lejos %.3f -> %.3f, cerca %.3f -> %.3f"
+			% [antes[0], main.background.layer_offset(0), antes[1], main.background.layer_offset(1)]
+		)
 	)
 	main.free()
 
@@ -106,8 +110,14 @@ func _se_reinicia_al_volver_a_ready() -> void:
 	# propósito (mundo vivo mientras Flapo espera, igual que el suelo).
 	h.check(
 		"al reiniciar el fondo vuelve al origen",
-		is_zero_approx(main.background.layer_offset(0)) and is_zero_approx(main.background.layer_offset(1)),
-		"lejos %.3f, cerca %.3f" % [main.background.layer_offset(0), main.background.layer_offset(1)]
+		(
+			is_zero_approx(main.background.layer_offset(0))
+			and is_zero_approx(main.background.layer_offset(1))
+		),
+		(
+			"lejos %.3f, cerca %.3f"
+			% [main.background.layer_offset(0), main.background.layer_offset(1)]
+		)
 	)
 	await _idle(30)
 	h.check(

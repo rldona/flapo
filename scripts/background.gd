@@ -16,9 +16,9 @@ extends Node2D
 ## Si está en marcha. Main lo para en GAME_OVER.
 @export var moving: bool = true
 
-@onready var _layers: Array[Parallax2D] = [$Far, $Near]
-
 var _offset: float = 0.0
+
+@onready var _layers: Array[Parallax2D] = [$Far, $Near]
 
 
 func _process(delta: float) -> void:

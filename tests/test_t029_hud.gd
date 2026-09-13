@@ -65,9 +65,7 @@ func _sigue_la_puntuacion() -> void:
 	main.restart()
 	await h.ticks(1)
 	h.check(
-		"al reiniciar el marcador vuelve a 0",
-		etiqueta.text == "0",
-		"texto '%s'" % etiqueta.text
+		"al reiniciar el marcador vuelve a 0", etiqueta.text == "0", "texto '%s'" % etiqueta.text
 	)
 	main.free()
 
@@ -85,8 +83,6 @@ func _nunca_coincide_con_el_panel() -> void:
 			main.restart()
 			main.change_state(GameState.State.PLAYING)
 	h.check(
-		"HUD y panel nunca se ven a la vez",
-		solapan == 0,
-		"frames solapados: %d de 600" % solapan
+		"HUD y panel nunca se ven a la vez", solapan == 0, "frames solapados: %d de 600" % solapan
 	)
 	main.free()

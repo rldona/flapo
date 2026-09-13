@@ -39,8 +39,12 @@ func _intensidades_exportadas() -> void:
 		if prop.usage & PROPERTY_USAGE_SCRIPT_VARIABLE and prop.usage & PROPERTY_USAGE_EDITOR:
 			exportadas.append(prop.name)
 	for nombre in [
-		"flash_alpha", "flash_time", "shake_strength", "shake_time",
-		"shake_frequency", "hit_stop_time"
+		"flash_alpha",
+		"flash_time",
+		"shake_strength",
+		"shake_time",
+		"shake_frequency",
+		"hit_stop_time"
 	]:
 		h.check("`%s` es @export en Juice" % nombre, exportadas.has(nombre), "")
 	main.free()
@@ -71,7 +75,11 @@ func _al_morir_hay_flash_sacudida_y_rebote() -> void:
 	h.check("al morir hay flash blanco", flash_max > 0.1, "alfa máximo: %.2f" % flash_max)
 	h.check("al morir la cámara se sacude", shake_max > 1.0, "offset máximo: %.2f px" % shake_max)
 	h.check("al morir Flapo rebota hacia arriba", subio, "")
-	h.check("y el flash se apaga solo", is_zero_approx(flash.color.a), "alfa final: %.3f" % flash.color.a)
+	h.check(
+		"y el flash se apaga solo",
+		is_zero_approx(flash.color.a),
+		"alfa final: %.3f" % flash.color.a
+	)
 	h.check(
 		"y la cámara vuelve al centro",
 		camara.offset.is_zero_approx(),
@@ -119,9 +127,10 @@ func _liberar_a_media_congelacion_no_deja_el_juego_parado() -> void:
 	h.check(
 		"liberar a media congelación devuelve el reloj",
 		is_equal_approx(Engine.time_scale, 1.0),
-		"estaba congelado al liberar: %s, time_scale ahora %.3f" % [
-			congelado_al_liberar, Engine.time_scale
-		]
+		(
+			"estaba congelado al liberar: %s, time_scale ahora %.3f"
+			% [congelado_al_liberar, Engine.time_scale]
+		)
 	)
 
 

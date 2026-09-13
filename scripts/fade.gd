@@ -15,9 +15,9 @@ extends CanvasLayer
 ## Opacidad de partida del velo.
 @export_range(0.0, 1.0) var start_alpha: float = 0.6
 
-@onready var _rect: ColorRect = $Veil
-
 var _left: float = 0.0
+
+@onready var _rect: ColorRect = $Veil
 
 
 func _ready() -> void:

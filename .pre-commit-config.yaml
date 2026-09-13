@@ -1,0 +1,25 @@
+# Formato y lint de GDScript antes de cada commit (T-083).
+#
+# Instalación (una vez por clon):
+#   python3 -m venv .venv && ./.venv/bin/pip install gdtoolkit pre-commit
+#   ./.venv/bin/pre-commit install
+#
+# Ejecutar sobre todo el repo:
+#   ./.venv/bin/pre-commit run --all-files
+repos:
+  - repo: https://github.com/Scony/godot-gdscript-toolkit
+    rev: 4.5.0
+    hooks:
+      - id: gdlint
+      - id: gdformat
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        # Los .tscn y .import los escribe Godot: no se tocan.
+        exclude: '\.(tscn|tres|import|godot)$'
+      - id: end-of-file-fixer
+        exclude: '\.(tscn|tres|import|godot)$'
+      - id: check-yaml
+      - id: check-merge-conflict

@@ -18,13 +18,13 @@ signal restart_pressed
 ## Cuánto tarda en aparecer una vez sale, s.
 @export var fade_time: float = 0.2
 
-@onready var _root: Control = $Root
-@onready var _score_label: Label = $Root/Box/Score
-@onready var _button: Button = $Root/Box/Button
-
 ## Segundos que faltan para que salga. Negativo = no hay nada pendiente.
 var _delay_left: float = -1.0
 var _fade_left: float = 0.0
+
+@onready var _root: Control = $Root
+@onready var _score_label: Label = $Root/Box/Score
+@onready var _button: Button = $Root/Box/Button
 
 
 func _ready() -> void:

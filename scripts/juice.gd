@@ -122,9 +122,7 @@ func _update_shake(delta: float) -> void:
 	# La intensidad decae con lo que queda: empieza fuerte y se calma sola.
 	var intensidad: float = shake_strength * (_shake_left / shake_time)
 	var fase: float = _shake_left * shake_frequency
-	camera.offset = Vector2(
-		sin(fase) * intensidad, cos(fase * 1.37) * intensidad * 0.6
-	)
+	camera.offset = Vector2(sin(fase) * intensidad, cos(fase * 1.37) * intensidad * 0.6)
 
 
 func _update_flash(delta: float) -> void:

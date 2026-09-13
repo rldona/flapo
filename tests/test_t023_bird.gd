@@ -68,9 +68,7 @@ func _muere_al_caer() -> void:
 		main.get_state() == GameState.State.GAME_OVER,
 		"estado final: %s" % GameState.State.keys()[main.get_state()]
 	)
-	h.check(
-		"muere una sola vez", _game_over_count == 1, "transiciones: %d" % _game_over_count
-	)
+	h.check("muere una sola vez", _game_over_count == 1, "transiciones: %d" % _game_over_count)
 
 	var v_antes: float = bird.velocity.y
 	h.pulsa(KEY_SPACE)
