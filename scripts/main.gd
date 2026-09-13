@@ -27,6 +27,9 @@ signal score_changed(score: int)
 ## El suelo.
 @export var ground: Ground
 
+## El panel de Game Over.
+@export var game_over_panel: GameOverPanel
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -57,12 +60,22 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _state == GameState.State.READY and event.is_action_pressed("flap"):
 		change_state(GameState.State.PLAYING)
+	elif _state == GameState.State.GAME_OVER and event.is_action_pressed("restart"):
+		restart()
 
 
 ## Estado actual. Solo lectura: cambiarlo pasa por `change_state()`, que es
 ## lo único que garantiza que se emita la señal.
 func get_state() -> GameState.State:
 	return _state
+
+
+## Vuelve a dejarlo todo listo para jugar.
+##
+## No recarga la escena: cada sistema se reinicia al recibir READY. Ver
+## ADR-0011 sobre por qué, y el test de 50 reinicios que lo respalda.
+func restart() -> void:
+	change_state(GameState.State.READY)
 
 
 ## Puntuación de la partida en curso.
@@ -104,6 +117,12 @@ func _connect_children() -> void:
 		push_error("Main no tiene asignado el nodo Ground en el inspector.")
 		return
 	state_changed.connect(ground.on_game_state_changed)
+	if game_over_panel == null:
+		push_error("Main no tiene asignado el nodo GameOverPanel en el inspector.")
+		return
+	state_changed.connect(game_over_panel.on_game_state_changed)
+	score_changed.connect(game_over_panel.set_score)
+	game_over_panel.restart_pressed.connect(restart)
 
 
 func _on_scored() -> void:

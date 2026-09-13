@@ -28,6 +28,11 @@ signal died
 ## que lo lance muy rápido). No debería dispararse nunca en una partida.
 @export var fall_death_y: float = 512.0
 
+@export_group("Colocación")
+## Dónde aparece Flapo al empezar cada partida, px. Se toma de la posición
+## que tenga en la escena, así que se mueve arrastrándolo en el editor.
+@export var start_position: Vector2 = Vector2(72.0, 256.0)
+
 @export_group("Rotación")
 ## Ángulo con el impulso de aleteo a tope (morro arriba).
 @export var rotation_up_degrees: float = -25.0
@@ -38,6 +43,10 @@ signal died
 
 var _state: GameState.State = GameState.State.READY
 var _dead: bool = false
+
+
+func _ready() -> void:
+	start_position = position
 
 
 func _physics_process(delta: float) -> void:
@@ -59,7 +68,11 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_clamp_to_ceiling()
-	_update_rotation(delta)
+	# En READY no se toca la rotación. Si se dejara correr, el ángulo objetivo
+	# con velocidad 0 no es 0° sino ~25° (el 0 cae dentro del rango
+	# impulso..caída máxima), y Flapo iría cabeceando mientras espera.
+	if _state != GameState.State.READY:
+		_update_rotation(delta)
 
 	if _state == GameState.State.PLAYING:
 		_check_death()
@@ -69,9 +82,12 @@ func _physics_process(delta: float) -> void:
 func on_game_state_changed(to: GameState.State) -> void:
 	_state = to
 	if to == GameState.State.READY:
+		# Reinicio completo: si algo de esto se olvidara, Flapo empezaría la
+		# partida nueva muerto, girado o cayendo. Ver ADR-0011.
 		_dead = false
 		velocity = Vector2.ZERO
 		rotation = 0.0
+		position = start_position
 
 
 func _apply_gravity(delta: float) -> void:
