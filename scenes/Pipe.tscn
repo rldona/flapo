@@ -13,7 +13,7 @@ collision_mask = 0
 
 [node name="BodyPlaceholder" type="ColorRect" parent="Top"]
 mouse_filter = 2
-color = Color(0.29, 0.62, 0.29, 1)
+color = Color(0.3137, 0.4118, 0.5098, 1)
 
 [node name="Bottom" type="StaticBody2D" parent="."]
 collision_layer = 4
@@ -23,7 +23,7 @@ collision_mask = 0
 
 [node name="BodyPlaceholder" type="ColorRect" parent="Bottom"]
 mouse_filter = 2
-color = Color(0.29, 0.62, 0.29, 1)
+color = Color(0.3137, 0.4118, 0.5098, 1)
 
 [node name="ScoreZone" type="Area2D" parent="."]
 collision_layer = 8

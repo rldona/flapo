@@ -14,7 +14,7 @@ offset_top = 60.0
 offset_right = 52.0
 offset_bottom = 76.0
 mouse_filter = 2
-color = Color(1, 1, 1, 0.55)
+color = Color(0.7490, 0.8510, 0.9255, 0.85)
 
 [node name="CloudB" type="ColorRect" parent="Far"]
 offset_left = 78.0
@@ -22,7 +22,7 @@ offset_top = 108.0
 offset_right = 130.0
 offset_bottom = 122.0
 mouse_filter = 2
-color = Color(1, 1, 1, 0.4)
+color = Color(0.7490, 0.8510, 0.9255, 0.7)
 
 [node name="Near" type="Parallax2D" parent="."]
 repeat_size = Vector2(96, 0)
@@ -33,7 +33,7 @@ offset_top = 330.0
 offset_right = 36.0
 offset_bottom = 448.0
 mouse_filter = 2
-color = Color(0.36, 0.45, 0.55, 1)
+color = Color(0.4863, 0.6039, 0.7098, 1)
 
 [node name="BuildingB" type="ColorRect" parent="Near"]
 offset_left = 44.0
@@ -41,4 +41,4 @@ offset_top = 366.0
 offset_right = 88.0
 offset_bottom = 448.0
 mouse_filter = 2
-color = Color(0.3, 0.38, 0.48, 1)
+color = Color(0.3137, 0.4118, 0.5098, 1)
