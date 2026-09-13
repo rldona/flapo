@@ -1,0 +1,63 @@
+name: Export
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+env:
+  GODOT_VERSION: 4.4.1   # ajustar a la versión de docs/environment.md
+  PROJECT_NAME: flapo
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install gdtoolkit
+      - run: gdformat --check scripts/ scenes/ || true   # quitar `|| true` en T-083
+      - run: gdlint scripts/ || true
+
+  export:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: checks
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.4.1   # misma versión que GODOT_VERSION
+    strategy:
+      matrix:
+        preset: [Web, Android, Linux, Windows]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import assets
+        run: godot --headless --import || true
+      - name: Export ${{ matrix.preset }}
+        run: |
+          mkdir -p export/${{ matrix.preset }}
+          case "${{ matrix.preset }}" in
+            Web)     out=export/Web/index.html ;;
+            Android) out=export/Android/${PROJECT_NAME}.apk ;;
+            Linux)   out=export/Linux/${PROJECT_NAME}.x86_64 ;;
+            Windows) out=export/Windows/${PROJECT_NAME}.exe ;;
+          esac
+          godot --headless --export-release "${{ matrix.preset }}" "$out"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}-${{ matrix.preset }}
+          path: export/${{ matrix.preset }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: export
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - run: cd artifacts && for d in */; do zip -r "${d%/}.zip" "$d"; done
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.zip
+          generate_release_notes: true

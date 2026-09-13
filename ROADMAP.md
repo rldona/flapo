@@ -1,0 +1,209 @@
+# Roadmap — Flapo
+
+Flapo es un juego de un solo botón inspirado en Flappy Bird; el pájaro protagonista también se llama Flapo. Primer proyecto de aprendizaje de desarrollo de videojuegos, hecho de principio a fin: diseño, arte, código, audio, pruebas, exportación y publicación. El objetivo no es el juego, es recorrer el pipeline completo y documentarlo.
+
+- Motor: Godot 4.x (GDScript)
+- Plataformas objetivo: Web (itch.io) y Android. PC (Windows/Linux/macOS) como extra.
+- Resolución base: 288×512 (vertical), pixel art, escalado entero.
+- Licencia: MIT para el código; el personaje Flapo con todos los derechos reservados (mascota de Plazoleta); resto de assets propios bajo CC BY 4.0, assets de terceros con su licencia original.
+
+Estado: 🔲 pendiente · 🔄 en curso · ✅ hecho
+
+---
+
+## Fase 0 — Preparación (1-2 días)
+
+Objetivo: entorno listo y repo con estructura profesional desde el día uno.
+
+- 🔲 Instalar Godot 4.x (versión estable) y verificar que arranca.
+- 🔲 Instalar Pixelorama (arte), Audacity (audio), Tiled/LDtk no hace falta para este juego.
+- 🔲 Crear el repo público con esta estructura:
+
+```
+flapo/
+├─ project.godot
+├─ assets/
+│  ├─ sprites/      # PNG fuente y hojas de sprites
+│  ├─ audio/        # WAV/OGG
+│  └─ fonts/
+├─ scenes/          # .tscn
+├─ scripts/         # .gd
+├─ docs/            # GDD, decisiones, retrospectiva
+│  ├─ GDD.md
+│  ├─ decisions/    # ADR-0001-motor.md, ...
+│  └─ retro.md
+├─ .github/workflows/export.yml
+├─ .gitignore       # plantilla Godot 4
+├─ README.md
+├─ ROADMAP.md
+└─ LICENSE
+```
+
+- 🔲 `.gitignore` de Godot 4 (`.godot/`, `export/`, `*.import` NO se ignora).
+- 🔲 README con: qué es, captura, cómo ejecutar, cómo contribuir, licencias.
+- 🔲 ADR-0001: elección de motor y lenguaje (por qué Godot/GDScript).
+
+Entregable: repo con proyecto vacío que abre en Godot y `README.md` legible.
+
+---
+
+## Fase 1 — Diseño (1 día)
+
+Objetivo: GDD de una página. Si no cabe en una página, el alcance es demasiado grande.
+
+- 🔲 `docs/GDD.md` con:
+  - Pitch en una frase.
+  - Bucle central: tocar → aletear → cruzar huecos → morir → reintentar.
+  - Reglas: gravedad, fuerza de salto, velocidad de scroll, separación y hueco de tuberías, condición de muerte, puntuación.
+  - Estados del juego: `Ready → Playing → GameOver`.
+  - Controles: toque/click/espacio.
+  - Feedback: sonidos (aleteo, punto, golpe), parpadeo al morir, sacudida de cámara.
+  - Lo que NO está en el alcance v1 (skins, ranking online, power-ups).
+- 🔲 Definir estilo visual: paleta de 16 colores (Lospec), tamaño del pájaro 16×12 px, tubería 26 px de ancho.
+
+Entregable: GDD cerrado y paleta elegida.
+
+---
+
+## Fase 2 — Prototipo jugable con placeholders (2-3 días)
+
+Objetivo: el bucle completo funciona con rectángulos de colores. Nada de arte todavía.
+
+- 🔲 Escena `Main` con estados `Ready / Playing / GameOver` (máquina de estados simple).
+- 🔲 `Bird` (`CharacterBody2D`): gravedad, impulso al pulsar, rotación según velocidad, límite superior.
+- 🔲 `Pipe` (`Area2D`): par de tuberías con hueco aleatorio; se mueve a la izquierda y se libera al salir de pantalla.
+- 🔲 `PipeSpawner`: `Timer` que instancia tuberías a intervalo fijo.
+- 🔲 Zona de puntuación entre las tuberías → +1 al atravesar.
+- 🔲 Suelo con scroll infinito y colisión.
+- 🔲 Muerte por contacto con tubería o suelo; pantalla de Game Over con reinicio.
+- 🔲 HUD: puntuación en pantalla.
+- 🔲 Input unificado en `InputMap` (acción `flap`: click, toque, espacio).
+
+Definición de hecho: se puede jugar 5 minutos sin bugs y la partida se reinicia limpiamente.
+
+---
+
+## Fase 3 — Game feel (1-2 días)
+
+Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
+
+- 🔲 Ajustar constantes hasta que el salto sea legible (documentar valores finales en el GDD).
+- 🔲 Animación de aleteo (3 frames) con `AnimatedSprite2D`.
+- 🔲 Flash blanco + sacudida de cámara al morir.
+- 🔲 Pequeña pausa (hit-stop) de 50-100 ms al morir.
+- 🔲 Parallax de fondo (2 capas: nubes lentas, ciudad media).
+- 🔲 Transiciones: fundido entre `Ready` y `Playing`, retardo antes de mostrar Game Over.
+
+Entregable: build jugable con vídeo/GIF en `docs/`.
+
+---
+
+## Fase 4 — Arte (3-5 días)
+
+Objetivo: sustituir todos los placeholders por pixel art propio.
+
+- 🔲 Pájaro: idle + aleteo (3 frames), 16×12.
+- 🔲 Tubería: cuerpo repetible + cabeza.
+- 🔲 Suelo: tile de 32 px repetible.
+- 🔲 Fondo: cielo, nubes, silueta de ciudad.
+- 🔲 UI: números de puntuación, botón de reinicio, logo, medalla (bronce/plata/oro).
+- 🔲 Icono de la app (varios tamaños) y splash.
+- 🔲 Configurar importación de texturas: filtro `Nearest`, sin mipmaps.
+- 🔲 Ajustar `Project Settings → Display → Stretch` a `viewport` + `integer`.
+
+Entregable: juego sin ningún placeholder. Fuentes de arte (`.pxo`) en `assets/sprites/src/`.
+
+---
+
+## Fase 5 — Audio (1 día)
+
+- 🔲 Sonidos: aleteo, punto, golpe, caída, botón. Grabar/generar (jsfxr, Freesound) y limpiar en Audacity.
+- 🔲 Música: un loop corto de fondo (opcional; en Flappy original no hay).
+- 🔲 `AudioStreamPlayer` por sonido, bus de SFX y Música separados.
+- 🔲 Botón de silencio persistente.
+
+---
+
+## Fase 6 — Persistencia y pulido (1-2 días)
+
+- 🔲 Guardar récord en `user://save.cfg` (`ConfigFile`).
+- 🔲 Pantalla Game Over: puntuación, récord, medalla, botón de reintento y de compartir (Android).
+- 🔲 Pausa (Android: al salir de la app se pausa).
+- 🔲 Soporte de pantallas altas: márgenes seguros (notch).
+- 🔲 Revisión de accesibilidad: contraste, tamaño de botones ≥ 48 px en móvil.
+
+---
+
+## Fase 7 — Calidad (1-2 días)
+
+- 🔲 Tests unitarios con GUT o gdUnit4 para: lógica de puntuación, máquina de estados, guardado.
+- 🔲 Checklist manual de QA en `docs/qa-checklist.md` (reinicio, pausa, rotación, pérdida de foco, rendimiento).
+- 🔲 Perfilado: 60 fps estables en un Android de gama baja; sin fugas de nodos (`Performance.get_monitor`).
+- 🔲 Formateo y lint de GDScript (gdtoolkit: `gdformat`, `gdlint`) en pre-commit.
+
+---
+
+## Fase 8 — CI/CD y exportación (1-2 días)
+
+- 🔲 GitHub Actions (`export.yml`): en cada tag `v*`, exportar Web + Android + Linux/Windows con `godot --headless --export-release`.
+- 🔲 Subir artefactos a GitHub Releases automáticamente.
+- 🔲 Export Web: comprobar cabeceras COOP/COEP (itch.io las soporta con la opción SharedArrayBuffer).
+- 🔲 Export Android: keystore de release (guardado como secreto de GitHub, nunca en el repo), firma, versionado (`version/code` y `version/name`).
+- 🔲 Reproducir el build de Android en un dispositivo real.
+
+Entregable: `v1.0.0` con builds descargables desde Releases.
+
+---
+
+## Fase 9 — Publicación (1-2 días)
+
+- 🔲 **itch.io**: página con capturas, GIF, descripción, build web embebido y descargas de escritorio.
+- 🔲 **Google Play** (25 $ una vez): ficha, capturas, política de privacidad, clasificación de contenido, prueba cerrada de 14 días con 12+ testers (requisito actual para cuentas nuevas).
+- 🔲 (Opcional) **Steam**: no para este proyecto; se documenta el proceso para el siguiente.
+- 🔲 Post en el README: enlaces a las tiendas y badge de la release.
+
+---
+
+## Fase 10 — Retrospectiva y cierre
+
+- 🔲 `docs/retro.md`: qué salió bien, qué mal, qué haría distinto, horas reales por fase.
+- 🔲 Post/hilo público contando el proceso (devlog en itch.io o blog).
+- 🔲 Lista de aprendizajes reutilizables para el siguiente proyecto (metroidvania).
+
+---
+
+## Calendario orientativo
+
+| Fase | Días | Acumulado |
+|---|---|---|
+| 0 Preparación | 1-2 | 2 |
+| 1 Diseño | 1 | 3 |
+| 2 Prototipo | 2-3 | 6 |
+| 3 Game feel | 1-2 | 8 |
+| 4 Arte | 3-5 | 13 |
+| 5 Audio | 1 | 14 |
+| 6 Persistencia y pulido | 1-2 | 16 |
+| 7 Calidad | 1-2 | 18 |
+| 8 CI/CD y exportación | 1-2 | 20 |
+| 9 Publicación | 1-2 | 22 |
+| 10 Retrospectiva | 1 | 23 |
+
+A ritmo de tardes y fines de semana: 5-7 semanas.
+
+---
+
+## Convenciones del repo
+
+- Commits: Conventional Commits (`feat:`, `fix:`, `art:`, `docs:`, `ci:`).
+- Ramas: `main` siempre exportable; una rama por fase o feature; PR con descripción y GIF cuando cambie algo visible.
+- Issues: una por tarea de este roadmap, etiquetadas por fase; milestone por fase.
+- Decisiones técnicas relevantes → ADR en `docs/decisions/`.
+- Este archivo se actualiza al cerrar cada fase.
+
+## Recursos
+
+- Docs Godot 4: https://docs.godotengine.org
+- Tutorial oficial "Your first 2D game"
+- GMTK — *Why does Celeste feel so good to play?*
+- Lospec (paletas), Kenney (assets placeholder), jsfxr (SFX)
+- gdtoolkit, GUT / gdUnit4, godot-ci (imágenes Docker para Actions)
