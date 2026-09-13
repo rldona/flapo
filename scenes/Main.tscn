@@ -23,8 +23,9 @@
 [ext_resource type="PackedScene" path="res://scenes/Ghost.tscn" id="20_ghost"]
 [ext_resource type="PackedScene" path="res://scenes/OptionsPanel.tscn" id="21_options"]
 [ext_resource type="Script" path="res://scripts/replay_recorder.gd" id="22_rec"]
+[ext_resource type="PackedScene" path="res://scenes/Buddy.tscn" id="23_buddy"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost", "options_panel", "replay_recorder", "sky")]
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background", "fade", "pause_panel", "audio", "effects", "fruit_spawner", "menu_panel", "stats_panel", "layout", "wind", "glide_hint", "ghost", "options_panel", "replay_recorder", "sky", "buddy")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
 pipe_spawner = NodePath("PipeSpawner")
@@ -47,6 +48,7 @@ ghost = NodePath("Ghost")
 options_panel = NodePath("OptionsPanel")
 replay_recorder = NodePath("ReplayRecorder")
 sky = NodePath("Sky")
+buddy = NodePath("Buddy")
 death_lines = ExtResource("14_lines")
 
 [node name="Sky" type="ColorRect" parent="." unique_id=1166350777]
@@ -56,6 +58,9 @@ mouse_filter = 2
 color = Color(0.4863, 0.7020, 0.8431, 1)
 
 [node name="Background" parent="." instance=ExtResource("8_bg")]
+
+[node name="Buddy" parent="." node_paths=PackedStringArray("bird") instance=ExtResource("23_buddy")]
+bird = NodePath("../Bird")
 
 [node name="ReplayRecorder" type="Node" parent="."]
 script = ExtResource("22_rec")

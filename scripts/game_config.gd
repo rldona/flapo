@@ -344,6 +344,42 @@ const SCENERY_TINT: Array[Color] = [
 ## que haya una variante más, esto sigue diciendo la verdad.
 const SCENERY_LLUEVE: Array[bool] = [false, false, false, true]
 
+## --- Compañero silencioso (T-058) ---
+
+## A qué fracción del borde del hueco empieza a considerarse un roce.
+##
+## 0.80 del semihueco: los últimos 20 % antes del tubo. Más generoso y el
+## compañero se asustaría en casi todas las tuberías, que es la forma más
+## rápida de que el jugador deje de mirarlo.
+const GRAZE_RATIO: float = 0.80
+
+## Dónde vuela el compañero respecto a Flapo, px. Detrás y arriba, nunca
+## delante: entre Flapo y el hueco no puede haber nada que mirar.
+const BUDDY_OFFSET: Vector2 = Vector2(-26.0, -20.0)
+
+## Cuánto tarda en alcanzar su sitio, en segundos. El retardo es lo que le da
+## vida: un segundo pájaro pegado a Flapo con un offset fijo se lee como un
+## adorno del sprite, no como otro bicho.
+const BUDDY_LAG: float = 0.22
+
+## Cuánto sube y baja al volar, px, y cada cuánto. Ligero: es un compañero,
+## no un segundo objetivo en pantalla.
+const BUDDY_BOB: float = 3.0
+const BUDDY_BOB_PERIOD: float = 0.9
+
+## Tinte y tamaño. Más pequeño y más apagado que Flapo: si compitiera en
+## contraste, el ojo iría al sitio equivocado.
+const BUDDY_TINT: Color = Color("#9BBBA8")
+const BUDDY_SCALE: float = 0.7
+
+## Cuánto dura cada reacción, en segundos.
+const BUDDY_SCARE_TIME: float = 0.6
+const BUDDY_CLAP_TIME: float = 1.0
+
+## Cuánto se aparta del susto, px, y cuánto aplaude, px de rebote.
+const BUDDY_SCARE_JUMP: float = 14.0
+const BUDDY_CLAP_BOUNCE: float = 7.0
+
 ## --- Tramo especial al superar el récord (T-067) ---
 
 ## Cuántas tuberías dura el tramo. Cuatro: suficiente para que se note que
@@ -378,6 +414,15 @@ const GHOST_TINT: Color = Color("#8FB8D8")
 ## diseño sino un seguro: un fichero de fantasma no puede crecer sin fin ni
 ## por una partida eterna ni por un fichero manipulado a mano.
 const GHOST_MAX_FRAMES: int = 36000
+
+
+## A qué desvío del centro del hueco empieza a contar como roce (T-058).
+##
+## Se mide desde el centro, igual que `breath_band_half`, para que las dos
+## bandas —la del aliento y la del susto— hablen el mismo idioma y no puedan
+## solaparse por accidente.
+static func graze_threshold(gap: float) -> float:
+	return gap * 0.5 * GRAZE_RATIO
 
 
 ## Si a esta tubería del tramo le toca ser blandita (T-067).

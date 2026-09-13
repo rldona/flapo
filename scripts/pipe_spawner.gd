@@ -18,6 +18,9 @@ signal scored
 ## Flapo ha cruzado por el centro del hueco (T-048).
 signal centered
 
+## Flapo ha pasado rozando el borde (T-058). El spawner solo hace de puente.
+signal grazed
+
 ## Escena de tubería a instanciar. Se asigna en el editor.
 @export var pipe_scene: PackedScene
 
@@ -131,6 +134,7 @@ func _crear_tuberia() -> void:
 	pipe.position = Vector2(spawn_x, 0.0)
 	pipe.scored.connect(_on_pipe_scored)
 	pipe.centered.connect(_on_pipe_centered)
+	pipe.grazed.connect(_on_pipe_grazed)
 	add_child(pipe)
 	# Después de add_child: `randomize_gap` toca los nodos internos, que solo
 	# existen una vez ha corrido `_ready()` de la tubería.
@@ -185,6 +189,10 @@ func _on_pipe_scored() -> void:
 
 func _on_pipe_centered() -> void:
 	centered.emit()
+
+
+func _on_pipe_grazed() -> void:
+	grazed.emit()
 
 
 func _liberar_todas() -> void:

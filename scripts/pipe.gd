@@ -17,6 +17,11 @@ signal scored
 ## bien.
 signal centered
 
+## Flapo ha pasado **rozando** el borde del hueco (T-058). Ni muerte ni
+## mérito: un susto. Sale de la misma cuenta que `centered`, mirando el otro
+## extremo del hueco en vez del centro.
+signal grazed
+
 @export_group("Hueco")
 ## Alto del hueco, px. Es la constante que más cambia la dificultad.
 @export var gap: float = GameConfig.PIPE_GAP:
@@ -258,9 +263,12 @@ func _on_score_zone_body_entered(cuerpo: Node2D) -> void:
 	scored.emit()
 	# Solo la mitad central del hueco recupera aliento. Si valiera pasar por
 	# cualquier sitio, recuperar sería automático y el recurso no existiría.
+	var desvio: float = absf(cuerpo.global_position.y - global_position.y - _gap_center)
 	var margen: float = GameConfig.breath_band_half(gap)
-	if absf(cuerpo.global_position.y - global_position.y - _gap_center) <= margen:
+	if desvio <= margen:
 		centered.emit()
+	elif desvio >= GameConfig.graze_threshold(gap):
+		grazed.emit()
 
 
 func _asignar_forma(cuerpo: StaticBody2D) -> void:

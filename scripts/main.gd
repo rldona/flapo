@@ -72,6 +72,9 @@ const _TRANSITIONS: Dictionary = {
 ## El grabador de replays (T-261). Solo escucha el botón; no toca el juego.
 @export var replay_recorder: ReplayRecorder
 
+## El compañero silencioso (T-058). No colisiona, no puntúa, no decide nada.
+@export var buddy: Buddy
+
 ## Las ráfagas de viento (T-064).
 @export var wind: Wind
 
@@ -446,6 +449,7 @@ func _connect_children() -> void:
 		"Wind": wind,
 		"Ghost": ghost,
 		"ReplayRecorder": replay_recorder,
+		"Buddy": buddy,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
@@ -497,6 +501,7 @@ func _connect_children() -> void:
 		options_panel.ghost_toggled.connect(_on_ghost_toggled)
 	pipe_spawner.scored.connect(_on_scored)
 	pipe_spawner.centered.connect(_on_centered)
+	pipe_spawner.grazed.connect(_on_grazed)
 	bird.breath_changed.connect(hud.set_breath)
 	bird.fatigue_changed.connect(hud.set_fatigued)
 	score_changed.connect(hud.set_score)
@@ -581,6 +586,7 @@ func _score_para_dificultad() -> int:
 
 
 func _on_scored() -> void:
+	var antes_de_puntuar: int = _score
 	_score += 1
 	_quiza_tramo_especial()
 	if not _session.has_glided():
@@ -590,8 +596,20 @@ func _on_scored() -> void:
 		wind.enabled = _score >= GameConfig.WIND_MIN_SCORE
 	if audio != null:
 		audio.play_point()
+	_quiza_medalla(antes_de_puntuar)
 	_apply_difficulty()
 	score_changed.emit(_score)
+
+
+## Si esta tubería ha subido de medalla, el compañero lo celebra (T-058).
+##
+## Se compara la medalla de antes con la de ahora en vez de mirar umbrales:
+## así añadir una medalla en `GameConfig` no obliga a tocar esto.
+func _quiza_medalla(antes: int) -> void:
+	if buddy == null:
+		return
+	if GameConfig.medal_for(_score) != GameConfig.medal_for(antes):
+		buddy.aplaudir()
 
 
 ## Empieza el aviso de ráfaga (T-064). Todavía no sopla: esto es el tiempo
@@ -760,6 +778,16 @@ func _on_effects_changed(kind: Effects.Kind, restante: float) -> void:
 	bird.size_mult = effects.size_mult()
 	bird.hitbox_mult = effects.hitbox_mult()
 	_apply_difficulty()
+
+
+## Flapo ha pasado rozando el borde de un hueco (T-058).
+##
+## Al jugador no se le dice nada: se lo dice el compañero, que se aparta de un
+## salto. Es la diferencia entre un juego que te avisa y un mundo que
+## reacciona.
+func _on_grazed() -> void:
+	if buddy != null:
+		buddy.asustarse()
 
 
 ## Flapo ha cruzado por el centro de un hueco: recupera aliento (T-048).
