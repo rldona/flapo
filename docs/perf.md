@@ -29,72 +29,81 @@ un 0,45 % del presupuesto: todo lo demás será dibujado.
 
 ## Métrica de justicia del bot (T-260)
 
-Línea base del 8 de septiembre de 2026, con `GameConfig` tal y como está hoy.
-200 partidas, semillas 1000-1199:
+Línea base del 9 de septiembre de 2026, con `GameConfig` tal y como está hoy —
+ya con térmicas (T-203), rebufo (T-204), tramo especial (T-067) y el nido
+(T-209) dentro del juego. 200 partidas, semillas 1000-1199:
 
 | Medida | Valor |
 |---|---|
-| Media | **14,77** |
-| Mediana | **14** |
-| Peor / mejor | 1 / 40 |
+| Media | **13,35** |
+| Mediana | **12** |
+| Peor / mejor | 1 / 53 |
 
 Muertes por índice de tubería:
 
 ```
-    2 | ###################### 6
-    3 | #################################### 10
-    4 | ################################# 9
-    5 | ############### 4
-    6 | ################################# 9
-    7 | ######################### 7
-    8 | ################################# 9
-    9 | #### 1
-   10 | ######################################## 11
-   11 | ############################# 8
-   12 | ############### 4
-   13 | ############################# 8
-   14 | ######################################## 11
-   15 | ################## 5
-   16 | ######################### 7
-   17 | ######################### 7
-   18 | ######################### 7
-   19 | #################################### 10
-   20 | ################################# 9
-   21 | ###################### 6
-   22 | ################################# 9
-   23 | ###################### 6
-   24 | ########### 3
-   25 | ############################# 8
-   26 | ########### 3
-   27 | ####### 2
-   28 | ####### 2
-   29 | ####### 2
-   30 | #### 1
-   31 | ####### 2
-   32 | ############### 4
-   33 | ####### 2
-   34 | #### 1
-   35 | #### 1
-   36 | #### 1
-   37 | ####### 2
-   39 | #### 1
-   40 | #### 1
-   41 | #### 1
+    2 | ################################ 12
+    3 | ############# 5
+    4 | ######################################## 15
+    5 | ################### 7
+    6 | ################### 7
+    7 | ##################### 8
+    8 | ########################### 10
+    9 | ################### 7
+   10 | ############################# 11
+   11 | ########################### 10
+   12 | ######## 3
+   13 | ##################### 8
+   14 | ##################### 8
+   15 | ######## 3
+   16 | ########### 4
+   17 | ############# 5
+   18 | ######################## 9
+   19 | ##################### 8
+   20 | ############# 5
+   21 | ########################### 10
+   22 | ##################### 8
+   23 | ################ 6
+   24 | ################ 6
+   25 | ### 1
+   26 | ##################### 8
+   27 | ########### 4
+   28 | ##### 2
+   29 | ##### 2
+   31 | ### 1
+   32 | ##### 2
+   34 | ### 1
+   35 | ##### 2
+   38 | ### 1
+   54 | ### 1
 ```
 
-**Lectura: no hay un pico, hay una meseta larga.** Ninguna tubería mata
-desproporcionadamente: las barras oscilan entre 1 y 11 muertes sin que ninguna
-destaque, y la cola se adelgaza suave a partir de la 25. Eso es lo que se
-espera de una curva sin escalones — si una tubería tuviera algo que las de al
-lado no tienen, su barra sobresaldría del resto.
+Muertes por causa:
 
-Lo único con forma es que **la mortalidad no baja hasta la 24**: el bot muere
-casi igual en la tubería 5 que en la 20. Con la curva de T-045 apretando el
-hueco a la vez que el bot va mejorando, las dos cosas se compensan. No es un
-defecto; es un dato para T-040.
+```
+  TUBERIA         200  (100 %)
+WARNING: 41 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 6 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+```
+
+**Lectura 1: no hay pico, hay una meseta.** Ninguna tubería mata
+desproporcionadamente. Es lo que se espera de una curva sin escalones: si una
+tuviera algo que las de al lado no tienen, su barra sobresaldría.
+
+**Lectura 2: el bot muere siempre contra una tubería, nunca contra el suelo.**
+El 100 % es un dato sobre el bot antes que sobre el juego —su política aletea
+en cuanto se ve por debajo del objetivo, así que no toca el suelo jamás— pero
+la columna sirve igual, y sirve **para lo que venga**: el día que un cambio en
+`GameConfig` empiece a producir muertes por suelo, esa cifra dejará de ser 100
+y lo dirá antes de que nadie lo note jugando. Un pico por tubería en el índice
+12 dice "ese hueco está mal colocado"; el mismo pico por suelo diría "a esa
+altura de la curva ya no se llega arriba". Son dos diagnósticos distintos y
+antes se veían iguales.
 
 El número no es una nota. **Sirve para compararlo consigo mismo** después de
-tocar una constante, que es exactamente para lo que existe.
+tocar una constante, que es para lo que existe.
 
 Reproducir:
 

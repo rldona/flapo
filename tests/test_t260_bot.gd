@@ -84,7 +84,7 @@ func _el_bot_juega_de_verdad(tanda: Array) -> void:
 ## Criterio: el reporte se genera.
 func _el_informe_se_genera(tanda: Array) -> void:
 	var texto: String = BotPilot.informe(tanda)
-	for trozo in ["Partidas:", "Media:", "Mediana:", "Muertes por índice"]:
+	for trozo in ["Partidas:", "Media:", "Mediana:", "Muertes por índice", "Muertes por causa"]:
 		h.check("el informe trae '%s'" % trozo, texto.contains(trozo), "")
 	h.check(
 		"y el histograma tiene una fila por índice con muertes",
@@ -92,6 +92,36 @@ func _el_informe_se_genera(tanda: Array) -> void:
 		"%d filas" % texto.count("|")
 	)
 	h.check("un informe sin partidas no revienta", BotPilot.informe([]) == "Sin partidas.", "")
+
+	# La causa de muerte (T-247/T-260): el índice dice dónde se muere, la
+	# causa dice por qué, y son dos diagnósticos distintos.
+	var sin_causa: Array = []
+	for r in tanda:
+		if int(r.get("causa", -1)) < 0:
+			sin_causa.append(r["semilla"])
+	h.check(
+		"todas las partidas registran de qué murió el bot",
+		sin_causa.is_empty(),
+		"sin causa: %s" % str(sin_causa)
+	)
+	h.check(
+		"y el informe la nombra en palabras, no en números",
+		texto.contains("TUBERIA") or texto.contains("SUELO") or texto.contains("VACIO"),
+		"%s" % texto.split("Muertes por causa:")[-1].strip_edges()
+	)
+
+	# Y con causas inventadas, que las reparta bien.
+	var falsas: Array = [
+		{"score": 3, "causa": Bird.DeathCause.TUBERIA},
+		{"score": 4, "causa": Bird.DeathCause.TUBERIA},
+		{"score": 5, "causa": Bird.DeathCause.SUELO},
+	]
+	var reparto: String = BotPilot.informe(falsas)
+	h.check(
+		"el reparto por causa cuenta bien",
+		reparto.contains("TUBERIA           2") and reparto.contains("SUELO             1"),
+		"%s" % reparto.split("Muertes por causa:")[-1].strip_edges()
+	)
 
 
 ## Sin esto la métrica no vale para nada: si la misma tanda da números

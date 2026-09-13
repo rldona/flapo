@@ -110,6 +110,22 @@ de media dentro de la muestra contra 15,07 fuera.
 Ganador: anticipación 0,03 s, apuntar a media subida de aleteo por debajo del
 centro, sin cadencia.
 
+## Ampliación: la causa de muerte
+El informe original solo daba el índice de tubería. T-260 pedía "el mismo
+formato que T-247", y T-247 pide índice **y causa**, así que faltaba una
+columna.
+
+Importa porque son dos diagnósticos distintos que antes se veían iguales: un
+pico de muertes por **tubería** en el índice 12 dice "ese hueco está mal
+colocado"; el mismo pico por **suelo** dice "a esa altura de la curva ya no se
+llega arriba".
+
+Hoy el bot muere contra una tubería el **100 %** de las veces, así que la
+columna no dice nada todavía. Eso es un dato sobre el bot —su política aletea
+en cuanto se ve por debajo del objetivo, y por eso no toca el suelo jamás— y no
+un motivo para quitarla: **el valor está en el día que deje de ser 100**. Una
+métrica que solo se mira cuando ya sospechas algo llega tarde.
+
 ## Consecuencias
 - La línea base vive en `docs/perf.md`. Lo que importa no es el número, es
   cómo se mueve al tocar `GameConfig`.

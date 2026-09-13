@@ -98,6 +98,12 @@ func jugar(tree: SceneTree, main: Node, semilla: int) -> Dictionary:
 	_pulsado = false
 	_soltar_luego = false
 	_desde_aleteo = 999
+	# La causa de muerte se apunta desde la señal de Flapo (T-247/T-260): al
+	# llegar a GAME_OVER la colisión ya no existe y no se puede reconstruir.
+	# Array y no un `int` porque los lambdas de GDScript capturan por VALOR.
+	var causa: Array = [-1]
+	if not main.bird.died.is_connected(_anotar_causa):
+		main.bird.died.connect(_anotar_causa.bind(causa))
 	main.session().set_seed(semilla)
 	main.change_state(GameState.State.READY)
 	# Un frame entre READY y PLAYING, y no es un adorno: READY libera las
@@ -113,12 +119,19 @@ func jugar(tree: SceneTree, main: Node, semilla: int) -> Dictionary:
 		await tree.physics_frame
 		frames += 1
 	_soltar()
+	main.bird.died.disconnect(_anotar_causa.bind(causa))
 	return {
 		"semilla": semilla,
 		"score": main.get_score(),
 		"frames": frames,
 		"agotado": frames >= max_frames,
+		"causa": causa[0],
 	}
+
+
+## Apunta de qué murió Flapo. `bind` mete el Array al final de los argumentos.
+func _anotar_causa(c: int, _sin_aliento: bool, donde: Array) -> void:
+	donde[0] = c
 
 
 ## Decide qué hacer este frame y lo pulsa.
@@ -256,6 +269,33 @@ static func informe(resultados: Array) -> String:
 	texto += "Peor:     %d\nMejor:    %d\n" % [scores[0], scores[-1]]
 	texto += "\nMuertes por índice de tubería:\n"
 	texto += _histograma(scores)
+	texto += "\nMuertes por causa:\n"
+	texto += _por_causa(resultados)
+	return texto
+
+
+## Cuántas veces mata cada cosa.
+##
+## El índice solo dice DÓNDE se muere; la causa dice POR QUÉ, y son dos
+## diagnósticos distintos. Un pico de muertes por tubería en el índice 12 dice
+## "ese hueco está mal colocado"; el mismo pico por suelo dice "a esa altura de
+## la curva ya no se llega arriba". Sin esta tabla los dos se ven iguales.
+static func _por_causa(resultados: Array) -> String:
+	var cuenta: Dictionary = {}
+	var total: int = 0
+	for r in resultados:
+		var c: int = int(r.get("causa", -1))
+		cuenta[c] = int(cuenta.get(c, 0)) + 1
+		total += 1
+	if total == 0:
+		return "  (sin datos)\n"
+	var texto: String = ""
+	for c in cuenta.keys():
+		var n: int = int(cuenta[c])
+		var nombre: String = "sin registrar"
+		if c >= 0 and c < Bird.DeathCause.size():
+			nombre = Bird.DeathCause.keys()[c]
+		texto += "  %-14s %4d  (%.0f %%)\n" % [nombre, n, float(n) * 100.0 / float(total)]
 	return texto
 
 
