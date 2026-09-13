@@ -267,6 +267,16 @@ la vez, 6 s de duración; el escudo va aparte y no caduca.
 Las de castigo pagan en puntos: es lo que las convierte en una apuesta en vez
 de en una trampa. Ver ADR-0019.
 
+## Determinismo (T-240)
+Toda la aleatoriedad de una partida —huecos, variantes de tubería, frutas,
+viento— sale de **un solo generador** con semilla conocida. Con la misma
+semilla, la secuencia de tuberías es idéntica; desde un arranque limpio, la
+partida entera lo es frame a frame.
+
+Lo cosmético (sacudida de cámara, frases al morir) queda **fuera** a
+propósito: si entrara, el aspecto del juego afectaría a su simulación. Y el
+determinismo **no sobrevive a cambiar una constante del GDD**. Ver ADR-0030.
+
 ## Fuera de alcance en v1
 Skins, ranking online, anuncios, compras, modos de juego.
 

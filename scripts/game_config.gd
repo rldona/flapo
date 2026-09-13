@@ -223,6 +223,12 @@ const CONFIDENCE_MAX_LEVEL: int = 5
 ## una partida, pero la barra es visiblemente más larga a las 50.
 const CONFIDENCE_BREATH_BONUS: float = 8.0
 
+# --- Semilla determinista (T-240) ---------------------------------------
+## Semilla que se usa cuando nadie pide una concreta. 0 significa "sortea
+## una": la partida libre sigue siendo distinta cada vez, pero la semilla que
+## le tocó se puede leer y volver a jugar (T-242).
+const SEED_ALEATORIA: int = 0
+
 # --- Descubrir el planeo (T-200) ----------------------------------------
 ## En cuántas primeras partidas puede salir el aviso de planeo. Pocas: el
 ## planeo es la mecánica que ningún clon tiene y hay que enseñarla, pero un

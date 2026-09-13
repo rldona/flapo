@@ -44,6 +44,8 @@ var spin_chance: float = 0.0
 ## blandita (T-066): se puede contar. Se reinicia en READY.
 var _contador: int = 0
 
+## El generador de la partida. Lo inyecta Main (T-240): el spawner NO crea el
+## suyo, porque dos generadores son dos partidas distintas.
 var _rng := RandomNumberGenerator.new()
 
 @onready var _timer: Timer = $Timer
@@ -172,8 +174,16 @@ func _congelar_todas() -> void:
 			hijo.moving = false
 
 
+## Recibe el generador de la partida (T-240).
+##
+## Se comparte, no se copia: si cada sistema tuviera el suyo, la misma
+## semilla daría partidas distintas según el orden en que se consultaran.
+func set_rng(rng: RandomNumberGenerator) -> void:
+	_rng = rng
+
+
 func _reiniciar_rng() -> void:
-	if random_seed == 0:
-		_rng.randomize()
-	else:
+	# `random_seed` sigue existiendo para poder aislar el spawner en un test
+	# suelto. En la partida real vale 0 y manda el generador de Main.
+	if random_seed != 0:
 		_rng.seed = random_seed

@@ -139,6 +139,7 @@ func _crear() -> void:
 	fruit.kind = kind
 	fruit.points = penalty_points if CASTIGOS.has(kind) else 0
 	fruit.scroll_speed = scroll_speed
+	fruit.float_phase = _rng.randf() * TAU
 	var i: int = int(kind) - 1
 	if i >= 0 and i < textures.size():
 		fruit.set_texture(textures[i])
@@ -164,8 +165,11 @@ func _congelar_todas() -> void:
 			hijo.scroll_speed = 0.0
 
 
+## Recibe el generador de la partida (T-240).
+func set_rng(rng: RandomNumberGenerator) -> void:
+	_rng = rng
+
+
 func _reiniciar_rng() -> void:
-	if random_seed == 0:
-		_rng.randomize()
-	else:
+	if random_seed != 0:
 		_rng.seed = random_seed

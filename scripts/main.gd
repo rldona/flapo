@@ -95,6 +95,16 @@ const _TRANSITIONS: Dictionary = {
 var _state: GameState.State = GameState.State.MENU
 var _score: int = 0
 var _high_score: int = 0
+## El generador de TODA la aleatoriedad de la partida (T-240).
+##
+## Uno solo, y lo reparte Main. Huecos, tuberías móviles, giratorias, frutas
+## y viento salen de aquí; con la misma semilla y los mismos inputs la
+## partida es idéntica. Lo que NO sale de aquí, a propósito, es lo cosmético
+## (sacudida de cámara, frases al morir): ver ADR-0030.
+var _rng := RandomNumberGenerator.new()
+## Semilla de la partida en curso. 0 hasta que se siembra.
+var _seed: int = 0
+
 ## Si el jugador ya sabe planear (T-200). Del guardado, no se calcula aquí.
 var _has_glided: bool = false
 ## Huecos cruzados en esta partida sin haber planeado nunca (T-200).
@@ -113,12 +123,14 @@ var _ultima_frase: String = ""
 ## después de la muerte.
 var _death_cause: Bird.DeathCause = Bird.DeathCause.SUELO
 var _death_breathless: bool = false
-var _rng_frases := RandomNumberGenerator.new()
+## Generador aparte para lo cosmético (frases al morir). Fuera del RNG de la
+## partida a propósito: ver ADR-0030.
+var _rng_cosmetico := RandomNumberGenerator.new()
 var _is_new_high_score: bool = false
 
 
 func _ready() -> void:
-	_rng_frases.randomize()
+	_rng_cosmetico.randomize()
 	_high_score = SaveManager.get_high_score()
 	_confidence = SaveManager.get_confidence()
 	_has_glided = SaveManager.get_has_glided()
@@ -211,6 +223,39 @@ func is_new_high_score() -> bool:
 ## Escalón de confianza acumulado (T-074).
 func get_confidence() -> int:
 	return _confidence
+
+
+## La semilla de la partida en curso (T-240). La usan T-242 y T-243.
+func get_seed() -> int:
+	return _seed
+
+
+## Fija la semilla de la SIGUIENTE partida (T-240).
+##
+## No siembra ya: el generador se resiembra al entrar en READY, que es cuando
+## empieza una partida. Si se sembrara aquí, jugar y reiniciar daría partidas
+## distintas y el determinismo no serviría de nada.
+func set_seed(semilla: int) -> void:
+	_seed = semilla
+
+
+## Reparte el generador y lo siembra (T-240).
+##
+## Se llama al entrar en READY. Con semilla 0 se sortea una y se guarda: la
+## partida libre sigue siendo distinta cada vez, pero se puede saber cuál
+## tocó y volver a jugarla.
+func _sembrar() -> void:
+	if _seed == GameConfig.SEED_ALEATORIA:
+		_rng.randomize()
+		_seed = int(_rng.seed)
+	# Solo `seed`: asignarlo ya reinicia el estado del generador. Poner
+	# `state = 0` a mano lo dejaba en un estado degenerado que daba LA MISMA
+	# secuencia con cualquier semilla — y el test de "misma semilla, misma
+	# partida" pasaba trivialmente porque todas las partidas eran iguales.
+	_rng.seed = _seed
+	for pieza in [pipe_spawner, fruit_spawner, wind]:
+		if pieza != null:
+			pieza.set_rng(_rng)
 
 
 ## Modo de dificultad activo (T-078).
@@ -320,6 +365,10 @@ func change_state(to: GameState.State) -> void:
 		_is_new_high_score = false
 		effects.clear()
 		_aplicar_confianza()
+		# Antes que nada: los sistemas tienen que recibir el generador ya
+		# sembrado antes de que su propio `on_game_state_changed` los
+		# reinicie y empiece a pedirle números.
+		_sembrar()
 		_huecos_sin_planear = 0
 		bird.gravity_mult = 1.0
 		bird.size_mult = 1.0
@@ -425,7 +474,7 @@ func _siguiente_frase() -> String:
 	if death_lines == null:
 		return ""
 	var frase: String = death_lines.pick_for(
-		_death_cause, _death_breathless, _rng_frases, _ultima_frase
+		_death_cause, _death_breathless, _rng_cosmetico, _ultima_frase
 	)
 	if frase != "":
 		_ultima_frase = frase
