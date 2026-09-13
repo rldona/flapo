@@ -1,11 +1,13 @@
-# ADR-0023 — Tuberías móviles: física, límites y por qué no hay `constant_linear_velocity`
+# ADR-0023 — Tuberías especiales: móviles y blanditas
 
 Fecha: 2026-09-08 · Estado: aceptada · Extiende [ADR-0008](ADR-0008-tuberias.md) y [ADR-0018](ADR-0018-curva-de-dificultad.md)
 
 ## Contexto
-T-063 pide que, pasada cierta puntuación, algunos pares de tuberías oscilen
-arriba y abajo. Tres preguntas: **qué las mueve**, **cómo se garantiza que no
-sea injusto** y **cómo encaja con la curva de dificultad que ya existe**.
+Dos tickets tocan el mismo sistema y por eso comparten ADR: T-063 hace que
+algunos pares oscilen arriba y abajo, y T-066 añade una tubería que **no
+mata**. Las preguntas: qué las mueve, cómo se garantiza que no sea injusto,
+cómo encaja con la curva que ya existe, y qué pasa con la física cuando por
+primera vez hay contacto sin muerte.
 
 ## Decisión 1 · Se mueven cambiando `position`, sin `constant_linear_velocity`
 Los tubos siguen siendo `StaticBody2D` (ADR-0008). Oscilan escribiendo su
@@ -18,9 +20,10 @@ una tubería es la muerte (`get_slide_collision_count() > 0`, ADR-0008). Un
 cuerpo estático con velocidad constante sirve para arrastrar a quien se apoya
 en él —una plataforma móvil—, y aquí nadie se apoya: se muere.
 
-Si algún día una tubería dejara de matar —la "blandita" de T-066—, esta
-decisión hay que volver a mirarla, porque entonces sí habría contacto sin
-muerte y Flapo podría quedarse rozando una tubería que sube.
+Este párrafo se escribió avisando de que **habría que volver a mirarlo en
+T-066**, y en efecto hubo que hacerlo. La respuesta está más abajo, en
+"T-066 · La física del contacto sin muerte", y no es
+`constant_linear_velocity`.
 
 ## Decisión 2 · La amplitud se recorta por tubería, no es una constante
 `MOVING_PIPE_AMPLITUDE` (22 px) es un **máximo**, no la amplitud real.
@@ -85,3 +88,70 @@ por 10 lo pone en rojo con 576 px/s.
   de T-049.
 - **No cubierto aquí**: si el movimiento *se siente* justo. Eso no lo dice un
   test; lo dice jugar.
+
+---
+
+# T-066 · La tubería blandita
+
+## Decisión 5 · Predecible, no aleatoria
+Una de cada `SOFT_PIPE_INTERVAL` (7) tuberías es blandita, contando desde el
+principio de la partida, y **la primera nunca lo es**: salir a jugar y
+encontrarte la variante rara de entrada no explica nada.
+
+Que sea predecible es la decisión. Al poder contarla, la blandita se
+convierte en una decisión ("me la juego en la séptima") en vez de en un golpe
+de suerte. Aleatoria sería un premio; contable es una herramienta.
+
+`GameConfig.is_soft_pipe(indice)` es pura, como todo lo demás: reiniciar
+reinicia la cuenta sin código de reinicio.
+
+## Decisión 6 · Cuesta aliento y un punto, nunca la partida
+| Coste | Valor |
+|---|---|
+| Aliento | 35 de 100 |
+| Puntos | 1, con suelo en 0 |
+| Enfriamiento | 0,8 s |
+| Rebote | 260 px/s, vertical, **hacia el hueco** |
+
+El suelo en 0 no es defensivo: un marcador negativo es un castigo que no se
+puede recuperar, y la blandita existe justo para no castigar así (GDD, "se
+ríe con el jugador, no de él").
+
+El enfriamiento existe porque quedarse apoyado contra ella cobraría 60 veces
+por segundo. Y el rebote empuja **hacia el hueco** y no hacia afuera: la
+tubería que perdona te coloca donde tenías que haber pasado.
+
+Tocar a la vez una blandita y una normal **mata**. Perdonar por estar rozando
+una blandita la convertiría en un escudo, y no lo es.
+
+## Decisión 7 · La física del contacto sin muerte
+Aquí es donde la Decisión 1 tuvo que completarse. Con una tubería que no
+mata, Flapo puede seguir en contacto con ella, y entonces sí pasa lo que con
+las normales nunca llegaba a importar: **un `StaticBody2D` que se desplaza y
+atraviesa a Flapo lo empuja al resolver la penetración**. Medido en un test:
+la x de Flapo pasó de 320 a 338 en medio segundo, y como no moría se quedaba
+desplazado para siempre.
+
+La respuesta **no** es `constant_linear_velocity`: eso serviría para
+arrastrarlo *más*, no menos. La respuesta es afirmar el invariante que el
+juego siempre tuvo y nunca había necesitado escribir:
+
+> Si Flapo no se está moviendo en horizontal a propósito, la física no puede
+> moverlo en horizontal.
+
+Se implementa restaurando la x de antes de `move_and_slide()`, y solo cuando
+`velocity.x` era 0. Los dos matices importan: sin el primero, colocar a Flapo
+a mano dejaría de valer; sin el segundo, quien le da velocidad horizontal
+—varios tests cruzan una tubería moviendo a Flapo en vez de moverla a ella—
+se encontraría con que no avanza. En la partida real `velocity.x` es siempre
+0, así que la regla se aplica siempre.
+
+## Consecuencias de T-066
+- El tinte se aplica en `_ready()` y no solo en el setter de `soft`: el
+  spawner marca la tubería **antes** de `add_child`, cuando los sprites
+  todavía no existen. Es la misma trampa que con la textura de las frutas.
+- Una blandita puede además oscilar. No se ha prohibido a propósito: combinar
+  gimmicks es justo lo que pide T-067.
+- El rebote vertical hacia el hueco depende del hueco **actual**, así que en
+  una blandita que además oscila apunta al sitio correcto en cada momento.
+- **No cubierto aquí**: si el rebote *se siente* bien. Eso lo dice jugar.

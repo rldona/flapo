@@ -43,6 +43,14 @@ signal centered
 ## Si está en marcha. `PipeSpawner` lo pone a false en GAME_OVER (T-025).
 @export var moving: bool = true
 
+@export_group("Blandita (T-066)")
+## Si esta tubería no mata (T-066). Se tiñe al ponerla, para que se distinga
+## desde que entra en pantalla y no solo al chocar.
+@export var soft: bool = false:
+	set(valor):
+		soft = valor
+		_aplicar_tinte()
+
 @export_group("Oscilación (T-063)")
 ## Amplitud vertical, px (la mitad del recorrido). 0 = tubería normal, quieta.
 ##
@@ -74,6 +82,7 @@ var _ya_puntuada: bool = false
 
 
 func _ready() -> void:
+	_aplicar_tinte()
 	# Las formas se crean por instancia. Un `RectangleShape2D` guardado en el
 	# .tscn sería el MISMO recurso en todas las tuberías: cambiar el tamaño de
 	# una las cambiaría todas. Es la trampa clásica de los sub-recursos.
@@ -104,6 +113,29 @@ func set_gap_center(y: float) -> void:
 	_gap_center = y
 	_base_gap_center = y
 	_apply_layout()
+
+
+## Tiñe los dos tubos si es blandita, y los deja como estaban si no.
+##
+## El tinte va en los `Sprite2D`, no en la raíz: `modulate` en el `Node2D`
+## también teñiría la zona de puntuación si algún día tuviera dibujo, y lo
+## que tiene que verse distinto es el tubo.
+func _aplicar_tinte() -> void:
+	var color: Color = GameConfig.SOFT_PIPE_TINT if soft else Color.WHITE
+	for cuerpo in [_top, _bottom]:
+		if cuerpo == null:
+			continue
+		for nombre in ["Body", "Cap"]:
+			var sprite := (cuerpo as Node).get_node_or_null(nombre) as Sprite2D
+			if sprite != null:
+				sprite.modulate = color
+
+
+## El color con el que se está dibujando. Lo usan los tests: comprobar que
+## "se distingue" mirando el dibujo y no una bandera.
+func tint() -> Color:
+	var sprite := _top.get_node_or_null("Body") as Sprite2D if _top != null else null
+	return sprite.modulate if sprite != null else Color.WHITE
 
 
 ## Si esta tubería oscila. Lo usan los tests y T-067.

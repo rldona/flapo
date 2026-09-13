@@ -355,6 +355,7 @@ func _connect_children() -> void:
 		state_changed.connect(piezas[nombre].on_game_state_changed)
 
 	bird.died.connect(_on_bird_died)
+	bird.soft_hit.connect(_on_soft_hit)
 	game_over_panel.menu_pressed.connect(to_menu)
 	if menu_panel != null:
 		menu_panel.play_pressed.connect(func() -> void: change_state(GameState.State.READY))
@@ -418,6 +419,24 @@ func _on_scored() -> void:
 	_score += 1
 	if audio != null:
 		audio.play_point()
+	_apply_difficulty()
+	score_changed.emit(_score)
+
+
+## Flapo ha rebotado en una tubería blandita (T-066).
+##
+## El aliento ya se lo ha cobrado él —es suyo—; aquí se cobra el punto, que
+## es del marcador. Nunca baja de 0: quedarse en negativo sería un castigo
+## que no se puede recuperar, y la blandita existe justo para no castigar así.
+func _on_soft_hit() -> void:
+	if audio != null:
+		audio.play_fruit_bad()
+	if juice != null:
+		juice.punch()
+	var antes: int = _score
+	_score = maxi(_score - GameConfig.SOFT_PIPE_SCORE_COST, 0)
+	if _score == antes:
+		return
 	_apply_difficulty()
 	score_changed.emit(_score)
 

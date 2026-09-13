@@ -122,6 +122,31 @@ const MOVING_PIPE_AMPLITUDE: float = 22.0
 ## Flapo siempre puede más que la tubería, que es lo que la hace justa.
 const MOVING_PIPE_PERIOD: float = 2.4
 
+# --- Tubería blandita (T-066) -------------------------------------------
+## Cada cuántas tuberías sale una blandita. NO es aleatorio a propósito: al
+## ser predecible se puede contar y buscarla, y eso la convierte en una
+## decisión ("me la juego en la séptima") en vez de en un golpe de suerte.
+const SOFT_PIPE_INTERVAL: int = 7
+
+## Lo que cuesta tocarla. Aliento y un punto, nunca la partida: el GDD dice
+## que Flapo se ríe con el jugador, no de él, y perder 40 puntos por rozar
+## sería exactamente lo contrario.
+const SOFT_PIPE_BREATH_COST: float = 35.0
+const SOFT_PIPE_SCORE_COST: int = 1
+
+## Segundos de gracia entre dos cobros. Sin esto, quedarse apoyado contra
+## ella cobraría 60 veces por segundo.
+const SOFT_PIPE_COOLDOWN: float = 0.8
+
+## Con qué fuerza sale despedido, px/s. Va en la dirección de la normal del
+## contacto, así que rebota hacia afuera de la tubería que ha tocado.
+const SOFT_PIPE_BOUNCE_SPEED: float = 260.0
+
+## Tinte de la blandita. Un verde apagado que no usa ni el escenario ni las
+## frutas: tiene que leerse como "esta es distinta" en cuanto entra, no al
+## chocar. Ver docs/art-guide.md.
+const SOFT_PIPE_TINT: Color = Color("#7FA37B")
+
 # --- Nombre de jugador (T-079) ------------------------------------------
 ## Cuántos caracteres caben. Corto a propósito: el nombre va en el texto de
 ## compartir y en el menú, a 288 px de ancho, y un nombre largo desborda las
@@ -281,6 +306,19 @@ static func moving_pipe_amplitude(gap: float, centro: float) -> float:
 ## el movimiento pasaría de exigente a inevitable.
 static func moving_pipe_peak_speed(amplitud: float) -> float:
 	return amplitud * TAU / MOVING_PIPE_PERIOD
+
+
+## Si a la tubería número `indice` (0 la primera de la partida) le toca ser
+## blandita (T-066).
+##
+## Función pura del índice, como el resto de la curva: reiniciar la partida
+## reinicia la cuenta sin código de reinicio. La primera nunca lo es —salir a
+## jugar y encontrarte la variante rara de entrada no explica nada—, así que
+## se cuenta a partir de la séptima.
+static func is_soft_pipe(indice: int) -> bool:
+	if indice <= 0 or SOFT_PIPE_INTERVAL <= 0:
+		return false
+	return indice % SOFT_PIPE_INTERVAL == 0
 
 
 ## Nombre del modo para la interfaz. Vive aquí y no en el menú porque es
