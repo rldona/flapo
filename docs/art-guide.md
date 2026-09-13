@@ -10,7 +10,7 @@
 | Cuerpo sombra | `#31596C` | | Mejillas | `#D98972` |
 | Ala | `#4F8298` | | Cielo | `#7CB3D7` |
 | Tripa | `#F2D9A7` | | Nubes | `#BFD9EC` |
-| Tripa sombra | `#D5B87D` | | Edificios | `#506982` |
+| Tripa sombra | `#D5B87D` | | Tubería | `#3A5468` |
 | Pico y patas | `#E6B84A` | | Suelo | `#D0AE62` |
 | Pico sombra | `#B88632` | | Patas sombra | `#D49A3A` |
 | | | | Edificios lejanos | `#7C9AB5` |

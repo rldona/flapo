@@ -25,7 +25,7 @@ BRILLO = (0xFF, 0xF4, 0xD6, 255)
 CORAL = (0xD9, 0x89, 0x72, 255)
 CIELO = (0x7C, 0xB3, 0xD7, 255)
 NUBE = (0xBF, 0xD9, 0xEC, 255)
-EDIFICIO = (0x50, 0x69, 0x82, 255)
+TUBERIA = (0x3A, 0x54, 0x68, 255)
 EDIFICIO_LEJOS = (0x7C, 0x9A, 0xB5, 255)
 SUELO = (0xD0, 0xAE, 0x62, 255)
 SUELO_S = (0xB8, 0x86, 0x32, 255)
@@ -62,7 +62,7 @@ ANCHO_TUBO = 26
 def tuberia_cuerpo():
     """Franja de 26x16 que se repite en vertical."""
     img = lienzo(ANCHO_TUBO, 16)
-    rect(img, 0, 0, ANCHO_TUBO - 1, 15, EDIFICIO)
+    rect(img, 0, 0, ANCHO_TUBO - 1, 15, TUBERIA)
     # Brillo a la izquierda y sombra a la derecha: da volumen cilíndrico con
     # dos columnas, que es todo lo que cabe en 26 px.
     rect(img, 2, 0, 4, 15, EDIFICIO_LEJOS)
@@ -76,7 +76,7 @@ def tuberia_cabeza():
     """Boca de la tubería: 2 px más ancha por cada lado."""
     ancho = ANCHO_TUBO + 4
     img = lienzo(ancho, 14)
-    rect(img, 0, 0, ancho - 1, 13, EDIFICIO)
+    rect(img, 0, 0, ancho - 1, 13, TUBERIA)
     rect(img, 2, 1, 5, 12, EDIFICIO_LEJOS)
     rect(img, ancho - 7, 1, ancho - 3, 12, CUERPO_S)
     rect(img, 0, 0, ancho - 1, 0, OUTLINE)
