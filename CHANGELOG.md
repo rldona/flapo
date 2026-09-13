@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 — 2026-09-09
+
+### Novedades
+
+- Los efectos de fruta se acumulan, uno por eje
+
 ## 0.1.3 — 2026-09-09
 
 ### Arreglos

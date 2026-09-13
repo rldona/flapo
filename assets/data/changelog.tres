@@ -1,4 +1,4 @@
 [gd_resource type="Resource" format=3]
 
 [resource]
-lineas = PackedStringArray()
+lineas = PackedStringArray("Los efectos de fruta se acumulan, uno por eje")
