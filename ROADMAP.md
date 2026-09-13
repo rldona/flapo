@@ -147,10 +147,10 @@ que por ser la mascota debe dibujarlo una persona.
 
 ## Fase 7 — Calidad (1-2 días)
 
-- 🔲 Tests unitarios con GUT o gdUnit4 para: lógica de puntuación, máquina de estados, guardado.
-- 🔲 Checklist manual de QA en `docs/qa-checklist.md` (reinicio, pausa, rotación, pérdida de foco, rendimiento).
-- 🔲 Perfilado: 60 fps estables en un Android de gama baja; sin fugas de nodos (`Performance.get_monitor`).
-- 🔲 Formateo y lint de GDScript (gdtoolkit: `gdformat`, `gdlint`) en pre-commit.
+- 🔄 Tests: 18 ficheros en `tests/`, uno por ticket, con arnés propio (ADR-0007). Migrar a GUT o gdUnit4 sigue abierto → T-080.
+- ✅ Checklist manual de QA en `docs/qa-checklist.md`. → T-081
+- 🔄 Perfilado: sin fugas de nodos, verificado en cada push (`docs/perf.md`). → T-082. Los fps en Android de gama baja siguen pendientes: necesitan dispositivo.
+- ✅ Formateo y lint con gdtoolkit en pre-commit y en CI. → T-083
 
 ---
 
