@@ -30,14 +30,19 @@ signal sound_toggled
 ## El jugador ha escondido o enseñado el fantasma del récord (T-243).
 signal ghost_toggled
 
+## El jugador ha tocado el modo espejo (T-076).
+signal mirror_toggled
+
 var _modo: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 var _muted: bool = false
 var _ghost_hidden: bool = false
+var _mirror: bool = false
 
 @onready var _name: LineEdit = $Root/Box/Name
 @onready var _difficulty: Button = $Root/Box/Difficulty
 @onready var _sound: Button = $Root/Box/Sound
 @onready var _ghost: Button = $Root/Box/Ghost
+@onready var _mirror_button: Button = $Root/Box/Mirror
 @onready var _back: Button = $Root/Box/Back
 
 
@@ -52,6 +57,10 @@ func _ready() -> void:
 	_difficulty.pressed.connect(_on_difficulty_pressed)
 	_sound.pressed.connect(func() -> void: sound_toggled.emit())
 	_ghost.pressed.connect(func() -> void: ghost_toggled.emit())
+	_mirror_button.pressed.connect(func() -> void: mirror_toggled.emit())
+	# Escondido hasta que se desbloquea (T-076): un botón desactivado que no
+	# dice por qué es peor que no tener botón. Cuando aparece, es un premio.
+	_mirror_button.visible = false
 	_back.pressed.connect(func() -> void: back_pressed.emit())
 	visible = false
 	_refrescar()
@@ -102,11 +111,24 @@ func set_ghost_hidden(oculto: bool) -> void:
 	_refrescar()
 
 
+## Enseña el modo espejo, o lo esconde si aún no está desbloqueado (T-076).
+func set_mirror(activo: bool, desbloqueado: bool) -> void:
+	_mirror = activo
+	if _mirror_button != null:
+		_mirror_button.visible = desbloqueado
+	_refrescar()
+
+
+## Si el botón del espejo se está viendo. Lo usan los tests.
+func mirror_visible() -> bool:
+	return _mirror_button != null and _mirror_button.visible
+
+
 ## El texto de cada botón. Lo usan los tests.
 func lines_text() -> PackedStringArray:
 	if _difficulty == null:
 		return PackedStringArray()
-	return PackedStringArray([_difficulty.text, _sound.text, _ghost.text])
+	return PackedStringArray([_difficulty.text, _sound.text, _ghost.text, _mirror_button.text])
 
 
 func _on_name_changed(texto: String) -> void:
@@ -138,3 +160,4 @@ func _refrescar() -> void:
 	_difficulty.text = "Modo: %s" % GameConfig.difficulty_name(_modo)
 	_sound.text = "Sonido: %s" % ("apagado" if _muted else "activado")
 	_ghost.text = "Fantasma: %s" % ("oculto" if _ghost_hidden else "visible")
+	_mirror_button.text = "Espejo: %s" % ("sí" if _mirror else "no")

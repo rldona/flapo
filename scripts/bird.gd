@@ -54,6 +54,19 @@ enum DeathCause {
 ## apaga temporalmente y hay que saber a qué volver.
 const OBSTACULOS: int = 4
 
+@export_group("Modo espejo (T-076)")
+## Si el mundo está del revés (T-076).
+##
+## **Es un espejo, no otro control**: la gravedad tira hacia arriba y el
+## aleteo empuja hacia abajo. Todo lo demás es idéntico, y eso es a propósito:
+## un modo que además cambiara los números sería otro juego, no el mismo
+## visto en un espejo. Ver ADR-0038.
+@export var mirror: bool = false:
+	set(valor):
+		mirror = valor
+		if _sprite != null:
+			_sprite.flip_v = valor
+
 @export_group("Física")
 ## Aceleración de caída, px/s². Flapo pesa; ver GDD, "Concepto y tono".
 @export var gravity: float = 1200.0
@@ -191,7 +204,7 @@ func _physics_process(delta: float) -> void:
 			# frame de física o de dibujo, así que aquí no se pierde ni se
 			# duplica ninguna pulsación aunque los fps bailen.
 			if Input.is_action_just_pressed("flap"):
-				velocity.y = flap_impulse * _registrar_aleteo()
+				velocity.y = flap_impulse * _registrar_aleteo() * _signo()
 				_burst_left = flap_burst_time
 				_gastar_aliento(GameConfig.BREATH_DRAIN_FLAP)
 				flapped.emit()
@@ -426,15 +439,31 @@ func is_gliding() -> bool:
 	return _gliding
 
 
+## Hacia dónde tira la gravedad: 1 abajo, -1 arriba en modo espejo (T-076).
+##
+## Un solo signo para toda la física en vez de un `if mirror` en cada sitio.
+## Con `if` repartidos, cualquier ajuste futuro tendría que acordarse de las
+## dos ramas, y la que menos se juega es la que se rompe sin que nadie lo vea.
+func _signo() -> float:
+	return -1.0 if mirror else 1.0
+
+
+## Aplica un tope de caída respetando hacia dónde se cae.
+func _limitar(v: float, tope: float) -> float:
+	return maxf(v, tope * _signo()) if mirror else minf(v, tope)
+
+
 func _apply_gravity(delta: float) -> void:
+	var signo: float = _signo()
 	# Planeando cae a una fracción de la gravedad y con un tope mucho más
 	# bajo: es descender despacio, no flotar.
 	if _gliding:
-		velocity.y = minf(
-			velocity.y + gravity * gravity_mult * glide_gravity_mult * delta, glide_max_fall_speed
+		velocity.y = _limitar(
+			velocity.y + gravity * gravity_mult * glide_gravity_mult * delta * signo,
+			glide_max_fall_speed
 		)
 		return
-	velocity.y = minf(velocity.y + gravity * gravity_mult * delta, max_fall_speed)
+	velocity.y = _limitar(velocity.y + gravity * gravity_mult * delta * signo, max_fall_speed)
 
 
 ## La FÍSICA no mueve a Flapo en horizontal (T-066).
@@ -475,7 +504,11 @@ func _clamp_to_ceiling() -> void:
 func _update_rotation(delta: float) -> void:
 	# La velocidad vertical se mapea a un ángulo: subiendo, morro arriba;
 	# cayendo, picado. Es el truco que hace legible el salto sin animación.
-	var fall_ratio: float = clampf(inverse_lerp(flap_impulse, max_fall_speed, velocity.y), 0.0, 1.0)
+	# `velocity.y * _signo()`: en espejo, subir y bajar son al revés, y el
+	# morro tiene que seguir apuntando adonde va (T-076).
+	var fall_ratio: float = clampf(
+		inverse_lerp(flap_impulse, max_fall_speed, velocity.y * _signo()), 0.0, 1.0
+	)
 	var target: float = deg_to_rad(lerpf(rotation_up_degrees, rotation_down_degrees, fall_ratio))
 	# Interpolación exponencial: independiente de los fps, a diferencia de un
 	# `lerp(rotation, target, 0.2)` a pelo, que va más rápido cuantos más fps.
@@ -486,7 +519,11 @@ func _check_death() -> void:
 	if _dead:
 		return
 	var choque: bool = get_slide_collision_count() > 0
-	if not choque and position.y < fall_death_y:
+	# En espejo, el techo es el suelo (T-076). Sin esto, Flapo se quedaría
+	# pegado arriba para siempre: la gravedad lo empuja contra el techo y ahí
+	# no hay ningún cuerpo con el que chocar.
+	var contra_el_techo: bool = mirror and position.y <= ceiling_y
+	if not choque and not contra_el_techo and position.y < fall_death_y:
 		return
 	# Las blanditas se miran ANTES de morir (T-066): si todo lo que se ha
 	# tocado es blando, no hay muerte que procesar.
@@ -496,8 +533,12 @@ func _check_death() -> void:
 	_dead = true
 	# El rebote se aplica aquí y no en Juice: es física de Flapo, y así
 	# ocurre en el mismo tick del golpe, sin un frame de retraso.
-	velocity.y = bounce_impulse
-	var causa: DeathCause = _causa_del_choque() if choque else DeathCause.VACIO
+	velocity.y = bounce_impulse * _signo()
+	var causa: DeathCause = DeathCause.VACIO
+	if choque:
+		causa = _causa_del_choque()
+	elif contra_el_techo:
+		causa = DeathCause.SUELO
 	# Sin aliento no mata, pero sí explica: es la diferencia entre "se
 	# estampó" y "llegó agotado y se estampó".
 	died.emit(causa, is_zero_approx(_breath))

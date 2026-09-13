@@ -24,6 +24,7 @@ func reproducir(tree: SceneTree, main: Node, rep: Replay) -> Dictionary:
 	SaveManager.clear()
 	SaveManager.forget_cache()
 	main.session().set_difficulty(rep.modo)
+	main.session().set_mirror(rep.espejo)
 	_sembrar_confianza(rep.confianza)
 	# El récord también: desde T-067 dispara el tramo especial de celebración,
 	# o sea que **cambia el mundo**. Sin sembrarlo, el mismo replay daría

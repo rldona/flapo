@@ -344,6 +344,15 @@ const SCENERY_TINT: Array[Color] = [
 ## que haya una variante más, esto sigue diciendo la verdad.
 const SCENERY_LLUEVE: Array[bool] = [false, false, false, true]
 
+## --- Modo espejo (T-076) ---
+
+## Récord a partir del cual se ofrece el modo espejo.
+##
+## 25 y no menos: es por encima de la medalla de plata (20), o sea que lo ve
+## quien ya domina el juego normal. Ofrecérselo antes sería ofrecer una
+## variante a quien todavía no tiene de qué variar.
+const MIRROR_UNLOCK_SCORE: int = 25
+
 ## --- Compañero silencioso (T-058) ---
 
 ## A qué fracción del borde del hueco empieza a considerarse un roce.
@@ -414,6 +423,14 @@ const GHOST_TINT: Color = Color("#8FB8D8")
 ## diseño sino un seguro: un fichero de fantasma no puede crecer sin fin ni
 ## por una partida eterna ni por un fichero manipulado a mano.
 const GHOST_MAX_FRAMES: int = 36000
+
+
+## Si el récord guardado da acceso al modo espejo (T-076).
+##
+## Depende del récord y no de las partidas jugadas: es un premio por jugar
+## bien, no por jugar mucho. La confianza (T-074) ya premia lo segundo.
+static func mirror_unlocked(record: int) -> bool:
+	return record >= MIRROR_UNLOCK_SCORE
 
 
 ## A qué desvío del centro del hueco empieza a contar como roce (T-058).

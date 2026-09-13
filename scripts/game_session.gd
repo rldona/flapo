@@ -27,6 +27,7 @@ var _player_name: String = ""
 var _difficulty: GameConfig.Difficulty = GameConfig.Difficulty.NORMAL
 var _confidence: int = 0
 var _has_glided: bool = false
+var _mirror: bool = false
 
 
 ## Lee del guardado todo lo que persiste. Se llama una vez, al arrancar.
@@ -35,6 +36,7 @@ func cargar() -> void:
 	_player_name = SaveManager.get_player_name()
 	_confidence = SaveManager.get_confidence()
 	_has_glided = SaveManager.get_has_glided()
+	_mirror = SaveManager.get_mirror()
 
 
 ## La semilla de la partida en curso (T-240).
@@ -119,6 +121,21 @@ func difficulty() -> GameConfig.Difficulty:
 func set_difficulty(modo: GameConfig.Difficulty) -> void:
 	_difficulty = modo
 	SaveManager.set_difficulty(modo)
+
+
+## Si se juega en modo espejo (T-076).
+func mirror() -> bool:
+	return _mirror
+
+
+## Cambia el modo espejo y lo recuerda.
+##
+## No comprueba aquí si está desbloqueado: quien conoce el récord es `Main`.
+## La sesión guarda lo que le dicen; decidir si se puede es de quien tiene el
+## dato ("call down", ADR-0005).
+func set_mirror(activo: bool) -> void:
+	_mirror = activo
+	SaveManager.set_mirror(activo)
 
 
 ## Escalón de confianza acumulado (T-074).

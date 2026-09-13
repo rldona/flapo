@@ -19,14 +19,18 @@ const RUTA_ULTIMA: String = "user://last.replay"
 ## Marca de fichero: "FLRP", de FLapo RePlay.
 const MAGIC: int = 0x464C5250
 
-## Sube a 2 con T-067: el récord entra en el fichero. Un replay de la versión
-## 1 no se puede reproducir con garantías porque no dice con qué récord se
-## jugó, así que se descarta entero en vez de adivinarlo.
-const VERSION: int = 2
+## Sube a 2 con T-067 (entra el récord) y a 3 con T-076 (entra el espejo).
+## Un replay de una versión anterior no dice con qué se jugó, así que se
+## descarta entero en vez de adivinarlo.
+##
+## Que este número haya subido dos veces en dos tickets no es un accidente:
+## es la regla de ADR-0036 funcionando. Cada vez que algo nuevo mira el
+## guardado para decidir qué pasa en la partida, entra aquí.
+const VERSION: int = 3
 
 ## magia(4) + versión(4) + semilla(8) + modo(4) + confianza(4) + récord(4)
-## + marca(4) + nº(4)
-const _CABECERA: int = 36
+## + espejo(4) + marca(4) + nº(4)
+const _CABECERA: int = 40
 
 ## Tope de flancos, por si un fichero manipulado dice que trae millones.
 const MAX_EVENTOS: int = 100000
@@ -58,6 +62,11 @@ var confianza: int = 0
 ## Lo destapó el bot de T-260 al dejar de dar dos tandas iguales, no una
 ## lectura del código.
 var record: int = 0
+
+## Si se jugó en modo espejo (T-076). Le da la vuelta a la gravedad y al
+## aleteo, así que las mismas pulsaciones dan exactamente la partida
+## contraria.
+var espejo: bool = false
 
 ## Los puntos que se hicieron. Es contra lo que se compara al reproducir: sin
 ## un resultado esperado, un replay no verifica nada, solo vuelve a jugar.
@@ -96,6 +105,7 @@ func guardar(ruta: String = RUTA_ULTIMA) -> bool:
 	f.store_32(int(modo))
 	f.store_32(confianza)
 	f.store_32(record)
+	f.store_32(1 if espejo else 0)
 	f.store_32(score)
 	f.store_32(frames.size())
 	for i in frames.size():
@@ -122,6 +132,7 @@ static func cargar(ruta: String = RUTA_ULTIMA) -> Replay:
 	rep.modo = m as GameConfig.Difficulty
 	rep.confianza = f.get_32()
 	rep.record = f.get_32()
+	rep.espejo = f.get_32() != 0
 	rep.score = f.get_32()
 	var n: int = f.get_32()
 	if n < 0 or n > MAX_EVENTOS:

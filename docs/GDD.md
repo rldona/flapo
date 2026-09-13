@@ -309,3 +309,13 @@ contradice: no se compra, no se elige y no tiene pantalla. Ver ADR-0021.
 Los **power-ups estaban aquí** hasta T-047: se sacaron de la lista a
 propósito, con ADR-0019, cuando el juego ya estaba completo y se vio que
 aguantaba más sustancia.
+
+El **modo espejo (T-076)** es la segunda excepción, con ADR-0038. Se
+desbloquea con récord 25 y da la vuelta a la gravedad y al aleteo: la física
+de siempre con el signo cambiado. Entra porque **no añade sistemas** —ni
+tienda, ni servidor, ni assets, ni una segunda economía— y se paga una vez.
+Skins, ranking online, anuncios y compras siguen fuera, y por ese mismo
+motivo: todas ellas traen algo que mantener para siempre.
+
+Es **opt-in y nunca automático**: aparece un botón en Opciones al
+desbloquearlo, y hasta entonces no existe. El modo normal no cambia en nada.

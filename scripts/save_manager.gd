@@ -86,6 +86,24 @@ static func set_difficulty(modo: GameConfig.Difficulty) -> void:
 		push_warning("No se ha podido guardar la dificultad (error %d)." % err)
 
 
+## Si el jugador está jugando en modo espejo (T-076).
+##
+## Va con la dificultad y no en `settings.cfg`: es un modo de juego, como
+## fácil/normal/difícil, no una preferencia de presentación. Por defecto
+## `false`, siempre: el modo normal es el juego.
+static func get_mirror() -> bool:
+	return _leer_int("mirror") > 0
+
+
+## Recuerda el modo espejo. Se guarda al elegirlo, no al morir.
+static func set_mirror(activo: bool) -> void:
+	var cfg: ConfigFile = _datos()
+	cfg.set_value(SECCION, "mirror", 1 if activo else 0)
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el modo espejo (error %d)." % err)
+
+
 ## Nombre del jugador (T-079). Vacío si no ha puesto ninguno: quien decide
 ## qué enseñar entonces es `GameConfig.display_player_name`.
 static func get_player_name() -> String:

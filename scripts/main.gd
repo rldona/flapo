@@ -313,6 +313,7 @@ func _abrir_opciones() -> void:
 	options_panel.set_difficulty(_session.difficulty())
 	options_panel.set_muted(audio.is_muted() if audio != null else false)
 	options_panel.set_ghost_hidden(Settings.is_ghost_hidden())
+	options_panel.set_mirror(_session.mirror(), GameConfig.mirror_unlocked(_high_score))
 	options_panel.set_open(true)
 
 
@@ -325,6 +326,20 @@ func _on_ghost_toggled() -> void:
 	if options_panel == null:
 		return
 	options_panel.set_ghost_hidden(Settings.set_ghost_hidden(not Settings.is_ghost_hidden()))
+	if audio != null:
+		audio.play_button()
+
+
+## El jugador ha tocado el modo espejo (T-076).
+##
+## Se vuelve a comprobar el desbloqueo aquí, y no solo al enseñar el botón:
+## que un control esté escondido no es una garantía de nada. Quien decide es
+## quien tiene el récord.
+func _on_mirror_toggled() -> void:
+	if options_panel == null or not GameConfig.mirror_unlocked(_high_score):
+		return
+	_session.set_mirror(not _session.mirror())
+	options_panel.set_mirror(_session.mirror(), true)
 	if audio != null:
 		audio.play_button()
 
@@ -413,9 +428,16 @@ func change_state(to: GameState.State) -> void:
 		if ghost != null:
 			ghost.preparar(_session.seed())
 		_aplicar_escenario()
+		# El espejo se aplica al empezar la partida, nunca en vuelo: darle la
+		# vuelta a la gravedad a media partida sería una muerte gratis.
+		bird.mirror = _session.mirror()
 		if replay_recorder != null:
 			replay_recorder.preparar(
-				_session.seed(), _session.difficulty(), _session.confidence(), _high_score
+				_session.seed(),
+				_session.difficulty(),
+				_session.confidence(),
+				_high_score,
+				_session.mirror()
 			)
 		_huecos_sin_planear = 0
 		_tramo_usado = false
@@ -499,6 +521,7 @@ func _connect_children() -> void:
 		options_panel.difficulty_selected.connect(_on_difficulty_selected)
 		options_panel.sound_toggled.connect(_on_sound_toggled)
 		options_panel.ghost_toggled.connect(_on_ghost_toggled)
+		options_panel.mirror_toggled.connect(_on_mirror_toggled)
 	pipe_spawner.scored.connect(_on_scored)
 	pipe_spawner.centered.connect(_on_centered)
 	pipe_spawner.grazed.connect(_on_grazed)
