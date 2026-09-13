@@ -33,6 +33,9 @@ signal score_changed(score: int)
 ## El marcador de la partida en curso.
 @export var hud: Hud
 
+## El nodo que reparte el jugo al morir (flash, sacudida, hit-stop).
+@export var juice: Juice
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -131,6 +134,10 @@ func _connect_children() -> void:
 		return
 	state_changed.connect(hud.on_game_state_changed)
 	score_changed.connect(hud.set_score)
+	if juice == null:
+		push_error("Main no tiene asignado el nodo Juice en el inspector.")
+		return
+	state_changed.connect(juice.on_game_state_changed)
 
 
 func _on_scored() -> void:
@@ -139,6 +146,8 @@ func _on_scored() -> void:
 
 
 func _on_bird_died() -> void:
+	if juice != null:
+		juice.punch()
 	change_state(GameState.State.GAME_OVER)
 
 

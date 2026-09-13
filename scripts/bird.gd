@@ -33,6 +33,12 @@ signal died
 ## que tenga en la escena, así que se mueve arrastrándolo en el editor.
 @export var start_position: Vector2 = Vector2(72.0, 256.0)
 
+@export_group("Muerte")
+## Impulso hacia arriba al chocar, px/s. Lo fija Juice al morir.
+@export var bounce_impulse: float = -180.0
+## Giro de aturdimiento mientras cae muerto, rad/s.
+@export var stun_spin: float = 9.0
+
 @export_group("Animación")
 ## Frames por segundo del aleteo en reposo (cayendo, planeando).
 @export var flap_fps_idle: float = 6.0
@@ -80,13 +86,19 @@ func _physics_process(delta: float) -> void:
 		GameState.State.GAME_OVER:
 			# Sigue cayendo, pero ya no responde: el batacazo se ve entero.
 			_apply_gravity(delta)
+			# Gira aturdido en el aire. Al tocar suelo se queda quieto, que
+			# es cuando el rebote ya ha terminado.
+			if not is_on_floor():
+				rotation += stun_spin * delta
 
 	move_and_slide()
 	_clamp_to_ceiling()
+	# En GAME_OVER manda el giro de aturdimiento y no el ángulo por velocidad:
+	# si los dos escribieran `rotation`, se pelearían y el giro no se vería.
 	# En READY no se toca la rotación. Si se dejara correr, el ángulo objetivo
 	# con velocidad 0 no es 0° sino ~25° (el 0 cae dentro del rango
 	# impulso..caída máxima), y Flapo iría cabeceando mientras espera.
-	if _state != GameState.State.READY:
+	if _state == GameState.State.PLAYING:
 		_update_rotation(delta)
 
 	_update_animation(delta)
@@ -160,4 +172,7 @@ func _check_death() -> void:
 		return
 	if get_slide_collision_count() > 0 or position.y >= fall_death_y:
 		_dead = true
+		# El rebote se aplica aquí y no en Juice: es física de Flapo, y así
+		# ocurre en el mismo tick del golpe, sin un frame de retraso.
+		velocity.y = bounce_impulse
 		died.emit()
