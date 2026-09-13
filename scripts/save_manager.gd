@@ -1,0 +1,79 @@
+class_name SaveManager
+extends RefCounted
+## Progreso persistente: récord y partidas jugadas.
+##
+## No es un autoload, aunque el ticket lo pidiera. Ver ADR-0013: el estado de
+## verdad está en el fichero, no en memoria, y un `class_name` se resuelve en
+## compilación (ADR-0009) mientras que un autoload no existe ni en
+## `--check-only` ni en los scripts `-s` de los tests.
+##
+## Regla de oro de este fichero: **nunca reventar**. Un guardado ausente,
+## corrupto, de otra versión o con tipos raros devuelve valores por defecto.
+## Perder el récord es molesto; no poder abrir el juego es un desastre.
+
+const RUTA: String = "user://save.cfg"
+const SECCION: String = "progreso"
+
+## Copia en memoria. Se rellena en la primera lectura.
+static var _cfg: ConfigFile = null
+
+
+## Mejor puntuación conseguida.
+static func get_high_score() -> int:
+	return _leer_int("high_score")
+
+
+## Cuántas partidas se han jugado en total.
+static func get_games_played() -> int:
+	return _leer_int("games_played")
+
+
+## Registra una partida terminada. Devuelve `true` si ha sido récord.
+static func record_game(score: int) -> bool:
+	var cfg: ConfigFile = _datos()
+	var record: bool = score > get_high_score()
+	if record:
+		cfg.set_value(SECCION, "high_score", score)
+	cfg.set_value(SECCION, "games_played", get_games_played() + 1)
+	# Un fallo al escribir (disco lleno, permisos) no puede tumbar la
+	# partida: se avisa y se sigue jugando con los datos en memoria.
+	var err: Error = cfg.save(RUTA)
+	if err != OK:
+		push_warning("No se ha podido guardar el progreso (error %d)." % err)
+	return record
+
+
+## Borra el progreso. La usan los tests y serviría para un botón de reinicio
+## de datos si algún día hace falta.
+static func clear() -> void:
+	_cfg = ConfigFile.new()
+	if FileAccess.file_exists(RUTA):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(RUTA))
+	_cfg.save(RUTA)
+
+
+## Olvida la copia en memoria y vuelve a leer del disco. Solo para tests:
+## permite simular "abrir el juego otra vez" sin reiniciar el proceso.
+static func forget_cache() -> void:
+	_cfg = null
+
+
+static func _datos() -> ConfigFile:
+	if _cfg != null:
+		return _cfg
+	_cfg = ConfigFile.new()
+	var err: Error = _cfg.load(RUTA)
+	if err != OK and err != ERR_FILE_NOT_FOUND:
+		# Corrupto o ilegible: se descarta entero y se empieza de cero. Es
+		# preferible a intentar rescatar valores sueltos de un fichero roto.
+		push_warning("Guardado ilegible (error %d): se empieza de cero." % err)
+		_cfg = ConfigFile.new()
+	return _cfg
+
+
+static func _leer_int(clave: String) -> int:
+	var valor: Variant = _datos().get_value(SECCION, clave, 0)
+	# El fichero es texto y editable a mano: puede traer cualquier cosa.
+	if typeof(valor) != TYPE_INT and typeof(valor) != TYPE_FLOAT:
+		return 0
+	return maxi(int(valor), 0)

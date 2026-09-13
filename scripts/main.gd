@@ -56,9 +56,12 @@ const _TRANSITIONS: Dictionary = {
 
 var _state: GameState.State = GameState.State.READY
 var _score: int = 0
+var _high_score: int = 0
+var _is_new_high_score: bool = false
 
 
 func _ready() -> void:
+	_high_score = SaveManager.get_high_score()
 	if log_transitions:
 		state_changed.connect(_on_state_changed_log)
 	_connect_children()
@@ -95,6 +98,16 @@ func get_score() -> int:
 	return _score
 
 
+## Mejor puntuación de siempre.
+func get_high_score() -> int:
+	return _high_score
+
+
+## Si la partida que se acaba de perder ha batido el récord.
+func is_new_high_score() -> bool:
+	return _is_new_high_score
+
+
 ## Intenta pasar a `to`. Ignora el cambio si no es una transición legal.
 func change_state(to: GameState.State) -> void:
 	if to == _state:
@@ -107,6 +120,7 @@ func change_state(to: GameState.State) -> void:
 	# Game Over (T-071) tiene que poder seguir enseñándola.
 	if to == GameState.State.READY:
 		_score = 0
+		_is_new_high_score = false
 		score_changed.emit(_score)
 	state_changed.emit(to)
 
@@ -140,9 +154,18 @@ func _connect_children() -> void:
 	game_over_panel.restart_pressed.connect(restart)
 
 
+func _on_scored() -> void:
+	_score += 1
+	score_changed.emit(_score)
+
+
 func _on_bird_died() -> void:
 	if juice != null:
 		juice.punch()
+	# Se registra ANTES de cambiar de estado: el panel lee el récord al
+	# recibir GAME_OVER y tiene que ver ya el dato de esta partida.
+	_is_new_high_score = SaveManager.record_game(_score)
+	_high_score = SaveManager.get_high_score()
 	change_state(GameState.State.GAME_OVER)
 
 
