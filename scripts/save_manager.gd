@@ -28,6 +28,24 @@ static func get_games_played() -> int:
 	return _leer_int("games_played")
 
 
+## Tuberías cruzadas en toda la vida del jugador (T-084).
+##
+## Es el ÚNICO contador nuevo que añade la pantalla de estadísticas, y a
+## propósito: de él sale también la media por partida, que es el número que
+## de verdad dice si uno está mejorando. Aleteos totales o tiempo jugado
+## serían dos claves más que nadie mira.
+static func get_total_score() -> int:
+	return _leer_int("total_score")
+
+
+## Puntuación media por partida (T-084). Derivada, no guardada.
+static func get_average_score() -> float:
+	var partidas: int = get_games_played()
+	if partidas <= 0:
+		return 0.0
+	return float(get_total_score()) / float(partidas)
+
+
 ## Escalón de confianza alcanzado (T-074).
 ##
 ## Se guarda además de derivarse de las partidas jugadas, y no es
@@ -76,6 +94,7 @@ static func record_game(score: int) -> bool:
 		cfg.set_value(SECCION, "high_score", score)
 	var partidas: int = get_games_played() + 1
 	cfg.set_value(SECCION, "games_played", partidas)
+	cfg.set_value(SECCION, "total_score", get_total_score() + maxi(score, 0))
 	# Nunca baja: se queda con lo mejor entre lo guardado y lo que toca.
 	var nivel: int = maxi(get_confidence(), GameConfig.confidence_level(partidas))
 	cfg.set_value(SECCION, "confidence", nivel)

@@ -117,6 +117,11 @@ reacción, nunca el ritmo. Ver ADR-0022.
 
 El modo elegido se recuerda entre sesiones y no se puede cambiar jugando.
 
+### Estadísticas (T-084)
+Desde el menú: partidas jugadas, mejor marca, mejor medalla, tuberías
+cruzadas en total y media por partida. Solo el total de tuberías es un
+contador nuevo; lo demás se deriva de lo que ya se guardaba.
+
 ## Controles
 Acción `flap`: toque, click izquierdo, espacio. `restart`, `pause`.
 
