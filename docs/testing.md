@@ -115,6 +115,22 @@ El tercer paso no es redundante: un fallo de export —una ruta de recurso
 rota, un `class_name` que no resuelve— no se ve jugando en el editor y
 aparece justo al hacer la release.
 
+## Preguntar lo que importa, no lo que es fácil
+
+Un test puede pasar comprobando algo que no es lo que se quería comprobar.
+Pasó dos veces en T-047:
+
+- El test de las texturas comprobaba que **no fueran nulas**. Nunca lo eran:
+  la escena trae una por defecto. Todas las frutas salían azules y el test
+  pasaba tan contento. Lo que había que preguntar es si son **distintas entre
+  tipos**.
+- El test de la fase comprobaba la distancia fruta-tubería **en una partida
+  corta**, y el fallo solo aparecía al cambiar de dificultad.
+
+La regla: cuando un test pasa a la primera sobre código nuevo, merece la pena
+**romper el código a propósito** y ver si falla. Si no falla, el test no está
+comprobando lo que crees.
+
 ## Comprobar la premisa, no solo el resultado
 
 Un test que mide algo tiene que verificar antes que el escenario sigue siendo

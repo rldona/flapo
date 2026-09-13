@@ -18,6 +18,7 @@ func _init() -> void:
 	await _las_frutas_no_cruzan_partidas()
 	await _nacen_a_mitad_de_camino()
 	await _la_primera_tuberia_tambien_cuenta()
+	await _cada_fruta_tiene_su_color()
 	SaveManager.clear()
 	Settings.clear()
 	quit(h.resumen("T-047"))
@@ -292,3 +293,52 @@ func _la_primera_tuberia_tambien_cuenta() -> void:
 		"%d frutas tras %d ticks (medio intervalo)" % [main.fruit_spawner.fruit_count(), ticks]
 	)
 	main.free()
+
+
+## Cada tipo de fruta se dibuja con SU textura.
+##
+## El test original comprobaba que la textura no fuera nula, y nunca lo era:
+## la escena trae una por defecto. Todas las frutas salían azules y el test
+## pasaba. Lo que hay que comprobar es que sean DISTINTAS entre tipos.
+func _cada_fruta_tiene_su_color() -> void:
+	var main: Node = await _partida()
+	var spawner: Node = main.fruit_spawner
+	var escena: PackedScene = spawner.fruit_scene
+	var vistas: Dictionary = {}
+
+	for kind in [
+		Effects.Kind.INMUNIDAD,
+		Effects.Kind.PESADO,
+		Effects.Kind.LIGERO,
+		Effects.Kind.GRANDE,
+		Effects.Kind.LENTO,
+	]:
+		var fruit: Node = escena.instantiate()
+		# Se asigna ANTES de add_child, como hace el spawner de verdad.
+		fruit.set_texture(spawner.textures[int(kind) - 1])
+		spawner.add_child(fruit)
+		await process_frame
+		vistas[kind] = fruit.get_node("Sprite").texture
+		fruit.free()
+
+	var rutas: Array = []
+	for kind in vistas:
+		var t: Texture2D = vistas[kind]
+		h.check("la fruta %d tiene textura" % int(kind), t != null, "" if t != null else "nula")
+		if t != null:
+			rutas.append(t.resource_path)
+	h.check(
+		"cada tipo de fruta usa una textura distinta",
+		rutas.size() == 5 and _sin_repetidos(rutas),
+		"%s" % [rutas.map(func(r: String) -> String: return r.get_file())]
+	)
+	main.free()
+
+
+func _sin_repetidos(lista: Array) -> bool:
+	var vistos: Dictionary = {}
+	for x in lista:
+		if vistos.has(x):
+			return false
+		vistos[x] = true
+	return true

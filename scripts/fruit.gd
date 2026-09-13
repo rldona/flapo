@@ -23,6 +23,7 @@ signal taken(kind: Effects.Kind, puntos: int)
 ## Ciclos de vaivén por segundo.
 @export var float_speed: float = 1.6
 
+var _textura: Texture2D = null
 var _tomada: bool = false
 var _y_base: float = 0.0
 var _fase: float = 0.0
@@ -31,6 +32,8 @@ var _fase: float = 0.0
 
 
 func _ready() -> void:
+	if _textura != null:
+		_sprite.texture = _textura
 	_y_base = position.y
 	_fase = randf() * TAU
 	body_entered.connect(_on_body_entered)
@@ -50,7 +53,15 @@ func place(pos: Vector2) -> void:
 	_y_base = pos.y
 
 
+## Asigna el dibujo. Se puede llamar ANTES de meter la fruta en el árbol.
+##
+## `_sprite` es `@onready`, así que vale `null` hasta que el nodo entra en el
+## árbol. La primera versión hacía `if _sprite != null: ...` y se tragaba la
+## asignación en silencio: todas las frutas salían con la textura por defecto
+## de la escena, la azul. Guardarla y aplicarla también en `_ready()` quita la
+## dependencia del orden de llamada.
 func set_texture(tex: Texture2D) -> void:
+	_textura = tex
 	if _sprite != null:
 		_sprite.texture = tex
 
