@@ -100,6 +100,21 @@ Cuestan una tarde si se descubren solas:
    hace `await process_frame`, y por eso las propiedades se asignan **antes**
    de entrar al árbol.
 
+## En CI
+
+`.github/workflows/export.yml` ejecuta en cada push y cada PR, dentro del
+contenedor `barichello/godot-ci:4.7.2`:
+
+1. `godot --headless --path . --import` — genera `.godot/`, incluido el
+   registro de `class_name` (sin él nada que nombre `GameConfig` compila,
+   ver ADR-0009).
+2. `GODOT="$(command -v godot)" ./tests/run.sh`
+3. Un export a Web, y comprueba que `index.wasm` no está vacío.
+
+El tercer paso no es redundante: un fallo de export —una ruta de recurso
+rota, un `class_name` que no resuelve— no se ve jugando en el editor y
+aparece justo al hacer la release.
+
 ## Qué NO cubre esto
 
 Headless no tiene ventana ni renderiza. Queda fuera, y lo comprueba Raúl en

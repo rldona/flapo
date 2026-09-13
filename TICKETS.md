@@ -312,9 +312,11 @@ labels: fase:8, area:ci · estimate: 1
 
 ### T-091 · Workflow de export en GitHub Actions
 labels: fase:8, area:ci · estimate: 3
-`export.yml`: en push a `main` ejecuta los tests headless (`tests/run.sh` dentro del contenedor godot-ci, ver ADR-0007) y lint; en tag `v*` exporta los 4 presets con imagen godot-ci y publica en GitHub Releases.
+`export.yml`: en push a `main` y en PR ejecuta los tests headless (`tests/run.sh` dentro del contenedor godot-ci, ver ADR-0007) **y un export a Web**, que es lo que garantiza que `main` sigue siendo exportable; en tag `v*` exporta los presets con imagen godot-ci y publica en GitHub Releases.
 **Criterios de aceptación**
-- Un tag `v0.1.0` genera una release con 4 artefactos descargables.
+- Un push a `main` con un test roto pone el workflow en rojo.
+- Un tag `v0.1.0` genera una release con un artefacto descargable por preset existente.
+- La matriz de presets crece con T-090 (Android, Linux, Windows).
 
 ### T-092 · Firma de Android
 labels: fase:8, area:ci · estimate: 2

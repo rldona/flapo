@@ -1,4 +1,4 @@
-name: Export
+name: CI
 
 on:
   push:
@@ -7,33 +7,73 @@ on:
   pull_request:
 
 env:
-  GODOT_VERSION: 4.7.2   # debe coincidir con docs/environment.md
+  # Debe coincidir con docs/environment.md y con la imagen de godot-ci.
+  GODOT_VERSION: "4.7.2"
   PROJECT_NAME: flapo
 
 jobs:
-  checks:
+  # Lo que hace que `main` sea siempre exportable: si esto pasa en verde,
+  # el juego compila, se comporta y produce un build.
+  test:
+    name: Tests headless y export
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+
+      # Genera .godot/ (registro de class_name incluido). Sin esto los
+      # scripts que nombran GameConfig no compilan: ver ADR-0009.
+      - name: Importar assets
+        run: godot --headless --path . --import
+
+      - name: Comprobaciones headless
+        run: GODOT="$(command -v godot)" ./tests/run.sh
+
+      # Un fallo de export no se ve jugando en el editor y revienta justo en
+      # la release. Aquí se detecta en cada push.
+      - name: Export Web
+        run: |
+          mkdir -p export/Web
+          godot --headless --path . --export-release "Web" export/Web/index.html
+          test -s export/Web/index.wasm
+
+      - name: Guardar el build web
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}-web
+          path: export/Web
+          retention-days: 7
+
+  # Estilo. Sigue sin bloquear: se endurece en T-083, cuando gdformat pase
+  # limpio sobre todo el código y haya pre-commit.
+  lint:
+    name: Formato y lint (informativo)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install gdtoolkit
-      - run: gdformat --check scripts/ scenes/ || true   # quitar `|| true` en T-083
-      - run: gdlint scripts/ || true
+      - run: gdformat --check scripts/ tests/ || true # quitar `|| true` en T-083
+      - run: gdlint scripts/ tests/ || true
 
+  # Solo en tags. De momento un único preset: los de Android, Linux y
+  # Windows son T-090, y una matriz con presets inexistentes fallaría.
   export:
+    name: Exportar release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: checks
+    needs: test
     runs-on: ubuntu-latest
     container:
-      image: barichello/godot-ci:4.7.2   # misma versión que GODOT_VERSION
+      image: barichello/godot-ci:4.7.2
     strategy:
       matrix:
-        preset: [Web, Android, Linux, Windows]
+        preset: [Web]
     steps:
       - uses: actions/checkout@v4
-      - name: Import assets
-        run: godot --headless --import || true
+      - name: Importar assets
+        run: godot --headless --path . --import
       - name: Export ${{ matrix.preset }}
         run: |
           mkdir -p export/${{ matrix.preset }}
@@ -43,7 +83,7 @@ jobs:
             Linux)   out=export/Linux/${PROJECT_NAME}.x86_64 ;;
             Windows) out=export/Windows/${PROJECT_NAME}.exe ;;
           esac
-          godot --headless --export-release "${{ matrix.preset }}" "$out"
+          godot --headless --path . --export-release "${{ matrix.preset }}" "$out"
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_NAME }}-${{ matrix.preset }}
