@@ -1,0 +1,70 @@
+extends Node2D
+## Raíz de la partida y dueña de la máquina de estados.
+##
+## Patrón "call down, signal up" (la recomendación oficial de Godot):
+## Main conoce a sus hijos y les conecta señales o les llama métodos; los
+## hijos nunca buscan a Main con `get_parent()` ni suben por el árbol. Así
+## `Bird.tscn` o `Pipe.tscn` se pueden abrir y probar sueltos con F6.
+##
+## Main no decide *por qué* se cambia de estado, solo que el cambio es legal
+## y lo anuncia. Quien detecta la muerte (T-028) llama a `change_state()`.
+
+## Se emite después de que el estado ya ha cambiado, nunca antes: cuando un
+## nodo reacciona, `state` ya devuelve el valor nuevo.
+signal state_changed(to: GameState.State)
+
+## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
+@export var log_transitions: bool = true
+
+## Transiciones legales. Tenerlas en una tabla en vez de repartidas en `if`
+## convierte un bug de lógica (reiniciar desde PLAYING, morir dos veces) en
+## un aviso en consola en lugar de en un estado imposible.
+const _TRANSITIONS: Dictionary = {
+	GameState.State.READY: [GameState.State.PLAYING],
+	GameState.State.PLAYING: [GameState.State.GAME_OVER],
+	GameState.State.GAME_OVER: [GameState.State.READY],
+}
+
+var _state: GameState.State = GameState.State.READY
+
+
+func _ready() -> void:
+	if log_transitions:
+		state_changed.connect(_on_state_changed_log)
+	# Se anuncia el estado inicial para que nadie tenga que suponerlo. Los
+	# hijos ya están listos: en Godot `_ready()` corre de abajo arriba.
+	state_changed.emit(_state)
+
+
+## `_unhandled_input` y no `_input`: así la UI (botones de T-071) se queda
+## primero con el evento y el juego solo ve lo que nadie ha consumido.
+func _unhandled_input(event: InputEvent) -> void:
+	if _state == GameState.State.READY and event.is_action_pressed("flap"):
+		change_state(GameState.State.PLAYING)
+
+
+## Estado actual. Solo lectura: cambiarlo pasa por `change_state()`, que es
+## lo único que garantiza que se emita la señal.
+func get_state() -> GameState.State:
+	return _state
+
+
+## Intenta pasar a `to`. Ignora el cambio si no es una transición legal.
+func change_state(to: GameState.State) -> void:
+	if to == _state:
+		return
+	if not _TRANSITIONS[_state].has(to):
+		push_warning(
+			"Transición ilegal: %s -> %s" % [_state_name(_state), _state_name(to)]
+		)
+		return
+	_state = to
+	state_changed.emit(to)
+
+
+func _on_state_changed_log(to: GameState.State) -> void:
+	print("[Main] estado -> ", _state_name(to))
+
+
+func _state_name(state: GameState.State) -> String:
+	return GameState.State.keys()[state]
