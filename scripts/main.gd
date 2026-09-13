@@ -65,6 +65,9 @@ const _TRANSITIONS: Dictionary = {
 ## El fantasma del récord (T-243). Graba y reproduce; no colisiona ni puntúa.
 @export var ghost: Ghost
 
+## El grabador de replays (T-261). Solo escucha el botón; no toca el juego.
+@export var replay_recorder: ReplayRecorder
+
 ## Las ráfagas de viento (T-064).
 @export var wind: Wind
 
@@ -376,6 +379,8 @@ func change_state(to: GameState.State) -> void:
 		# todavía es 0 y el fantasma no sabría si le toca salir (T-243).
 		if ghost != null:
 			ghost.preparar(_session.seed())
+		if replay_recorder != null:
+			replay_recorder.preparar(_session.seed(), _session.difficulty(), _session.confidence())
 		_huecos_sin_planear = 0
 		bird.gravity_mult = 1.0
 		bird.size_mult = 1.0
@@ -405,11 +410,13 @@ func _connect_children() -> void:
 		"MenuPanel": menu_panel,
 		"Wind": wind,
 		"Ghost": ghost,
+		"ReplayRecorder": replay_recorder,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
 		return
 	pause_panel.resume_pressed.connect(set_paused.bind(false))
+	pause_panel.save_replay_pressed.connect(_on_save_replay_pressed)
 	if audio == null:
 		push_error("Main no tiene asignado el nodo Audio en el inspector.")
 		return
@@ -631,6 +638,17 @@ func _apply_difficulty() -> void:
 		fruit_spawner.set_difficulty(velocidad, hueco, separacion)
 
 
+## Guarda una copia del replay desde la pausa (T-261).
+##
+## La partida sigue viva: el fichero recoge lo jugado hasta aquí, que es lo
+## que quiere quien acaba de ver algo raro y pausa para conservarlo.
+func _on_save_replay_pressed() -> void:
+	if replay_recorder == null:
+		return
+	var ruta: String = replay_recorder.guardar_copia(_score)
+	pause_panel.set_aviso("Guardada" if ruta != "" else "No se ha podido guardar")
+
+
 ## Alterna el silencio y lo cuenta a los dos paneles que lo enseñan.
 func _on_mute_pressed() -> bool:
 	if audio == null:
@@ -699,6 +717,10 @@ func _on_bird_died(cause: Bird.DeathCause, sin_aliento: bool) -> void:
 	# Antes de cambiar de estado, mientras el vuelo grabado sigue completo.
 	if ghost != null:
 		ghost.terminar(_score, _is_new_high_score)
+	# Siempre, no solo si pasa algo raro: un replay solo sirve si ya estaba
+	# grabado cuando apareció el bug (T-261).
+	if replay_recorder != null:
+		replay_recorder.terminar(_score)
 	change_state(GameState.State.GAME_OVER)
 
 

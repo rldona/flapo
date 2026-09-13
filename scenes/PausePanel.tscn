@@ -39,6 +39,14 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 48)
 text = "Seguir"
 
+[node name="SaveButton" type="Button" parent="Root/Box"]
+custom_minimum_size = Vector2(0, 48)
+text = "Guardar esta partida"
+
+[node name="Aviso" type="Label" parent="Root/Box"]
+text = ""
+horizontal_alignment = 1
+
 [node name="MuteButton" type="Button" parent="Root/Box"]
 custom_minimum_size = Vector2(0, 48)
 text = "Sonido: sí"
