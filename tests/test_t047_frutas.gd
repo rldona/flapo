@@ -113,7 +113,19 @@ func _cada_fruta_hace_lo_suyo() -> void:
 		radio > radio_base and radio < radio_base * main.effects.big_size_mult,
 		"radio %.1f -> %.1f (dibujo x%.1f)" % [radio_base, radio, main.effects.big_size_mult]
 	)
-	h.check("la violeta ya no está activa", main.ground.scroll_speed > base * 0.9, "")
+	# Antes, coger la naranja apagaba la violeta: un solo efecto a la vez. Ahora
+	# se acumulan por ejes (ADR-0019, ampliación), así que grande y lento
+	# conviven — que es lo que uno espera y lo que se pidió jugando.
+	h.check(
+		"y la violeta sigue activa: grande y lento a la vez",
+		main.effects.activo(Effects.Kind.LENTO) and main.effects.activo(Effects.Kind.GRANDE),
+		"activos: %s" % str(main.effects.activos())
+	)
+	h.check(
+		"el mundo sigue lento con Flapo grande",
+		main.ground.scroll_speed < base * 0.9,
+		"%.1f px/s frente a %.1f de base" % [main.ground.scroll_speed, base]
+	)
 	main.free()
 
 
