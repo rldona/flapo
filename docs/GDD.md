@@ -47,7 +47,7 @@ Acción `flap`: toque, click izquierdo, espacio. `restart`, `pause`.
 Sonidos: aleteo, punto, golpe, caída, botón. Al morir: flash blanco, sacudida de cámara, hit-stop 60–100 ms. Parallax de fondo en 2 capas.
 
 ## Estilo
-288×512 vertical, pixel art, paleta de 16 colores (ver `docs/art-guide.md`). Flapo 16×12 px.
+288×512 vertical, pixel art, paleta propia de 16 colores (ver `docs/art-guide.md`). Flapo 24×24 px (hitbox: círculo de radio 8, más generosa que el dibujo).
 
 ## Fuera de alcance en v1
 Skins, ranking online, power-ups, anuncios, compras, modos de juego.

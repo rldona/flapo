@@ -29,7 +29,11 @@ verde que no pega con el resto. Los edificios del parallax van en
 `#7C9AB5`, más claros por perspectiva atmosférica, para que no compitan con
 las tuberías, que sí son obstáculo.
 
-- Tamaños: Flapo 16×12 · tubería 26 px ancho · tile de suelo 32 px · botones ≥ 48 px tras escalado.
+- Tamaños: **Flapo 24×24** · tubería 26 px ancho · tile de suelo 32 px · botones ≥ 48 px tras escalado.
+  El GDD decía 16×12; se subió en T-050 porque a ese tamaño se perdían la
+  tripa y el pico, que es lo que hace a Flapo reconocible. 24×24 deja el
+  mismo alto que el pájaro del Flappy original (34×24) sobre la misma
+  pantalla, así que el hueco de 100 px sigue siendo el correcto.
 - Reglas: outline 1 px oscuro, sin anti-aliasing fuera de la paleta, siluetas legibles a 1x.
 - Importación en Godot: filtro `Nearest`, sin mipmaps.
 - Fuentes `.pxo` en `assets/sprites/src/`, PNG exportados en `assets/sprites/`.
