@@ -105,6 +105,16 @@ el tope; nunca es certeza.
 Ese 15 % es lo que separa "exigente" de "inevitable": si la tubería subiera
 más rápido de lo que Flapo sube, no habría forma de responder. Ver ADR-0023.
 
+### Tubería blandita (T-066)
+
+Una de cada **7** tuberías es blandita y se ve distinta (verde apagado) desde
+que entra en pantalla. Tocarla **no acaba la partida**: rebota a Flapo hacia
+el hueco y cuesta 35 de aliento y 1 punto, con 0,8 s entre cobros.
+
+Es predecible a propósito: al poder contarla se convierte en una decisión
+("me la juego en la séptima") en vez de en un golpe de suerte. Tocar a la vez
+una blandita y una normal sí mata: la blandita no es un escudo. Ver ADR-0023.
+
 - Muerte: contacto con tubería o suelo.
 - Puntuación: +1 al atravesar el hueco. Una vez por tubería.
 - Récord persistente. Medallas: bronce 10, plata 20, oro 40.

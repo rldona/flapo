@@ -38,6 +38,9 @@ var spacing: float = GameConfig.PIPE_SPACING
 ## quien conoce la puntuación: el spawner no consulta el marcador ("call
 ## down", ADR-0005).
 var moving_chance: float = 0.0
+## Cuántas tuberías van en esta partida. Es lo que hace predecible a la
+## blandita (T-066): se puede contar. Se reinicia en READY.
+var _contador: int = 0
 
 var _rng := RandomNumberGenerator.new()
 
@@ -64,6 +67,7 @@ func on_game_state_changed(to: GameState.State) -> void:
 		# MENU se trata igual que READY: la pantalla de inicio es el mundo
 		# quieto con un panel encima, no un sitio aparte (T-078).
 		GameState.State.MENU, GameState.State.READY:
+			_contador = 0
 			_timer.stop()
 			_liberar_todas()
 			_reiniciar_rng()
@@ -113,6 +117,10 @@ func _crear_tuberia() -> void:
 	var pipe: Pipe = pipe_scene.instantiate()
 	pipe.scroll_speed = scroll_speed
 	pipe.gap = gap
+	# Antes de add_child: así ya nace teñida y se distingue desde el primer
+	# frame en pantalla, que es el criterio de T-066.
+	pipe.soft = GameConfig.is_soft_pipe(_contador)
+	_contador += 1
 	pipe.position = Vector2(spawn_x, 0.0)
 	pipe.scored.connect(_on_pipe_scored)
 	pipe.centered.connect(_on_pipe_centered)

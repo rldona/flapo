@@ -43,6 +43,11 @@ pequeño, que es lo que importa.
 de azul saturado compite con su propio fondo y parece pegado de otro juego.
 El `#3F7188` contrasta lo justo sin romper la armonía, y la tripa crema con el
 pico mostaza es lo que hace a Flapo reconocible de un vistazo.
+**Tubería blandita (T-066)**: se dibuja con el mismo sprite teñido de
+`#7FA37B`, un verde apagado que no usa ni el escenario ni las frutas. Tiene
+que leerse como "esta es distinta" **en cuanto entra en pantalla**, no al
+chocar: por eso es un cambio de color y no un detalle pequeño.
+
 **Tuberías**: `#506982`, el mismo gris azulado de los edificios. Contrasta con
 el cielo claro por arriba y con la arena del suelo por abajo, sin meter un
 verde que no pega con el resto. Los edificios del parallax van en

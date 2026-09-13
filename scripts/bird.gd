@@ -14,6 +14,10 @@ extends CharacterBody2D
 ## momento del golpe y nadie más puede reconstruirlo después.
 signal died(cause: DeathCause, sin_aliento: bool)
 
+## Flapo ha rebotado en una tubería blandita (T-066). No muere: quien decide
+## qué cuesta es Main.
+signal soft_hit
+
 ## La fatiga ha cambiado (T-049). `aleteos` es cuántos hay en la ventana.
 signal fatigue_changed(fatigado: bool, aleteos: int)
 
@@ -141,6 +145,8 @@ var _flap_times: Array[float] = []
 var _tiempo: float = 0.0
 ## Segundos que le quedan de no colisionar tras gastar un escudo.
 var _invulnerable_left: float = 0.0
+## Enfriamiento del cobro de la tubería blandita (T-066), s.
+var _soft_cooldown: float = 0.0
 
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _shape: CollisionShape2D = $CollisionShape2D
@@ -184,7 +190,12 @@ func _physics_process(delta: float) -> void:
 			if not is_on_floor():
 				rotation += stun_spin * delta
 
+	# La x y la velocidad horizontal de ANTES de mover: `move_and_slide` puede
+	# cambiar las dos, y eso no debe pasar (ver `_mantener_carril`).
+	var x_antes: float = position.x
+	var vx_antes: float = velocity.x
 	move_and_slide()
+	_mantener_carril(x_antes, vx_antes)
 	_clamp_to_ceiling()
 	# En GAME_OVER manda el giro de aturdimiento y no el ángulo por velocidad:
 	# si los dos escribieran `rotation`, se pelearían y el giro no se vería.
@@ -193,6 +204,9 @@ func _physics_process(delta: float) -> void:
 	# impulso..caída máxima), y Flapo iría cabeceando mientras espera.
 	if _state == GameState.State.PLAYING:
 		_update_rotation(delta)
+
+	if _soft_cooldown > 0.0:
+		_soft_cooldown = maxf(_soft_cooldown - delta, 0.0)
 
 	if _invulnerable_left > 0.0:
 		_invulnerable_left = maxf(_invulnerable_left - delta, 0.0)
@@ -221,6 +235,7 @@ func on_game_state_changed(to: GameState.State) -> void:
 		_breath = max_breath
 		breath_changed.emit(_breath, max_breath)
 		_flap_times.clear()
+		_soft_cooldown = 0.0
 		fatigue_changed.emit(false, 0)
 		gravity_mult = 1.0
 		size_mult = 1.0
@@ -354,6 +369,33 @@ func _apply_gravity(delta: float) -> void:
 	velocity.y = minf(velocity.y + gravity * gravity_mult * delta, max_fall_speed)
 
 
+## La FÍSICA no mueve a Flapo en horizontal (T-066).
+##
+## Su carril es cosa del juego: el mundo se desplaza, él no. Hasta T-066 esto
+## se cumplía solo, porque `velocity.x` siempre era 0. Con la tubería blandita
+## dejó de cumplirse: un `StaticBody2D` que se mueve y atraviesa a Flapo lo
+## desplaza al resolver la penetración, y como no muere se quedaba desplazado
+## para siempre. Medido en un test: x de 320 a 338 en medio segundo.
+##
+## La regla exacta es: **si Flapo no se estaba moviendo en horizontal a
+## propósito, la física no puede moverlo**. Se restaura la x de antes de
+## mover, no `start_position.x`, y solo cuando `velocity.x` era 0.
+##
+## Los dos matices importan. Sin el primero, colocar a Flapo en otro sitio a
+## mano dejaría de valer. Sin el segundo, quien le da velocidad horizontal
+## —varios tests cruzan una tubería moviendo a Flapo en vez de moverla a
+## ella— se encontraría con que no avanza. En la partida real `velocity.x`
+## es siempre 0, así que la regla se aplica siempre.
+##
+## Esta es la respuesta a lo que ADR-0023 dejó abierto. No es
+## `constant_linear_velocity` —eso arrastraría a Flapo *más*, no menos—.
+func _mantener_carril(x_antes: float, vx_antes: float) -> void:
+	if not is_zero_approx(vx_antes):
+		return
+	position.x = x_antes
+	velocity.x = 0.0
+
+
 func _clamp_to_ceiling() -> void:
 	if position.y < ceiling_y:
 		position.y = ceiling_y
@@ -378,6 +420,11 @@ func _check_death() -> void:
 	var choque: bool = get_slide_collision_count() > 0
 	if not choque and position.y < fall_death_y:
 		return
+	# Las blanditas se miran ANTES de morir (T-066): si todo lo que se ha
+	# tocado es blando, no hay muerte que procesar.
+	if choque and position.y < fall_death_y and _solo_blandas():
+		_rebotar_en_blanda()
+		return
 	_dead = true
 	# El rebote se aplica aquí y no en Juice: es física de Flapo, y así
 	# ocurre en el mismo tick del golpe, sin un frame de retraso.
@@ -386,6 +433,68 @@ func _check_death() -> void:
 	# Sin aliento no mata, pero sí explica: es la diferencia entre "se
 	# estampó" y "llegó agotado y se estampó".
 	died.emit(causa, is_zero_approx(_breath))
+
+
+## Si todo lo que se está tocando es tubería blandita (T-066).
+##
+## "Todo", no "algo": tocar a la vez una blandita y una normal mata, porque
+## la normal mata. Perdonar por estar rozando una blandita convertiría la
+## variante en un escudo, y no lo es.
+func _solo_blandas() -> bool:
+	var alguna: bool = false
+	for i in get_slide_collision_count():
+		var pipe: Pipe = _pipe_de(get_slide_collision(i).get_collider())
+		if pipe == null or not pipe.soft:
+			return false
+		alguna = true
+	return alguna
+
+
+## Rebota y avisa, con enfriamiento (T-066).
+##
+## El rebote es **solo vertical**, y hacia el hueco de la tubería tocada.
+##
+## Rebotar por la normal del contacto parecía lo natural y era un bug: un
+## choque de lado da una normal horizontal, y Flapo no tiene eje horizontal
+## —su x es fija en todo el juego—. Salía despedido a la derecha a 260 px/s y
+## se iba de la pantalla para no volver. Lo cazó el detalle de un test, que
+## lo dejó en x=459.
+##
+## Empujar hacia el hueco y no hacia afuera es deliberado: la blandita
+## perdona, así que te coloca donde tenías que haber pasado.
+##
+## Y aquí SÍ importa lo que ADR-0023 dejó abierto: esta es la primera tubería
+## con la que hay contacto sin muerte, así que Flapo puede quedarse apoyado
+## en ella. El enfriamiento evita que apoyarse cueste el aliento entero en
+## medio segundo, y como lo separa en cada toque no llega a sostenerse encima:
+## sigue sin hacer falta `constant_linear_velocity`.
+func _rebotar_en_blanda() -> void:
+	var direccion: float = -1.0
+	for i in get_slide_collision_count():
+		var pipe: Pipe = _pipe_de(get_slide_collision(i).get_collider())
+		if pipe == null:
+			continue
+		var centro: float = pipe.global_position.y + pipe.get_gap_center()
+		direccion = signf(centro - global_position.y)
+		break
+	if is_zero_approx(direccion):
+		direccion = -1.0
+	# velocity.x no se toca: Flapo no se mueve en horizontal, nunca.
+	velocity.y = direccion * GameConfig.SOFT_PIPE_BOUNCE_SPEED
+	if _soft_cooldown > 0.0:
+		return
+	_soft_cooldown = GameConfig.SOFT_PIPE_COOLDOWN
+	_gastar_aliento(GameConfig.SOFT_PIPE_BREATH_COST)
+	soft_hit.emit()
+
+
+## De qué tubería es este cuerpo, si es que lo es.
+func _pipe_de(nodo: Object) -> Pipe:
+	while nodo is Node:
+		if nodo is Pipe:
+			return nodo as Pipe
+		nodo = (nodo as Node).get_parent()
+	return null
 
 
 ## Contra qué se ha dado. Tuberías y suelo comparten capa de colisión, así
@@ -398,11 +507,8 @@ func _causa_del_choque() -> DeathCause:
 	# tocan las dos a la vez, porque es la que cuenta la historia; el suelo
 	# solo estaba ahí debajo.
 	for i in get_slide_collision_count():
-		var nodo: Object = get_slide_collision(i).get_collider()
-		while nodo is Node:
-			if nodo is Pipe:
-				return DeathCause.TUBERIA
-			nodo = (nodo as Node).get_parent()
+		if _pipe_de(get_slide_collision(i).get_collider()) != null:
+			return DeathCause.TUBERIA
 	# Cualquier otra cosa en la capa de obstáculos es el suelo. Si algún día
 	# hubiera un tercer obstáculo, este es el sitio donde añadirlo.
 	return DeathCause.SUELO
