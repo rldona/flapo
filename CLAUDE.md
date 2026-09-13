@@ -21,5 +21,6 @@ Proyecto de aprendizaje E2E, público. Prioridad: hacerlo bien y explicar por qu
 - Puedes ejecutar Godot en headless: `./tests/run.sh` y `/Applications/Godot.app/Contents/MacOS/Godot --headless --path . -s tests/test_x.gd`. Ver docs/testing.md.
 - Todo criterio de aceptación comprobable sin ventana (física, estados, señales, colisiones, puntuación, persistencia, fugas de nodos) lo verificas tú con un test en `tests/`, un fichero por ticket. No lo delegues en Raúl.
 - Lo que headless no ve (escalado y píxeles, arte, audio, y cómo se siente el juego) sí lo comprueba Raúl: di exactamente qué probar y qué debería verse.
+- **Raúl prueba en el navegador, no en el editor.** Después de cualquier cambio que se pueda ver o jugar, vuelve a exportar antes de decir que está hecho: `./tools/servir_web.sh` o, si el servidor ya está en marcha, `godot --headless --path . --export-release "Web" export/Web/index.html`. Un build viejo no da ningún error: carga, funciona y le faltan las últimas features.
 - Explica las decisiones de diseño de Godot (por qué CharacterBody2D y no RigidBody2D, etc.); es un proyecto de aprendizaje.
 - Responder en español, conciso.
