@@ -1,4 +1,4 @@
 [gd_resource type="Resource" format=3]
 
 [resource]
-lineas = PackedStringArray("El escudo se acumula", "Build jugable por PR y versionado automático (T-270, T-271)", "El bot dice también de qué muere (T-260)")
+lineas = PackedStringArray()

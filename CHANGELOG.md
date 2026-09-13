@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 — 2026-09-09
+
+### Arreglos
+
+- El changelog generado no pasaba los hooks del propio repo
+- El juego llena la pantalla, sin barras
+- El sobrante del letterbox lleva el cielo, no negro
+
 ## 0.1.0 — 2026-09-09
 
 ### Novedades
