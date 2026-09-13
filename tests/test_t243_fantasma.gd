@@ -34,6 +34,7 @@ func _init() -> void:
 	_un_fichero_roto_no_da_fantasma()
 	await _sin_fichero_el_juego_arranca_igual()
 	await _graba_al_batir_el_record_y_lo_reproduce()
+	await _al_superarlo_el_fantasma_desaparece()
 	await _una_partida_peor_no_pisa_el_fantasma()
 	await _con_otra_semilla_no_sale()
 	await _no_puntua_ni_toca_el_rng()
@@ -206,6 +207,41 @@ func _graba_al_batir_el_record_y_lo_reproduce() -> void:
 		"fantasma x %.2f, Flapo x %.2f" % [otro.ghost.position.x, otro.bird.position.x]
 	)
 	otro.free()
+
+
+## Cuando el jugador pasa de donde llegó aquella vez, el fantasma se va.
+##
+## El fallo que esto atrapa no se veía en ningún test: al acabarse el vuelo
+## grabado, el fantasma se quedaba en la última `y` y seguía en pantalla
+## planeando en línea recta para siempre, como si aquel vuelo hubiera durado
+## eternamente. Justo lo contrario de lo que un fantasma tiene que contar.
+func _al_superarlo_el_fantasma_desaparece() -> void:
+	var disco: GhostRecord = GhostRecord.cargar()
+	h.check("premisa: hay un vuelo guardado que superar", disco != null, "")
+	if disco == null:
+		return
+	var main: Node = await h.montar(MAIN, {"log_transitions": false})
+	main.start_code(CODIGO)
+	main.change_state(GameState.State.PLAYING)
+	main.bird.collision_mask = 0
+	var visto_dentro: bool = false
+	var visto_despues: bool = false
+	for i in disco.frames() + 40:
+		await _tick_volando(main, i)
+		var frame: int = main.ghost.frames_reproducidos()
+		if frame < disco.frames():
+			visto_dentro = visto_dentro or main.ghost.visible
+		elif frame > disco.frames():
+			visto_despues = visto_despues or main.ghost.visible
+	h.check("premisa: mientras dura el vuelo grabado, el fantasma se ve", visto_dentro, "")
+	h.check(
+		"premisa: y se ha volado más allá del final",
+		main.ghost.frames_reproducidos() > disco.frames(),
+		"%d frames de %d" % [main.ghost.frames_reproducidos(), disco.frames()]
+	)
+	h.check("al superar el vuelo grabado el fantasma desaparece", not visto_despues, "")
+	h.check("y deja de reproducir", not main.ghost.esta_reproduciendo(), "")
+	main.free()
 
 
 ## El fantasma es el del RÉCORD: una partida peor no lo sustituye.

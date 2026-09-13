@@ -71,8 +71,10 @@ func on_game_state_changed(to: GameState.State) -> void:
 				position.y = _registro.y_en(0)
 		GameState.State.GAME_OVER:
 			_activo = false
-			# Se queda donde estaba: el fantasma no se muere, simplemente
-			# deja de volar. Que siga en pantalla enseña dónde llegó.
+			# Al morir el jugador el fantasma se queda quieto donde iba: ahí
+			# sí enseña algo, la distancia que te faltaba. Es distinto de
+			# quedarse cuando ya lo has superado, que es lo que se corrigió
+			# en `_physics_process`.
 
 
 func _physics_process(_delta: float) -> void:
@@ -81,7 +83,19 @@ func _physics_process(_delta: float) -> void:
 	if bird != null and _grabando.size() < GameConfig.GHOST_MAX_FRAMES:
 		_grabando.append(bird.position.y)
 	if _reproduciendo:
-		position.y = _registro.y_en(_frame)
+		# Se acabó el vuelo grabado: el jugador ha pasado de donde llegó
+		# aquella vez. El fantasma se va.
+		#
+		# Antes se quedaba en la última `y` grabada, y sobre el papel sonaba
+		# a "se queda donde se estrelló". En pantalla se veía otra cosa muy
+		# distinta: un pájaro planeando en línea recta para siempre. Un
+		# fantasma que sigue ahí después de superarlo miente sobre lo único
+		# que tiene que contar, que es dónde llegaste.
+		if _frame >= _registro.frames():
+			_reproduciendo = false
+			visible = false
+		else:
+			position.y = _registro.posiciones[_frame]
 	_frame += 1
 
 

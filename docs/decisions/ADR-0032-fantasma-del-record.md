@@ -64,6 +64,21 @@ Se guarda al **batir el récord**, no al morir: si no, el "fantasma del récord"
 sería en realidad "el fantasma de la última partida", que es otra cosa y
 bastante menos útil.
 
+## Cuándo se va
+En cuanto el jugador pasa del último frame grabado. No se queda en la última
+posición.
+
+Esto se decidió mal la primera vez. Sobre el papel, "se queda donde se
+estrelló" sonaba razonable. En pantalla se veía otra cosa: un pájaro planeando
+en línea recta para siempre, porque la última `y` grabada se repetía frame
+tras frame mientras el mundo seguía moviéndose. Un fantasma que sigue ahí
+después de superarlo miente sobre lo único que tiene que contar, que es dónde
+llegaste; y el instante en que desaparece es justo el premio de haberlo
+superado.
+
+Es distinto de morirse: si el que muere es el jugador, el fantasma se queda
+quieto donde iba, y ahí sí enseña algo — la distancia que faltaba.
+
 ## Consecuencias
 - Un fantasma sobrevive a cambiar `GameConfig`; un replay por inputs no.
 - El fichero crece con la duración de la partida. Tope: `GHOST_MAX_FRAMES`,
