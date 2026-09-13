@@ -53,7 +53,11 @@ const PIPE_SPACING_MAX: float = 172.0
 const FLAP_CYCLE: float = 0.35
 ## Alto del hueco al empezar la partida, px. Es la base de la curva de
 ## dificultad; el rango vertical del hueco sigue siendo `@export` de Pipe.
-const PIPE_GAP: float = 100.0
+##
+## Arranca por encima de los 100 px "de género" a propósito: los primeros
+## diez segundos de alguien que no ha jugado nunca son los que deciden si
+## sigue. Se estrecha hasta PIPE_GAP_MIN con la puntuación (ADR-0018).
+const PIPE_GAP: float = 118.0
 
 # --- Puntuación ---------------------------------------------------------
 const MEDAL_BRONZE: int = 10

@@ -29,8 +29,8 @@ Ready → (toque) → Playing: aletear, esquivar, puntuar → (colisión) → Ga
 | Impulso de aleteo (px/s) | -380 | | |
 | Velocidad de scroll (px/s) | 100 | | |
 | Separación entre tuberías (px) | 160 | | |
-| Hueco (px) | 100 | | |
-| Rango vertical del hueco | 20 %–80 % | | |
+| Hueco inicial (px) | 118 | | se estrecha con la puntuación |
+| Rango vertical del hueco | 20 %–80 % | | deja ≥30 px con techo y suelo |
 | Tope superior | y = 0 | | |
 | Tope de caída (px/s) | 500 | | mentira física al servicio del control (ADR-0006) |
 | Alto del suelo (px) | 64 | | altura jugable = 448 |
@@ -66,9 +66,13 @@ son funciones puras de la puntuación, así que reiniciar la devuelve al inicio.
 
 | Puntos | Velocidad | Hueco | Separación | Aleteos entre tuberías |
 |---|---|---|---|---|
-| 0 | 100 px/s | 100 px | 160 px | 4,57 |
-| 15 | 122 px/s | 91 px | 166 px | 3,87 |
+| 0 | 100 px/s | 118 px | 160 px | 4,57 |
+| 15 | 122 px/s | **100 px** | 166 px | 3,87 |
 | 30 y más | 145 px/s | 82 px | 172 px | **3,39** |
+
+El hueco arranca **por encima** de los 100 px habituales del género y llega a
+ellos justo a los 15 puntos: los primeros quince son la rampa de entrada, y a
+partir de ahí el juego es el de siempre y sigue apretando.
 
 La separación sube a propósito: es lo que mantiene los aleteos por encima de
 3. Ver ADR-0018.

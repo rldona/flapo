@@ -164,6 +164,13 @@ La dificultad sube con la puntuación: velocidad de scroll y hueco de las tuber�
 - **Nunca caben menos de 3 aleteos entre tuberías** en ninguna puntuación.
 - Reiniciar devuelve la dificultad inicial.
 
+### T-046 · Hueco de salida más ancho
+labels: fase:3, area:code · estimate: 1
+Subir el hueco inicial de 100 a 118 px para que los primeros puntos perdonen más, manteniendo el mínimo de 82 en el tope de la curva.
+**Criterios de aceptación**
+- El hueco de salida es mayor que el "normal" del género (100 px) y la curva llega a 100 px alrededor de los 15 puntos.
+- El hueco cabe entre techo y suelo en todo el rango de sorteo, en toda la curva.
+
 ### T-041 · Animación de aleteo
 labels: fase:3, area:code · estimate: 1
 `AnimatedSprite2D` con 3 frames placeholder; velocidad de animación según estado (más rápida al saltar).

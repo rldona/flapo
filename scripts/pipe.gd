@@ -14,7 +14,7 @@ signal scored
 
 @export_group("Hueco")
 ## Alto del hueco, px. Es la constante que más cambia la dificultad.
-@export var gap: float = 100.0:
+@export var gap: float = GameConfig.PIPE_GAP:
 	set(valor):
 		gap = valor
 		_apply_layout()

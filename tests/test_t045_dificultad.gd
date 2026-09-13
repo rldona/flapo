@@ -11,6 +11,7 @@ func _init() -> void:
 	print("--- T-045 · Dificultad ---")
 	_la_curva_es_monotona_y_con_tope()
 	_nunca_baja_del_umbral_de_lo_justo()
+	await _el_hueco_siempre_cabe()
 	await _la_partida_acelera_de_verdad()
 	await _reiniciar_devuelve_la_dificultad_inicial()
 	SaveManager.clear()
@@ -89,6 +90,36 @@ func _nunca_baja_del_umbral_de_lo_justo() -> void:
 		GameConfig.pipe_gap_for(GameConfig.DIFFICULTY_CAP) >= 16.0 * 4.0,
 		"hueco mínimo %.0f px" % GameConfig.pipe_gap_for(GameConfig.DIFFICULTY_CAP)
 	)
+
+
+## El hueco más ancho tiene que caber entre el techo y el suelo en las dos
+## posiciones extremas donde puede sortearse. Ensanchar el hueco de salida sin
+## comprobar esto dejaría tuberías con un tubo de altura cero: un hueco que
+## llega hasta el borde de la pantalla y que no se ve venir.
+func _el_hueco_siempre_cabe() -> void:
+	var pipe: Node = load("res://scenes/Pipe.tscn").instantiate()
+	root.add_child(pipe)
+	await process_frame
+	var jugable: float = GameConfig.playable_height()
+	var peor_arriba: float = INF
+	var peor_abajo: float = INF
+	for score in range(0, GameConfig.DIFFICULTY_CAP + 1):
+		var media: float = GameConfig.pipe_gap_for(score) * 0.5
+		var centro_alto: float = pipe.gap_center_min_ratio * jugable
+		var centro_bajo: float = pipe.gap_center_max_ratio * jugable
+		peor_arriba = minf(peor_arriba, centro_alto - media)
+		peor_abajo = minf(peor_abajo, jugable - (centro_bajo + media))
+	h.check(
+		"el hueco nunca toca el techo",
+		peor_arriba > 0.0,
+		"margen mínimo con el techo: %.1f px" % peor_arriba
+	)
+	h.check(
+		"el hueco nunca toca el suelo",
+		peor_abajo > 0.0,
+		"margen mínimo con el suelo: %.1f px" % peor_abajo
+	)
+	pipe.free()
 
 
 ## Que la curva exista en una hoja de cálculo no basta: el mundo tiene que

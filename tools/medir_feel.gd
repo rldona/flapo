@@ -66,7 +66,7 @@ func _constantes() -> void:
 	print("  tope de caída       %7.1f px/s" % b.max_fall_speed)
 	print("  velocidad de scroll %7.1f px/s" % GameConfig.SCROLL_SPEED)
 	print("  separación tuberías %7.1f px" % GameConfig.PIPE_SPACING)
-	print("  hueco               %7.1f px" % 100.0)
+	print("  hueco               %7.1f px" % GameConfig.PIPE_GAP)
 	print("  alto de Flapo         24 px · hitbox radio 8")
 
 
@@ -114,7 +114,7 @@ func _ventana_de_reaccion() -> void:
 ## Cuánto margen sobra al pasar por el centro del hueco.
 func _margen_del_hueco() -> void:
 	_cab("Margen del hueco")
-	var hueco: float = 100.0
+	var hueco: float = GameConfig.PIPE_GAP
 	var diametro: float = 16.0  # hitbox radio 8
 	print("  hueco                    %5.1f px" % hueco)
 	print("  hitbox de Flapo          %5.1f px" % diametro)

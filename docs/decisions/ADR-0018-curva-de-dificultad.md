@@ -40,7 +40,7 @@ Velocidad y hueco a la vez, con tope a los **30 puntos**:
 | | Inicio | Tope |
 |---|---|---|
 | Velocidad | 100 px/s | 145 px/s |
-| Hueco | 100 px | 82 px |
+| Hueco | 118 px | 82 px |
 | Separación | 160 px | 172 px |
 | Aleteos entre tuberías | 4,57 | **3,39** |
 
@@ -50,6 +50,23 @@ ella, a 145 px/s quedarían 3,15 y el margen sería demasiado fino.
 
 El hueco mínimo de 82 px sigue siendo **cinco veces la hitbox** de Flapo
 (16 px de diámetro) y más de tres veces su dibujo.
+
+### El hueco de salida sube a 118 px (T-046)
+El GDD fijaba 100 px, que es el hueco habitual del género. Se sube a 118 para
+la salida: los primeros diez segundos de alguien que no ha jugado nunca son
+los que deciden si sigue jugando, y con 100 px el margen es de 42 px por lado
+frente a los 51 de ahora.
+
+El efecto secundario es que la curva llega a los 100 px **justo a los 15
+puntos**: los primeros quince son la rampa de entrada y a partir de ahí el
+juego es el de siempre.
+
+Esto abrió un invariante que antes no existía: con huecos más anchos hay que
+comprobar que **el hueco cabe entre el techo y el suelo** en las dos
+posiciones extremas del rango de sorteo (20 %–80 %). Con 118 px quedan 30,6 px
+de margen por arriba y por abajo. Hay test, porque ensanchar más sin mirarlo
+dejaría tuberías con un tubo de altura cero: un hueco pegado al borde que no
+se ve venir.
 
 ### Todo son funciones puras de la puntuación
 `GameConfig.scroll_speed_for(score)`, `pipe_gap_for(score)`,
