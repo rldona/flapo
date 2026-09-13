@@ -59,6 +59,9 @@ const _TRANSITIONS: Dictionary = {
 ## La pantalla de inicio (T-078).
 @export var menu_panel: MenuPanel
 
+## Las ráfagas de viento (T-064).
+@export var wind: Wind
+
 ## El vigilante del tamaño de ventana (T-085). No dibuja: solo publica.
 @export var layout: LayoutDirector
 
@@ -333,6 +336,7 @@ func _connect_children() -> void:
 		"Fade": fade,
 		"FruitSpawner": fruit_spawner,
 		"MenuPanel": menu_panel,
+		"Wind": wind,
 	}
 	if pause_panel == null:
 		push_error("Main no tiene asignado el nodo PausePanel en el inspector.")
@@ -359,6 +363,10 @@ func _connect_children() -> void:
 
 	bird.died.connect(_on_bird_died)
 	bird.soft_hit.connect(_on_soft_hit)
+	if wind != null:
+		wind.warning_started.connect(_on_wind_warning)
+		wind.gust_started.connect(_on_wind_gust)
+		wind.gust_ended.connect(_on_wind_ended)
 	game_over_panel.menu_pressed.connect(to_menu)
 	if menu_panel != null:
 		menu_panel.play_pressed.connect(func() -> void: change_state(GameState.State.READY))
@@ -420,10 +428,33 @@ func _on_share_pressed(texto: String) -> void:
 
 func _on_scored() -> void:
 	_score += 1
+	if wind != null:
+		wind.enabled = _score >= GameConfig.WIND_MIN_SCORE
 	if audio != null:
 		audio.play_point()
 	_apply_difficulty()
 	score_changed.emit(_score)
+
+
+## Empieza el aviso de ráfaga (T-064). Todavía no sopla: esto es el tiempo
+## que tiene el jugador para colocarse.
+func _on_wind_warning(a_favor: bool) -> void:
+	if hud != null:
+		hud.set_wind("aviso", a_favor)
+
+
+func _on_wind_gust(a_favor: bool) -> void:
+	if hud != null:
+		hud.set_wind("sopla", a_favor)
+	_apply_difficulty()
+
+
+## El viento se deshace solo: no hay estado que limpiar, basta con recalcular
+## la dificultad, que es función pura de la puntuación (ADR-0018).
+func _on_wind_ended() -> void:
+	if hud != null:
+		hud.set_wind("", true)
+	_apply_difficulty()
 
 
 ## Flapo ha rebotado en una tubería blandita (T-066).
@@ -444,15 +475,28 @@ func _on_soft_hit() -> void:
 	score_changed.emit(_score)
 
 
+## El factor de viento de este instante (T-064).
+##
+## Se pregunta a `GameConfig` en vez de guardarlo: la dirección que de verdad
+## cabe depende de la puntuación, que cambia mientras sopla.
+func _wind_factor() -> float:
+	if wind == null or not wind.is_blowing():
+		return 1.0
+	return GameConfig.wind_factor_for(_score, _difficulty, wind.is_tailwind())
+
+
 ## Empuja la dificultad de la puntuación actual a quien la necesita.
 ##
 ## "Call down" (ADR-0005): los sistemas no consultan la puntuación, la reciben.
 ## Al ser funciones puras de la puntuación (ADR-0018), volver a READY con el
 ## marcador a 0 restaura la dificultad inicial sin código de reinicio.
 func _apply_difficulty() -> void:
-	# La velocidad del mundo es la curva de dificultad POR el modificador de
-	# la fruta violeta: una cosa sube con la puntuación y la otra es temporal.
-	var velocidad: float = GameConfig.scroll_speed_for(_score, _difficulty) * effects.speed_mult()
+	# El orden importa. Primero la curva, luego el viento ACOTADO al sobre de
+	# la curva (T-064), y solo al final el modificador de la fruta violeta,
+	# que sí puede bajar del mínimo: ese es su efecto, y el criterio del
+	# viento no debía llevárselo por delante.
+	var velocidad: float = GameConfig.wind_speed_for(_score, _difficulty, _wind_factor())
+	velocidad *= effects.speed_mult()
 	var hueco: float = GameConfig.pipe_gap_for(_score, _difficulty)
 	var separacion: float = GameConfig.pipe_spacing_for(_score, _difficulty)
 	if pipe_spawner != null:

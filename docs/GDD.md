@@ -115,6 +115,17 @@ Es predecible a propósito: al poder contarla se convierte en una decisión
 ("me la juego en la séptima") en vez de en un golpe de suerte. Tocar a la vez
 una blandita y una normal sí mata: la blandita no es un escudo. Ver ADR-0023.
 
+### Ráfagas de viento (T-064)
+
+A partir de **10 puntos**, cada 12-22 s hay una ráfaga de 5 s que sube o baja
+la velocidad del mundo un 25 % / 20 %. **Siempre se anuncia 2 s antes** (5,7
+aleteos) con un cartel ámbar; mientras sopla el cartel es blanco.
+
+El viento nunca saca la velocidad del sobre de la curva, y por eso **sopla
+hacia donde hay margen**: a 0 puntos solo puede empujar a favor, en el tope
+solo en contra. Así el rango se respeta y la ráfaga siempre se nota. Ver
+ADR-0026.
+
 - Muerte: contacto con tubería o suelo.
 - Puntuación: +1 al atravesar el hueco. Una vez por tubería.
 - Récord persistente. Medallas: bronce 10, plata 20, oro 40.

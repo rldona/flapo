@@ -122,6 +122,29 @@ const MOVING_PIPE_AMPLITUDE: float = 22.0
 ## Flapo siempre puede más que la tubería, que es lo que la hace justa.
 const MOVING_PIPE_PERIOD: float = 2.4
 
+# --- Ráfagas de viento (T-064) ------------------------------------------
+## Segundos de aviso antes de que empiece a soplar. Es la constante que
+## decide si el viento es un reto o una encerrona: a 2 s caben casi 6
+## aleteos, tiempo de sobra para recolocarse.
+const WIND_WARNING_TIME: float = 2.0
+
+## Cuánto sopla una ráfaga, s. Corta a propósito: el viento es un tramo, no
+## un estado del juego.
+const WIND_DURATION: float = 5.0
+
+## Calma entre ráfagas, s. Al azar dentro del rango para que no se pueda
+## contar el compás, pero nunca seguidas.
+const WIND_CALM_MIN: float = 12.0
+const WIND_CALM_MAX: float = 22.0
+
+## Cuánto multiplica la velocidad del mundo, a favor y en contra.
+const WIND_FACTOR_TAIL: float = 1.25
+const WIND_FACTOR_HEAD: float = 0.80
+
+## Puntuación a partir de la cual puede soplar. Como con las tuberías
+## móviles: la rampa de entrada se deja limpia.
+const WIND_MIN_SCORE: int = 10
+
 # --- Layout adaptativo (T-085) ------------------------------------------
 ## Escala mínima. Por debajo de 1 el pixel art se destruiría: antes que
 ## encoger el playfield se prefiere que se salga y la ventana lo recorte.
@@ -366,6 +389,39 @@ static func playfield_rect_for(ventana: Vector2i) -> Rect2i:
 static func layout_margin_for(ventana: Vector2i) -> Vector2i:
 	var caja: Rect2i = playfield_rect_for(ventana)
 	return Vector2i(maxi(caja.position.x, 0), maxi(caja.position.y, 0))
+
+
+## El factor de viento que de verdad se puede aplicar a esa puntuación
+## (T-064), respetando el sobre de la curva de dificultad.
+##
+## El criterio del ticket es que el viento **nunca** saque el scroll de
+## `[SCROLL_SPEED, SCROLL_SPEED_MAX]` (escalados al modo). Acotar a secas
+## tenía un efecto feo: a 0 puntos ya estás en el mínimo, así que un viento
+## en contra no haría nada, y en el tope pasaría lo mismo con uno a favor.
+## Una ráfaga anunciada que luego no se nota es peor que no tenerla.
+##
+## Así que se sopla **hacia donde hay margen**: se pide una dirección y, si
+## esa no cabe, se devuelve la contraria. El rango se respeta exacto y la
+## ráfaga siempre se siente. Devuelve 1.0 solo si no cabe ninguna de las dos.
+static func wind_factor_for(score: int, modo: Difficulty, a_favor: bool) -> float:
+	var base: float = scroll_speed_for(score, modo)
+	if base <= 0.0:
+		return 1.0
+	var suelo: float = scroll_speed_for(0, modo)
+	var techo: float = scroll_speed_for(DIFFICULTY_CAP, modo)
+	var cola: float = clampf(base * WIND_FACTOR_TAIL, suelo, techo) / base
+	var contra: float = clampf(base * WIND_FACTOR_HEAD, suelo, techo) / base
+	var preferido: float = cola if a_favor else contra
+	var alternativo: float = contra if a_favor else cola
+	if not is_equal_approx(preferido, 1.0):
+		return preferido
+	return alternativo
+
+
+## La velocidad del mundo con el viento ya aplicado y acotada (T-064).
+static func wind_speed_for(score: int, modo: Difficulty, factor: float) -> float:
+	var base: float = scroll_speed_for(score, modo)
+	return clampf(base * factor, scroll_speed_for(0, modo), scroll_speed_for(DIFFICULTY_CAP, modo))
 
 
 ## Nombre del modo para la interfaz. Vive aquí y no en el menú porque es

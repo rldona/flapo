@@ -105,7 +105,7 @@ Objetivo: que se sienta bien. Es donde un clon mediocre se separa de uno bueno.
 - ✅ Parallax de fondo (2 capas: nubes lentas, ciudad media). → T-043
 - ✅ Transiciones: fundido entre `Ready` y `Playing`, retardo antes de mostrar Game Over. → T-044
 - ✅ Tuberías con movimiento vertical a partir de 15 puntos. → T-063 (ADR-0023)
-- 🔲 Ráfagas de viento anunciadas, tramos puntuales. → T-064
+- ✅ Ráfagas de viento anunciadas 2 s antes, acotadas al sobre de la curva. → T-064 (ADR-0026)
 - 🔲 Tubería giratoria (variante visual, misma hitbox). → T-065
 - ✅ Tubería "blandita" cada 7: cuesta aliento y un punto, no mata. → T-066 (ADR-0023)
 - 🔲 Tramo especial combinando gimmicks al superar récord. → T-067 (ADR-0024)
