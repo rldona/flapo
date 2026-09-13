@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3 — 2026-09-09
+
+### Arreglos
+
+- Quita el brillo de la franja de aliento (T-202)
+
 ## 0.1.2 — 2026-09-09
 
 ### Arreglos
