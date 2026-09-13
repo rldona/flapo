@@ -223,6 +223,12 @@ const CONFIDENCE_MAX_LEVEL: int = 5
 ## una partida, pero la barra es visiblemente más larga a las 50.
 const CONFIDENCE_BREATH_BONUS: float = 8.0
 
+# --- Bocanada (T-202) ---------------------------------------------------
+## Color del brillo que marca la franja que recupera aliento. El mismo crema
+## de la tripa de Flapo (docs/art-guide.md), muy transparente: tiene que
+## leerse como aire, no como una fruta ni como el tramo especial de T-067.
+const BREATH_BAND_TINT: Color = Color(0.949, 0.851, 0.655, 0.16)
+
 # --- Jadeo visible (T-201) ----------------------------------------------
 ## Por debajo de esta fracción del aliento, Flapo jadea: alas temblando,
 ## mejillas rojas y sudor. 0,3 y no 0,5 porque el jadeo tiene que significar
@@ -354,6 +360,16 @@ static func moving_pipe_chance(score: int) -> float:
 	var recorrido: int = maxi(DIFFICULTY_CAP - MOVING_PIPE_MIN_SCORE, 1)
 	var t: float = clampf(float(score - MOVING_PIPE_MIN_SCORE) / float(recorrido), 0.0, 1.0)
 	return lerpf(MOVING_PIPE_CHANCE_MIN, MOVING_PIPE_CHANCE_MAX, t)
+
+
+## Media altura de la franja que recupera aliento, px (T-202).
+##
+## Existe para que **el dibujo y la regla salgan del mismo sitio**. Antes el
+## número vivía dentro de `_on_score_zone_body_entered`; marcar la franja en
+## pantalla con una segunda cuenta habría sido la forma más fácil de que el
+## brillo dejara de coincidir con lo que de verdad recupera.
+static func breath_band_half(gap: float) -> float:
+	return gap * BREATH_BAND_RATIO * 0.5
 
 
 ## Cuánto puede oscilar un hueco de alto `gap` centrado en `centro` sin que se

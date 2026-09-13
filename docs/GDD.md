@@ -200,6 +200,14 @@ central**.
 | `BREATH_RECOVER_ON_GAP` | +25 por hueco centrado | ~15,6/s: sostiene el planeo, no el aleteo |
 | `BREATH_BAND_RATIO` | 0,5 | solo la mitad central del hueco cuenta |
 
+Desde T-202 esa franja **se ve**: un brillo crema muy tenue marca en cada
+tubería la mitad central del hueco, y al cruzarla suena una inhalación y sale
+una bocanada de aire. Es lo que enseña la regla sin un texto que la explique.
+
+El brillo y la regla salen del **mismo cálculo** (`breath_band_half`), así que
+no pueden desincronizarse: enseñar una franja y premiar otra sería peor que no
+marcar nada.
+
 **A 0 de aliento el planeo deja de frenar, pero el aleteo corto sigue dando el
 impulso completo.** Flapo nunca se queda sin poder aletear: el castigo es
 perder una herramienta, no el control. Ver ADR-0020.

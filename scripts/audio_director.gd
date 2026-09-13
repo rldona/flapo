@@ -24,6 +24,7 @@ extends Node
 @onready var _fall: AudioStreamPlayer = $Fall
 @onready var _button: AudioStreamPlayer = $Button
 @onready var _fruit_good: AudioStreamPlayer = $FruitGood
+@onready var _breath: AudioStreamPlayer = $Breath
 @onready var _fruit_bad: AudioStreamPlayer = $FruitBad
 
 
@@ -57,6 +58,11 @@ func play_hit() -> void:
 
 func play_fruit_good() -> void:
 	_fruit_good.play()
+
+
+## Bocanada al recuperar aliento (T-202).
+func play_breath() -> void:
+	_breath.play()
 
 
 func play_fruit_bad() -> void:

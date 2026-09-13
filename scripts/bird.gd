@@ -14,6 +14,11 @@ extends CharacterBody2D
 ## momento del golpe y nadie más puede reconstruirlo después.
 signal died(cause: DeathCause, sin_aliento: bool)
 
+## Flapo ha cogido aire al cruzar por la franja central (T-202). Va aparte
+## de `breath_changed` porque son cosas distintas: una es el número, esta es
+## el momento — y el momento es lo que se puede celebrar.
+signal breath_recovered(cantidad: float)
+
 ## Flapo ha rebotado en una tubería blandita (T-066). No muere: quien decide
 ## qué cuesta es Main.
 signal soft_hit
@@ -151,6 +156,7 @@ var _soft_cooldown: float = 0.0
 @onready var _sprite: AnimatedSprite2D = $Sprite
 @onready var _sweat: CPUParticles2D = $Sweat
 @onready var _puff: CPUParticles2D = $Puff
+@onready var _air: CPUParticles2D = $Air
 @onready var _shape: CollisionShape2D = $CollisionShape2D
 
 
@@ -385,7 +391,22 @@ func _ajustar_aliento(delta_aliento: float) -> void:
 
 ## Recupera aliento. Lo llama Main al cruzar el centro de un hueco.
 func recover_breath(cantidad: float) -> void:
+	var antes: float = _breath
 	_ajustar_aliento(cantidad)
+	# La señal lleva lo que de VERDAD ha entrado, no lo que se pidió: con el
+	# aliento casi lleno, recuperar 25 puede ser recuperar 3, y celebrar 25
+	# sería mentirle al jugador.
+	var ganado: float = _breath - antes
+	if ganado > 0.0:
+		_bocanada(ganado)
+
+
+## Celebra la bocanada: partícula de aire y aviso (T-202).
+func _bocanada(cantidad: float) -> void:
+	if _air != null:
+		_air.restart()
+		_air.emitting = true
+	breath_recovered.emit(cantidad)
 
 
 ## Aliento actual, en las unidades de GameConfig.MAX_BREATH.

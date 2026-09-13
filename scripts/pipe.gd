@@ -93,9 +93,11 @@ var _ya_puntuada: bool = false
 @onready var _top: StaticBody2D = $Top
 @onready var _bottom: StaticBody2D = $Bottom
 @onready var _score_zone: Area2D = $ScoreZone
+@onready var _band: ColorRect = $Band
 
 
 func _ready() -> void:
+	_band.color = GameConfig.BREATH_BAND_TINT
 	_aplicar_tinte()
 	# Las formas se crean por instancia. Un `RectangleShape2D` guardado en el
 	# .tscn sería el MISMO recurso en todas las tuberías: cambiar el tamaño de
@@ -167,6 +169,16 @@ func _girar(delta: float) -> void:
 			cap.rotation = angulo
 
 
+## Alto real del brillo de la franja, px. Lo usan los tests.
+func band_height() -> float:
+	return _band.size.y if _band != null else 0.0
+
+
+## Centro del brillo en coordenadas locales, px. Lo usan los tests.
+func band_center() -> float:
+	return _band.position.y + _band.size.y * 0.5 if _band != null else 0.0
+
+
 ## Ángulo actual de las bocas, rad. Lo usan los tests.
 func spin_angle() -> float:
 	if _top == null:
@@ -230,7 +242,7 @@ func _on_score_zone_body_entered(cuerpo: Node2D) -> void:
 	scored.emit()
 	# Solo la mitad central del hueco recupera aliento. Si valiera pasar por
 	# cualquier sitio, recuperar sería automático y el recurso no existiría.
-	var margen: float = gap * GameConfig.BREATH_BAND_RATIO * 0.5
+	var margen: float = GameConfig.breath_band_half(gap)
 	if absf(cuerpo.global_position.y - global_position.y - _gap_center) <= margen:
 		centered.emit()
 
@@ -272,6 +284,12 @@ func _recolocar() -> void:
 	_bottom.position.y = _gap_center + media_luz + body_length * 0.5
 	# La zona de puntuación ES el hueco: mismo centro, mismo alto.
 	_score_zone.position.y = _gap_center
+	# Y el brillo ES la franja que recupera aliento, con el mismo cálculo que
+	# la usa de verdad: no hay dos números que puedan desincronizarse (T-202).
+	if _band != null:
+		var alto: float = GameConfig.breath_band_half(gap) * 2.0
+		_band.size = Vector2(width, alto)
+		_band.position = Vector2(-width * 0.5, _gap_center - alto * 0.5)
 
 
 ## Estira el cuerpo del tubo y coloca la cabeza en su boca.

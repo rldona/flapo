@@ -363,6 +363,7 @@ func _connect_children() -> void:
 
 	bird.died.connect(_on_bird_died)
 	bird.soft_hit.connect(_on_soft_hit)
+	bird.breath_recovered.connect(_on_breath_recovered)
 	if wind != null:
 		wind.warning_started.connect(_on_wind_warning)
 		wind.gust_started.connect(_on_wind_gust)
@@ -455,6 +456,13 @@ func _on_wind_ended() -> void:
 	if hud != null:
 		hud.set_wind("", true)
 	_apply_difficulty()
+
+
+## Flapo ha cogido aire (T-202). El sonido va aquí y no en Flapo porque el
+## audio lo gobierna Main, como el resto ("call down", ADR-0005).
+func _on_breath_recovered(_cantidad: float) -> void:
+	if audio != null:
+		audio.play_breath()
 
 
 ## Flapo ha rebotado en una tubería blandita (T-066).
