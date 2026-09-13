@@ -19,14 +19,34 @@ var _tile_width: float = 0.0
 
 @onready var _tiles: Array[Node2D] = [$Tile0, $Tile1]
 @onready var _body: StaticBody2D = $StaticBody2D
+@onready var _relleno: ColorRect = $Relleno
 
 
 func _ready() -> void:
 	_tile_width = float(GameConfig.VIEWPORT_SIZE.x)
 	_montar_colision()
+	_remontar_tiles()
+	# La pantalla puede cambiar de tamaño en marcha (T-085) y el suelo tiene
+	# que seguir llegando abajo.
+	get_viewport().size_changed.connect(_remontar_tiles)
+
+
+## Vuelve a dimensionar los tiles al alto que haga falta.
+func _remontar_tiles() -> void:
 	for tile in _tiles:
 		_montar_tile(tile)
 	_colocar_tiles()
+	_montar_relleno()
+
+
+## Rellena de tierra lisa desde el final del tile hasta el borde de abajo.
+func _montar_relleno() -> void:
+	if _relleno == null:
+		return
+	var alto: float = GameConfig.ground_fill_height(get_viewport_rect().size.y, surface_y())
+	_relleno.size = Vector2(_tile_width, alto)
+	_relleno.position = Vector2(0.0, surface_y() + GameConfig.GROUND_HEIGHT)
+	_relleno.visible = alto > 0.0
 
 
 func _physics_process(delta: float) -> void:

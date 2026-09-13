@@ -13,6 +13,7 @@ func _init() -> void:
 	await _avanza_a_velocidad_de_scroll()
 	await _flapo_muere_en_el_suelo()
 	await _se_para_en_game_over()
+	_el_suelo_llega_al_borde_de_cualquier_pantalla()
 	quit(h.resumen("T-027"))
 
 
@@ -122,3 +123,37 @@ func _se_para_en_game_over() -> void:
 		"x %.3f -> %.3f" % [x_antes, t0.position.x]
 	)
 	main.free()
+
+
+## El suelo se dibuja hasta abajo, sea cual sea la pantalla (ADR-0042).
+##
+## Con el viewport más alto que los 512 del diseño, un suelo de la altura de
+## la constante deja **cielo por debajo del suelo**. Se vio jugando en el
+## móvil, no en un test: por eso la regla vive ahora en una función pura.
+func _el_suelo_llega_al_borde_de_cualquier_pantalla() -> void:
+	var superficie: float = GameConfig.playable_height()
+	var casos: Array = [512.0, 624.0, 700.0, 1024.0]
+	var cortos: Array = []
+	for alto in casos:
+		var dibujo: float = (
+			GameConfig.ground_fill_height(alto, superficie) + GameConfig.GROUND_HEIGHT
+		)
+		if superficie + dibujo < alto:
+			cortos.append("%.0f de pantalla → %.0f de suelo" % [alto, dibujo])
+	h.check(
+		"el suelo llega al borde inferior en cualquier alto de pantalla",
+		cortos.is_empty(),
+		"%s" % str(cortos)
+	)
+	h.check(
+		"en una pantalla del alto de diseño no hace falta relleno",
+		is_zero_approx(GameConfig.ground_fill_height(512.0, superficie)),
+		"%.1f" % GameConfig.ground_fill_height(512.0, superficie)
+	)
+	# La colisión NO crece con la pantalla: si lo hiciera, morir contra el
+	# suelo dependería del móvil que tengas.
+	h.check(
+		"pero la colisión sigue siendo la de siempre",
+		is_equal_approx(GameConfig.GROUND_HEIGHT, 64.0),
+		"%.1f" % GameConfig.GROUND_HEIGHT
+	)
