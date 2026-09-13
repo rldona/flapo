@@ -7,8 +7,9 @@
 [ext_resource type="PackedScene" path="res://scenes/GameOverPanel.tscn" id="5_panel"]
 [ext_resource type="PackedScene" path="res://scenes/Hud.tscn" id="6_hud"]
 [ext_resource type="Script" path="res://scripts/juice.gd" id="7_juice"]
+[ext_resource type="PackedScene" path="res://scenes/Background.tscn" id="8_bg"]
 
-[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice")]
+[node name="Main" type="Node2D" unique_id=1247355002 node_paths=PackedStringArray("bird", "pipe_spawner", "ground", "game_over_panel", "hud", "juice", "background")]
 script = ExtResource("1_main")
 bird = NodePath("Bird")
 pipe_spawner = NodePath("PipeSpawner")
@@ -16,12 +17,15 @@ ground = NodePath("Ground")
 game_over_panel = NodePath("GameOverPanel")
 hud = NodePath("Hud")
 juice = NodePath("Juice")
+background = NodePath("Background")
 
 [node name="BackgroundPlaceholder" type="ColorRect" parent="." unique_id=1166350777]
 offset_right = 288.0
 offset_bottom = 512.0
 mouse_filter = 2
 color = Color(0.42, 0.71, 0.86, 1)
+
+[node name="Background" parent="." instance=ExtResource("8_bg")]
 
 [node name="Bird" parent="." unique_id=269885029 instance=ExtResource("2_bird")]
 position = Vector2(72, 256)

@@ -1,0 +1,44 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/background.gd" id="1_bg"]
+
+[node name="Background" type="Node2D"]
+script = ExtResource("1_bg")
+
+[node name="Far" type="Parallax2D" parent="."]
+repeat_size = Vector2(144, 0)
+
+[node name="CloudA" type="ColorRect" parent="Far"]
+offset_left = 12.0
+offset_top = 60.0
+offset_right = 52.0
+offset_bottom = 76.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.55)
+
+[node name="CloudB" type="ColorRect" parent="Far"]
+offset_left = 78.0
+offset_top = 108.0
+offset_right = 130.0
+offset_bottom = 122.0
+mouse_filter = 2
+color = Color(1, 1, 1, 0.4)
+
+[node name="Near" type="Parallax2D" parent="."]
+repeat_size = Vector2(96, 0)
+
+[node name="BuildingA" type="ColorRect" parent="Near"]
+offset_left = 4.0
+offset_top = 330.0
+offset_right = 36.0
+offset_bottom = 448.0
+mouse_filter = 2
+color = Color(0.36, 0.45, 0.55, 1)
+
+[node name="BuildingB" type="ColorRect" parent="Near"]
+offset_left = 44.0
+offset_top = 366.0
+offset_right = 88.0
+offset_bottom = 448.0
+mouse_filter = 2
+color = Color(0.3, 0.38, 0.48, 1)

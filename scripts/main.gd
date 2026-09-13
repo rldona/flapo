@@ -36,6 +36,9 @@ signal score_changed(score: int)
 ## El nodo que reparte el jugo al morir (flash, sacudida, hit-stop).
 @export var juice: Juice
 
+## El fondo con parallax.
+@export var background: Background
+
 ## Escribe cada transición en la consola. Útil hasta que exista HUD (T-029).
 @export var log_transitions: bool = true
 
@@ -138,6 +141,10 @@ func _connect_children() -> void:
 		push_error("Main no tiene asignado el nodo Juice en el inspector.")
 		return
 	state_changed.connect(juice.on_game_state_changed)
+	if background == null:
+		push_error("Main no tiene asignado el nodo Background en el inspector.")
+		return
+	state_changed.connect(background.on_game_state_changed)
 
 
 func _on_scored() -> void:
