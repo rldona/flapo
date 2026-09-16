@@ -42,6 +42,7 @@ export class GhostRecord {
   static cargar(): GhostRecord | null {
     try {
       const raw = localStorage.getItem(KEY);
+      // Stryker disable next-line ConditionalExpression: sin raw, JSON.parse(null) acaba en catch y devuelve null
       if (!raw) return null;
       const parsed = JSON.parse(raw) as Partial<GhostRecord>;
       if (

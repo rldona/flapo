@@ -103,6 +103,22 @@ describe('Input · bordes', () => {
     expect(input.isFlapPressed()).toBe(true);
   });
 
+  it('ArrowUp aletea y suelta al levantar', () => {
+    const { input, ventana } = instalar();
+    ventana.emitir('keydown', tecla('ArrowUp'));
+    expect(input.consumeFlapJust()).toBe(true);
+    ventana.emitir('keyup', tecla('ArrowUp'));
+    expect(input.isFlapPressed()).toBe(false);
+  });
+
+  it('el keyup de otra tecla no suelta el flap', () => {
+    const { input, ventana } = instalar();
+    ventana.emitir('keydown', tecla('Space'));
+    expect(input.isFlapPressed()).toBe(true);
+    ventana.emitir('keyup', tecla('KeyA'));
+    expect(input.isFlapPressed()).toBe(true);
+  });
+
   it('teclas ajenas no aletean ni pausan ni reinician', () => {
     const { input, ventana } = instalar();
     ventana.emitir('keydown', tecla('KeyA'));

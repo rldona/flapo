@@ -37,9 +37,9 @@
     "fileName": "reports/mutation/mutation.json"
   },
   "thresholds": {
-    "high": 98,
-    "low": 96,
-    "break": 95
+    "high": 100,
+    "low": 99,
+    "break": 99
   },
   "timeoutMS": 20000,
   "concurrency": 6,

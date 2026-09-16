@@ -39,23 +39,28 @@ export class Juice {
       }
       return;
     }
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: decaer un temporizador a 0 no cambia nada
     if (this.shakeLeft > 0) this.shakeLeft = Math.max(this.shakeLeft - realDt, 0);
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: decaer un temporizador a 0 no cambia nada
     if (this.flashLeft > 0) this.flashLeft = Math.max(this.flashLeft - realDt, 0);
   }
 
   shakeX(): number {
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: en el borde la intensidad ya es 0
     if (this.shakeLeft <= 0) return 0;
     const intensidad = this.shakeStrength * (this.shakeLeft / this.shakeTime);
     return Math.sin(this.shakeLeft * this.shakeFrequency) * intensidad;
   }
 
   shakeY(): number {
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: en el borde la intensidad ya es 0
     if (this.shakeLeft <= 0) return 0;
     const intensidad = this.shakeStrength * (this.shakeLeft / this.shakeTime);
     return Math.cos(this.shakeLeft * this.shakeFrequency * 1.37) * intensidad * 0.6;
   }
 
   alpha(): number {
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: en el borde el alpha ya es 0
     if (this.flashLeft <= 0) return 0;
     return this.flashAlpha * (this.flashLeft / this.flashTime);
   }

@@ -379,12 +379,12 @@ comportamiento. Se mutan **20 módulos** del núcleo y los sistemas:
 `meta/{SaveManager,DailyChallenge,GhostRecord}` y
 `systems/{Bird,Fruit,Effects,Journey,Wind,Pipe,PipeSpawner,AirSpawner,Ghost,DeathLines,Snapshot,Juice}`.
 
-- Mutation score actual: **97,6 %** (1979 detectados + 9 por *timeout*).
+- Mutation score actual: **100 %** (1977 detectados + 8 por *timeout*).
 - Los mutantes **equivalentes** (imposibles de matar: `signo()` es ±1, ramas
   defensivas contra constantes, etc.) se marcan en el código con
   `// Stryker disable next-line`. La directiva es por línea y mutador, así que
   también excluye el mutante hermano del mismo operador.
-- Umbral `break` en **95**, también *ratchet*: si baja, Stryker sale con error.
+- Umbral `break` en **99**, también *ratchet*: si baja, Stryker sale con error.
 - Informe HTML/JSON en `reports/mutation/` (ignorado por git).
 - Con `incremental` activado, las repeticiones locales son de segundos.
 

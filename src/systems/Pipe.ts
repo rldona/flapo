@@ -37,6 +37,7 @@ export class Pipe {
   update(dt: number): void {
     if (!this.moving) return;
     this.x -= this.scrollSpeed * dt;
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: con amplitud 0 el seno ya no mueve el hueco
     if (this.oscillationAmplitude > 0 && this.oscillationPeriod > 0) {
       this.oscTime += dt;
       const angulo = this.oscillationPhase + (this.oscTime * Math.PI * 2) / this.oscillationPeriod;

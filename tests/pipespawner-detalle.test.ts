@@ -50,6 +50,32 @@ describe('PipeSpawner · pausa y reservas', () => {
     const { sp } = spawner();
     expect(sp.reserveNormal()).toBe(true);
   });
+
+  it('READY desactiva, despausa y limpia la reserva', () => {
+    const { sp, eventos } = spawner();
+    sp.specialLeft = 3;
+    sp.reserveNormal();
+    sp.onStateChanged(GameState.PLAYING);
+    sp.onStateChanged(GameState.READY);
+
+    expect(sp.isPaused()).toBe(false);
+    sp.update(10);
+    expect(sp.pipes).toHaveLength(0);
+
+    sp.specialLeft = 3;
+    sp.onStateChanged(GameState.PLAYING);
+    expect(eventos.at(-1)?.special).toBe(true);
+  });
+
+  it('una normal reservada no sale móvil ni giratoria', () => {
+    const { sp, eventos } = spawner();
+    sp.movingChance = 1;
+    sp.spinChance = 1;
+    sp.reserveNormal();
+    sp.onStateChanged(GameState.PLAYING);
+    expect(eventos[0].isOscillating()).toBe(false);
+    expect(eventos[0].spin).toBe(false);
+  });
 });
 
 describe('PipeSpawner · estado y lastPipe', () => {
@@ -135,6 +161,12 @@ describe('PipeSpawner · inicialización', () => {
     const { sp, eventos } = spawner();
     sp.update(10);
     expect(eventos).toHaveLength(0);
+  });
+
+  it('sin rng no crea tuberías', () => {
+    const sp = new PipeSpawner({ onPipeSpawned: () => {} });
+    sp.onStateChanged(GameState.PLAYING);
+    expect(sp.pipes).toHaveLength(0);
   });
 
   it('con specialLeft alto, la primera tubería es especial', () => {

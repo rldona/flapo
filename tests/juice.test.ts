@@ -13,6 +13,15 @@ describe('Juice', () => {
     expect(j.shakeX()).not.toBe(0);
   });
 
+  it('completa el hit-stop justo cuando llega a 0', () => {
+    const j = new Juice();
+    const escalas: number[] = [];
+    j.setTimeScale = (s) => escalas.push(s);
+    j.punch();
+    j.update(j.hitStopTime); // hitStopLeft = 0 exacto
+    expect(escalas).toEqual([0, 0, 1]);
+  });
+
   it('sin hitStopTime no fuerza timeScale', () => {
     const j = new Juice();
     const escalas: number[] = [];
@@ -67,6 +76,15 @@ describe('Juice', () => {
     expect(j.shakeY()).toBe(0);
     j.update(j.flashTime);
     expect(j.alpha()).toBe(0);
+  });
+
+  it('reset restaura el timeScale', () => {
+    const j = new Juice();
+    const escalas: number[] = [];
+    j.setTimeScale = (s) => escalas.push(s);
+    j.punch();
+    j.reset();
+    expect(escalas).toContain(1);
   });
 
   it('READY y MENU resetean; PLAYING no', () => {

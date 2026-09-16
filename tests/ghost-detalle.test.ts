@@ -122,6 +122,7 @@ describe('Ghost · transición a GAME_OVER y tope de frames', () => {
     g.onStateChanged(GameState.MENU);
     expect(g.visible).toBe(false);
     expect(g.estaReproduciendo()).toBe(false);
+    g.update(1 / 60); // con activo=true volvería a grabar
     g.terminar(3, true);
     expect(GhostRecord.cargar()?.posiciones.length).toBe(3); // el registro viejo intacto
   });

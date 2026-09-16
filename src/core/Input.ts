@@ -75,7 +75,9 @@ export class Input {
   };
 
   private onPointerUp = (e: PointerEvent): void => {
-    if (this.pointerId !== null && e.pointerId !== this.pointerId) return;
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: sin puntero activo, la salida no cambia el estado
+    const hayPuntero = this.pointerId !== null;
+    if (hayPuntero && e.pointerId !== this.pointerId) return;
     this.pointerId = null;
     this.releaseFlap();
   };

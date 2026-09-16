@@ -51,8 +51,25 @@ describe('Snapshot', () => {
     expect(muestras()).toBeGreaterThan(0);
     snap.onStateChanged(GameState.READY);
     expect(muestras()).toBe(0);
-    snap.update();
+    for (let i = 0; i < CADA; i++) snap.update();
     expect(muestras()).toBe(0); // ya no está activo
+  });
+
+  it('MENU reinicia y GAME_OVER deja de muestrear', () => {
+    const { snap, muestras } = crear();
+    snap.onStateChanged(GameState.PLAYING);
+    for (let i = 0; i < CADA * 3; i++) snap.update();
+    expect(muestras()).toBeGreaterThan(0);
+
+    snap.onStateChanged(GameState.GAME_OVER);
+    const antes = muestras();
+    for (let i = 0; i < CADA * 2; i++) snap.update();
+    expect(muestras()).toBe(antes);
+
+    snap.onStateChanged(GameState.MENU);
+    expect(muestras()).toBe(0);
+    for (let i = 0; i < CADA; i++) snap.update();
+    expect(muestras()).toBe(0);
   });
 
   it('capturar devuelve null sin vuelo o sin document', () => {

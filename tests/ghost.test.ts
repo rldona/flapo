@@ -119,4 +119,14 @@ describe('Ghost', () => {
     expect(g.visible).toBe(false);
     expect(g.estaReproduciendo()).toBe(false);
   });
+
+  it('MENU oculta el fantasma', () => {
+    grabarVuelo(123);
+    const g = new Ghost(new Bird(cb()));
+    g.preparar(123);
+    g.onStateChanged(GameState.PLAYING);
+    expect(g.visible).toBe(true);
+    g.onStateChanged(GameState.MENU);
+    expect(g.visible).toBe(false);
+  });
 });

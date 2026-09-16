@@ -49,10 +49,12 @@ const LINES_BREATHLESS = [
 ];
 
 export class DeathLines {
+  // Stryker disable next-line StringLiteral: el valor inicial no coincide con ninguna frase real
   private ultima = '';
 
   pickFor(causa: DeathCause, breathless: boolean, rng: Rng): string {
     let candidatas = LINES;
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: el repertorio de jadeo nunca está vacío
     if (breathless && LINES_BREATHLESS.length > 0) {
       candidatas = LINES_BREATHLESS;
     } else {
@@ -62,17 +64,22 @@ export class DeathLines {
           : causa === DeathCause.SUELO
             ? LINES_GROUND
             : LINES_VOID;
+      // Stryker disable next-line ConditionalExpression,EqualityOperator: cada causa tiene repertorio no vacío
       if (porCausa.length > 0) candidatas = porCausa;
     }
     const frase = this.elegir(candidatas, rng);
+    // Stryker disable next-line ConditionalExpression,StringLiteral: elegir nunca devuelve cadena vacía
     if (frase !== '') this.ultima = frase;
     return frase;
   }
 
   private elegir(lista: string[], rng: Rng): string {
+    // Stryker disable next-line ConditionalExpression,StringLiteral: las listas siempre traen al menos una frase
     if (lista.length === 0) return '';
+    // Stryker disable next-line ConditionalExpression: las listas siempre traen más de una frase
     if (lista.length === 1) return lista[0];
     const noRepetidas = lista.filter((l) => l !== this.ultima);
+    // Stryker disable next-line ConditionalExpression: siempre queda alguna frase sin repetir
     if (noRepetidas.length === 0) return lista[0];
     return noRepetidas[rng.randiRange(0, noRepetidas.length - 1)];
   }

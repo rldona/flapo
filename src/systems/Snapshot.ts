@@ -41,6 +41,7 @@ export class Snapshot {
 
   update(): void {
     if (!this.activo) return;
+    // Stryker disable next-line UpdateOperator: el contador solo se usa por módulo (el signo da el mismo resto)
     this.frames++;
     const cada = this.cadaCuantos();
     if (this.frames % cada !== 0) return;

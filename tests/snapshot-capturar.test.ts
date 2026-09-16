@@ -21,7 +21,10 @@ const { makeCanvasMock, contexto } = vi.hoisted(() => {
   const makeCanvasMock = vi.fn((w: number, h: number) => ({
     width: w,
     height: h,
-    getContext: () => contexto,
+    getContext: (tipo?: string) => {
+      llamadas.push(['getContext', tipo]);
+      return contexto;
+    },
     toDataURL: (tipo: string) => `data:${tipo};base64,AAAA`,
   }));
   return { makeCanvasMock, contexto };
@@ -45,9 +48,13 @@ function cb(): BirdCallbacks {
 }
 
 class ImageFalsa {
+  static instancias: ImageFalsa[] = [];
   complete = true;
   naturalWidth = 24;
   src = '';
+  constructor() {
+    ImageFalsa.instancias.push(this);
+  }
 }
 
 const CADA = Math.max(Math.floor((C.SNAPSHOT_SECONDS * 60) / C.SNAPSHOT_SAMPLES), 1);
@@ -73,6 +80,8 @@ function conMuestras(): Snapshot {
 
 beforeEach(() => {
   contexto.llamadas.length = 0;
+  contexto.imageSmoothingEnabled = false;
+  ImageFalsa.instancias.length = 0;
   makeCanvasMock.mockClear();
   vi.stubGlobal('Image', ImageFalsa);
   // `capturar()` exige que exista `document`; el canvas está mockeado.
@@ -100,9 +109,13 @@ describe('Snapshot · capturar', () => {
       C.VIEWPORT_WIDTH * C.SNAPSHOT_SCALE,
       C.VIEWPORT_HEIGHT * C.SNAPSHOT_SCALE,
     ]);
+    expect(contexto.llamadas).toContainEqual(['getContext', '2d']);
+    expect(contexto.imageSmoothingEnabled).toBe(false);
     expect(contexto.llamadas.some(([op]) => op === 'scale')).toBe(true);
     expect(contexto.llamadas.some(([op]) => op === 'save')).toBe(true);
     expect(contexto.llamadas.some(([op]) => op === 'restore')).toBe(true);
+    // El sprite del pájaro se carga con su ruta real.
+    expect(ImageFalsa.instancias.at(-1)?.src ?? '').toContain('sprites/flapo_0.png');
   });
 
   it('dibuja las tuberías con su geometría', () => {
@@ -126,6 +139,8 @@ describe('Snapshot · capturar', () => {
       expect(d[5]).toBe(24);
       expect(d[6]).toBe(24);
     }
+    // Primera muestra: bird.y = 150 + 19 = 169 (muestreo en el frame 20).
+    expect(dibujos[0][4]).toBe(169 - 12);
   });
 
   it('devuelve null sin muestras', () => {
@@ -146,12 +161,22 @@ describe('Snapshot · capturar', () => {
   });
 
   it('omite el pájaro si la imagen no está lista', () => {
-    class ImageNoLista {
+    class ImagenIncompleta {
       complete = false;
-      naturalWidth = 0;
+      naturalWidth = 24; // con `||` se colaría
       src = '';
     }
-    vi.stubGlobal('Image', ImageNoLista);
+    vi.stubGlobal('Image', ImagenIncompleta);
+    conMuestras().capturar();
+    expect(contexto.llamadas.filter(([op]) => op === 'drawImage')).toHaveLength(0);
+
+    class ImagenSinAncho {
+      complete = true;
+      naturalWidth = 0; // con `>0 → true/>=` se colaría
+      src = '';
+    }
+    vi.stubGlobal('Image', ImagenSinAncho);
+    contexto.llamadas.length = 0;
     conMuestras().capturar();
     expect(contexto.llamadas.filter(([op]) => op === 'drawImage')).toHaveLength(0);
   });

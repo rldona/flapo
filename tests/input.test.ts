@@ -129,4 +129,10 @@ describe('Input · teclado', () => {
     ventana.emitir('blur');
     expect(input.isFlapPressed()).toBe(false);
   });
+
+  it('una tecla cualquiera no aletea', () => {
+    const { input, ventana } = instalar();
+    ventana.emitir('keydown', tecla('KeyA'));
+    expect(input.isFlapPressed()).toBe(false);
+  });
 });
