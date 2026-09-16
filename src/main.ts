@@ -241,9 +241,13 @@ async function boot(): Promise<void> {
   document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
 
   if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+    const registrar = (): void => {
       void navigator.serviceWorker.register(`${BASE}sw.js`).catch(() => {});
-    });
+    };
+    // `boot()` es async: si `load` ya disparó mientras cargaban assets/audio, el
+    // listener nunca se ejecutaría y el service worker quedaría sin registrar.
+    if (document.readyState === 'complete') registrar();
+    else window.addEventListener('load', registrar, { once: true });
   }
 
   loop.start();
