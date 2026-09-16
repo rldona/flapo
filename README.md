@@ -312,6 +312,8 @@ proyectos locales.
 
 - **Funciones puras**: curva de dificultad, aliento/fatiga, medallas, semilla y
   códigos, layout adaptativo y viento.
+- **Bucle y entrada**: paso fijo/acumulador del `Loop` (recorte, tope de pasos,
+  pausa, hit-stop) y flancos de puntero/teclado de `Input`.
 - **Determinismo**: la misma semilla produce exactamente las mismas tuberías.
 - **Simulación headless**: una partida autopilotada de 30 s cruza tuberías y
   puntúa sin reventar.
