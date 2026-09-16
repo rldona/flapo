@@ -316,6 +316,9 @@ proyectos locales.
 - **Simulación headless**: una partida autopilotada de 30 s cruza tuberías y
   puntúa sin reventar.
 - **Modo espejo**: la gravedad se invierte.
+- **Integración de la máquina de estados**: transiciones legales e ilegales,
+  pausa, espejo, dificultad, escudo y frutas, y tolerancia a fallos del entorno
+  (`localStorage` que lanza, sin `crypto`).
 - **Property-based / fuzz** (fast-check): invariantes sobre cualquier entrada.
 
 ```bash
