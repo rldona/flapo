@@ -208,6 +208,7 @@ export class Game {
 
     if (this.state === GameState.GAME_OVER) {
       this.bird.update(dt, false, false);
+      this.settleBirdOnGround();
       this.ground.update(dt);
       if (!this.gameOverShown) {
         this.gameOverDelay -= dt;
@@ -507,6 +508,18 @@ export class Game {
   // -------------------------------------------------------------- colisiones
   private circle(): { x: number; y: number; r: number } {
     return { x: this.bird.x + 1, y: this.bird.y, r: this.bird.baseRadius * this.bird.hitboxMult };
+  }
+
+  /**
+   * Con el pájaro ya muerto no hay resolución de colisiones, así que se fija al
+   * suelo para que el rebote de la muerte acabe apoyado y no se salga por abajo.
+   */
+  private settleBirdOnGround(): void {
+    const suelo = C.playableHeight() - this.bird.baseRadius * this.bird.hitboxMult;
+    if (this.bird.y > suelo) {
+      this.bird.y = suelo;
+      this.bird.vy = Math.min(this.bird.vy, 0);
+    }
   }
 
   private resolveScoring(): void {

@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { Game } from '../src/core/Game';
 import type { Input } from '../src/core/Input';
 import { GameState } from '../src/core/types';
-import { seedACodigo } from '../src/config/GameConfig';
+import { MAX_FALL_SPEED, playableHeight, seedACodigo } from '../src/config/GameConfig';
 import { SaveManager } from '../src/meta/SaveManager';
 
 class MemStorage {
@@ -130,6 +130,20 @@ describe('simulación headless', () => {
 
     expect(gapsA.length).toBeGreaterThanOrEqual(2);
     expect(gapsA).toEqual(gapsB);
+  });
+
+  it('al morir contra el suelo, el pájaro se queda apoyado y no se sale', () => {
+    const { input } = fakeInput();
+    const game = new Game(input);
+    game.initSession();
+    game.startFree();
+    game.changeState(GameState.PLAYING);
+    game.bird.y = playableHeight() - game.bird.baseRadius + 2;
+    game.bird.vy = MAX_FALL_SPEED;
+    for (let i = 0; i < 90; i++) game.update(1 / 60);
+    expect(game.getState()).toBe(GameState.GAME_OVER);
+    const suelo = playableHeight() - game.bird.baseRadius * game.bird.hitboxMult;
+    expect(game.bird.y).toBeLessThanOrEqual(suelo + 1e-6);
   });
 
   it('el modo espejo invierte la gravedad', () => {
