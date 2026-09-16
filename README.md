@@ -319,6 +319,10 @@ proyectos locales.
 - **Integración de la máquina de estados**: transiciones legales e ilegales,
   pausa, espejo, dificultad, escudo y frutas, y tolerancia a fallos del entorno
   (`localStorage` que lanza, sin `crypto`).
+- **Replay determinista**: una partida grabada (semilla + flancos) se re-simula
+  desde cero y da el mismo score y las mismas tuberías.
+- **Audio**: `AudioDirector` con un `AudioContext` falso: cableado fuente→gain→bus,
+  mute, ducking, pitch y tolerancia a que no haya audio.
 - **Property-based / fuzz** (fast-check): invariantes sobre cualquier entrada.
 
 ```bash
@@ -380,8 +384,9 @@ PR porque tarda varios minutos.
 
 ### E2E
 
-Prueban la app real en **Chrome headless** con Puppeteer (`puppeteer-core`),
-levantando Vite en un puerto libre. Cubren:
+Prueban la app real en **Chrome headless** con Puppeteer (`puppeteer-core`) y, en
+**Chromium, Firefox y WebKit** con Playwright, levantando Vite en un puerto
+libre. Cubren:
 
 - **Arranque**: carga sin errores de consola, menú principal, canvas 288×alto,
   paneles de opciones/estadísticas y layout en móvil y escritorio.
@@ -389,17 +394,28 @@ levantando Vite en un puerto libre. Cubren:
   cruzando tuberías (piloto automático), fin de partida, reinicio y persistencia
   del récord en `localStorage`.
 - **Visual**: escenas deterministas del canvas comparadas con baselines.
+- **PWA/offline**: build de producción servido con `vite preview`: manifest,
+  registro del service worker y recarga **sin red** desde la caché.
 - **Accesibilidad**: `axe-core` sin violaciones WCAG 2 A/AA en cada panel y
   navegación por teclado (foco, Tab, Enter y P para pausar).
+- **Cross-browser y móvil**: arranque + partida en Chromium/Firefox/WebKit y
+  aleteo táctil con un perfil móvil.
 
 ```bash
 npm run test:e2e
 ```
 
-El navegador se resuelve por `CHROME_PATH` / `PUPPETEER_EXECUTABLE_PATH` o por
-las rutas habituales de macOS y Linux. Si un caso falla, se guarda una captura
-en `test-results/` (ignorado por git; CI lo publica como artefacto). Para probar
-contra una URL ya levantada, define `E2E_URL`.
+Los navegadores de Playwright se descargan aparte (no van en `package-lock`):
+
+```bash
+npx playwright install chromium firefox webkit   # en CI: --with-deps
+```
+
+El navegador de Puppeteer se resuelve por `CHROME_PATH` /
+`PUPPETEER_EXECUTABLE_PATH` o por las rutas habituales de macOS y Linux. Si un
+caso falla, se guarda una captura en `test-results/` (ignorado por git; CI lo
+publica como artefacto). Para probar contra una URL ya levantada, define
+`E2E_URL`.
 
 ### Regresión visual
 

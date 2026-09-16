@@ -51,7 +51,7 @@ jobs:
           retention-days: 7
 
   e2e:
-    name: E2E (Chrome headless)
+    name: E2E (Chrome + Playwright)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -65,6 +65,9 @@ jobs:
 
       - name: Instalar dependencias
         run: npm ci
+
+      - name: Instalar navegadores de Playwright
+        run: node ./node_modules/playwright/cli.js install --with-deps chromium firefox webkit
 
       - name: Ejecutar tests E2E
         run: npm run test:e2e

@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import puppeteer, { type Browser, type Page } from 'puppeteer-core';
-import { createServer, type ViteDevServer } from 'vite';
+import { createServer } from 'vite';
 
 /**
  * Arranque de los tests E2E: levanta la app (Vite en un puerto libre, o la URL
@@ -114,22 +114,32 @@ async function esperarBoot(page: Page): Promise<void> {
   await page.waitForFunction(() => window.__flapo !== undefined, { timeout: 30_000, polling: 100 });
 }
 
+/** Servidor de Vite (o `E2E_URL`) compartido por los `E2E`. */
+export interface ServidorVite {
+  url: string;
+  cerrar(): Promise<void>;
+}
+
+/** Levanta el servidor de Vite en un puerto libre, o usa `E2E_URL`. */
+export async function iniciarServidorVite(): Promise<ServidorVite> {
+  const externo = process.env.E2E_URL ?? '';
+  if (externo !== '') return { url: externo, cerrar: async () => {} };
+
+  const server = await createServer({
+    configFile: 'vite.config.ts',
+    logLevel: 'warn',
+    server: { host: '127.0.0.1', port: 0, strictPort: false },
+  });
+  await server.listen();
+  const address = server.httpServer?.address();
+  const port = typeof address === 'object' && address !== null ? address.port : 0;
+  if (port === 0) throw new Error('El servidor de Vite no expuso ningún puerto');
+  return { url: `http://127.0.0.1:${port}/`, cerrar: () => server.close() };
+}
+
 /** Levanta el servidor de Vite (si no hay `E2E_URL`) y Chrome headless. */
 export async function crearEntorno(): Promise<EntornoE2E> {
-  let server: ViteDevServer | undefined;
-  let url = process.env.E2E_URL ?? '';
-  if (url === '') {
-    server = await createServer({
-      configFile: 'vite.config.ts',
-      logLevel: 'warn',
-      server: { host: '127.0.0.1', port: 0, strictPort: false },
-    });
-    await server.listen();
-    const address = server.httpServer?.address();
-    const port = typeof address === 'object' && address !== null ? address.port : 0;
-    if (port === 0) throw new Error('El servidor de Vite no expuso ningún puerto');
-    url = `http://127.0.0.1:${port}/`;
-  }
+  const servidor = await iniciarServidorVite();
 
   const browser = await puppeteer.launch({
     executablePath: rutaChrome(),
@@ -145,11 +155,11 @@ export async function crearEntorno(): Promise<EntornoE2E> {
   });
 
   return {
-    url,
+    url: servidor.url,
     browser,
     async cerrar(): Promise<void> {
       await browser.close();
-      await server?.close();
+      await servidor.cerrar();
     },
   };
 }
