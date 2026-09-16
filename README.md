@@ -366,6 +366,7 @@ levantando Vite en un puerto libre. Cubren:
 - **Partida**: paso a READY/PLAYING, pausa y reanudación, puntuación real
   cruzando tuberías (piloto automático), fin de partida, reinicio y persistencia
   del récord en `localStorage`.
+- **Visual**: escenas deterministas del canvas comparadas con baselines.
 
 ```bash
 npm run test:e2e
@@ -375,6 +376,26 @@ El navegador se resuelve por `CHROME_PATH` / `PUPPETEER_EXECUTABLE_PATH` o por
 las rutas habituales de macOS y Linux. Si un caso falla, se guarda una captura
 en `test-results/` (ignorado por git; CI lo publica como artefacto). Para probar
 contra una URL ya levantada, define `E2E_URL`.
+
+### Regresión visual
+
+`tests/e2e/visual.e2e.ts` dibuja escenas deterministas —bucle congelado, semilla
+fija y `Math.random` sembrado— y las compara con `pixelmatch` contra los
+baselines de `tests/e2e/__screenshots__`. Se captura el canvas lógico (288 px de
+ancho), así que no depende del DPR ni de la escala CSS.
+
+Cubre el menú, READY en los cuatro escenarios (día/atardecer/noche/lluvia) y
+estados de partida y game over. Para regenerar baselines tras un cambio
+intencionado de dibujo:
+
+```bash
+UPDATE_SNAPSHOTS=1 npm run test:e2e
+```
+
+Si falla, deja `actual` y `diff` en `test-results/` para inspeccionarlos. El
+umbral de píxeles distintos se ajusta con `VISUAL_MAX_DIFF` (por defecto 0.3 %).
+Los baselines se generan en la plataforma que los ejecuta; si CI cambia de
+versión de Chrome, conviene regenerarlos.
 
 ## Despliegue en GitHub Pages
 

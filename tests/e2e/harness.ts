@@ -1,4 +1,6 @@
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import pixelmatch from 'pixelmatch';
+import { PNG } from 'pngjs';
 import puppeteer, { type Browser, type Page } from 'puppeteer-core';
 import { createServer, type ViteDevServer } from 'vite';
 
@@ -32,6 +34,8 @@ interface TuberiaDebug {
 interface PajaroDebug {
   x: number;
   y: number;
+  rotation: number;
+  maskDisabled: boolean;
   die(cause: number, breathless: boolean): void;
 }
 
@@ -41,8 +45,13 @@ interface DebugFlapo {
   getScore(): number;
   getHighScore(): number;
   isPaused(): boolean;
+  startCode(codigo: string): boolean;
+  changeState(estado: number): void;
+  update(dt: number): void;
+  render(): void;
   bird: PajaroDebug;
   pipeSpawner: { pipes: TuberiaDebug[] };
+  juice: { reset(): void };
 }
 
 declare global {
@@ -78,6 +87,11 @@ export interface OpcionesPagina {
   deviceScaleFactor?: number;
   /** Claves de `localStorage` a sembrar antes de cargar la app. */
   almacen?: Record<string, string>;
+  /**
+   * Congela el bucle (no dispara `requestAnimationFrame`) y siembra
+   * `Math.random`, para poder construir escenas deterministas paso a paso.
+   */
+  congelado?: boolean;
 }
 
 /** Servidor + navegador compartidos por todos los casos de un archivo. */
@@ -95,7 +109,9 @@ export interface SesionE2E {
 }
 
 async function esperarBoot(page: Page): Promise<void> {
-  await page.waitForFunction(() => window.__flapo !== undefined, { timeout: 30_000 });
+  // `polling` numérico a propósito: con el bucle congelado no hay rAF que
+  // dispare el sondeo por defecto de Puppeteer.
+  await page.waitForFunction(() => window.__flapo !== undefined, { timeout: 30_000, polling: 100 });
 }
 
 /** Levanta el servidor de Vite (si no hay `E2E_URL`) y Chrome headless. */
@@ -143,7 +159,7 @@ export async function nuevaPagina(
   entorno: EntornoE2E,
   opciones: OpcionesPagina = {},
 ): Promise<SesionE2E> {
-  const { width = 390, height = 844, deviceScaleFactor = 2, almacen } = opciones;
+  const { width = 390, height = 844, deviceScaleFactor = 2, almacen, congelado = false } = opciones;
 
   const page = await entorno.browser.newPage();
   const errores: string[] = [];
@@ -161,6 +177,30 @@ export async function nuevaPagina(
     await page.evaluateOnNewDocument((datos: Record<string, string>) => {
       for (const [clave, valor] of Object.entries(datos)) localStorage.setItem(clave, valor);
     }, almacen);
+  }
+
+  if (congelado) {
+    await page.evaluateOnNewDocument(() => {
+      let id = 0;
+      const w = window as unknown as {
+        requestAnimationFrame: (cb: FrameRequestCallback) => number;
+        cancelAnimationFrame: (handle: number) => void;
+      };
+      w.requestAnimationFrame = () => {
+        id += 1;
+        return id;
+      };
+      w.cancelAnimationFrame = () => {};
+      // mulberry32: Math.random determinista para las gotas de lluvia.
+      let estado = 0x9e3779b9 >>> 0;
+      Math.random = (): number => {
+        estado = (estado + 0x6d2b79f5) >>> 0;
+        let t = estado;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    });
   }
 
   await page.setViewport({ width, height, deviceScaleFactor });
@@ -182,6 +222,97 @@ export async function capturar(page: Page, nombre: string): Promise<string> {
   const ruta = `test-results/${nombre}.png`;
   await page.screenshot({ path: ruta });
   return ruta;
+}
+
+export interface PlanEscena {
+  /** Deja la escena en el menú, sin arrancar código. */
+  menu?: boolean;
+  /** Semilla del código; su resto entre 4 elige el escenario. Evita el 0. */
+  seed?: number;
+  /** Avanza N pasos de 1/60 s antes de dibujar. */
+  pasos?: number;
+  /** Pasa a PLAYING antes de los pasos. */
+  jugar?: boolean;
+  /** Inmuniza al pájaro para poder dejar correr la partida sin que muera. */
+  inmune?: boolean;
+  /** Altura a la que colocar al pájaro antes de dibujar. */
+  altura?: number;
+  /** Mata al pájaro antes de los pasos (cae y queda apoyado). */
+  morir?: boolean;
+  /** Fija la rotación antes de dibujar (0 evita el suavizado del giro). */
+  rotacion?: number;
+}
+
+/**
+ * Construye una escena determinista (con el bucle congelado) y devuelve el PNG
+ * del canvas lógico, sin depender del DPR ni del CSS.
+ */
+export async function capturarEscena(page: Page, plan: PlanEscena = {}): Promise<Buffer> {
+  const dataUrl = await page.evaluate((p: PlanEscena) => {
+    const g = window.__flapo;
+    if (!g) throw new Error('window.__flapo no está listo');
+    if (!p.menu) g.startCode(String(p.seed ?? 1).padStart(5, '0'));
+    if (p.jugar || p.morir) g.changeState(2);
+    if (p.inmune) g.bird.maskDisabled = true;
+    if (p.morir) g.bird.die(0, false);
+    const pasos = p.pasos ?? 0;
+    for (let i = 0; i < pasos; i++) g.update(1 / 60);
+    if (p.altura !== undefined) g.bird.y = p.altura;
+    if (p.rotacion !== undefined) g.bird.rotation = p.rotacion;
+    // Sin el bucle, el juice (flash/sacudida) no se decae; lo limpiamos para
+    // que la escena no salga velada.
+    g.juice.reset();
+    g.render();
+    const canvas = document.getElementById('playfield') as HTMLCanvasElement;
+    return canvas.toDataURL('image/png');
+  }, plan);
+  return Buffer.from(dataUrl.slice(dataUrl.indexOf(',') + 1), 'base64');
+}
+
+const CARPETA_GOLDEN = 'tests/e2e/__screenshots__';
+const MAX_DIFERENCIA = Number(process.env.VISUAL_MAX_DIFF ?? 0.003);
+
+/**
+ * Compara el PNG de una escena con su baseline en `tests/e2e/__screenshots__`.
+ * Con `UPDATE_SNAPSHOTS=1` (o si aún no existe) escribe el baseline. En caso de
+ * fallo deja `actual` y `diff` en `test-results/` para inspeccionarlos.
+ */
+export async function compararGolden(nombre: string, actual: Buffer): Promise<void> {
+  mkdirSync(CARPETA_GOLDEN, { recursive: true });
+  const ruta = `${CARPETA_GOLDEN}/${nombre}.png`;
+  if (process.env.UPDATE_SNAPSHOTS === '1' || !existsSync(ruta)) {
+    writeFileSync(ruta, actual);
+    return;
+  }
+
+  const esperado = PNG.sync.read(readFileSync(ruta));
+  const recibido = PNG.sync.read(actual);
+  if (esperado.width !== recibido.width || esperado.height !== recibido.height) {
+    throw new Error(
+      `golden ${nombre}: tamaño ${recibido.width}x${recibido.height} != ${esperado.width}x${esperado.height}`,
+    );
+  }
+
+  const diff = new PNG({ width: esperado.width, height: esperado.height });
+  const distintos = pixelmatch(
+    esperado.data,
+    recibido.data,
+    diff.data,
+    esperado.width,
+    esperado.height,
+    { threshold: 0.1 },
+  );
+  const ratio = distintos / (esperado.width * esperado.height);
+  if (ratio > MAX_DIFERENCIA) {
+    mkdirSync('test-results', { recursive: true });
+    writeFileSync(`test-results/golden-${nombre}-actual.png`, actual);
+    writeFileSync(`test-results/golden-${nombre}-diff.png`, PNG.sync.write(diff));
+    throw new Error(
+      `golden ${nombre}: ${distintos} píxeles distintos (${(ratio * 100).toFixed(2)}% > ${(
+        MAX_DIFERENCIA * 100
+      ).toFixed(2)}%). Mira test-results/ o regenera con UPDATE_SNAPSHOTS=1`,
+    );
+  }
 }
 
 /** Espera a que la app alcance un estado concreto. */
