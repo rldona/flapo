@@ -316,6 +316,9 @@ proyectos locales.
   pausa, hit-stop) y flancos de puntero/teclado de `Input`.
 - **Spawners**: `Pipe`/`PipeSpawner` (cadencia, blanditas, móviles/giratorias y
   tramo especial) y `AirSpawner` (térmicas, estelas y hermanos).
+- **Juice y meta**: `Juice` (flash/sacudida/hit-stop), `DeathLines` (sin
+  repetición), `Ghost`/`GhostRecord` (grabar/reproducir y persistencia, incluida
+  corrupción) y `Snapshot` (muestreo).
 - **Determinismo**: la misma semilla produce exactamente las mismas tuberías.
 - **Simulación headless**: una partida autopilotada de 30 s cruza tuberías y
   puntúa sin reventar.
