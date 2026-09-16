@@ -316,10 +316,29 @@ proyectos locales.
 - **Simulación headless**: una partida autopilotada de 30 s cruza tuberías y
   puntúa sin reventar.
 - **Modo espejo**: la gravedad se invierte.
+- **Property-based / fuzz** (fast-check): invariantes sobre cualquier entrada.
 
 ```bash
 npm test
 ```
+
+### Property-based / fuzz
+
+Con **fast-check** se fijan invariantes que deben cumplirse para *cualquier*
+entrada, no solo para ejemplos concretos. Cubren:
+
+- `GameConfig`: `posmod`/`clamp` dentro de rango, `difficulty` en [0, 1],
+  `sceneryFor`/`journeyStage` en sus enums, `sanitizePlayerName` recorta/limpia y
+  es idempotente, round-trip `seedACodigo`/`codigoASeed`, cotas de
+  `windowScaleFor`, `pantTintWeight`, `maxBreathFor`, etc.
+- `Rng`: misma semilla → misma secuencia, `randf` en [0, 1), `randiRange`
+  inclusivo y semilla normalizada a uint32.
+- **Simulación**: secuencias aleatorias de aleteos y `dt` no rompen el mundo
+  (`x`/`y`/`vy` finitos, estados válidos, puntuación no negativa) y, al morir, el
+  pájaro nunca atraviesa el suelo.
+
+Se ejecutan dentro de `npm test`. fast-check imprime la semilla y el
+contraejemplo mínimo si algo falla, para reproducirlo.
 
 La cobertura se mide con `@vitest/coverage-v8` y abarca todo `src/**/*.ts`
 (excepto `src/main.ts`), incluyendo los módulos aún sin tests. Los umbrales son
