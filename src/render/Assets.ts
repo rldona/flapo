@@ -136,6 +136,10 @@ export const Assets = {
     return AUDIO_NAMES;
   },
 
+  spriteNames(): readonly SpriteName[] {
+    return SPRITE_NAMES;
+  },
+
   audioUrl(name: AudioName): string {
     return `${import.meta.env.BASE_URL}audio/${name}.wav`;
   },

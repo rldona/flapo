@@ -326,6 +326,9 @@ proyectos locales.
 - **Rendimiento**: presupuesto del coste de un tick y poda de tuberías/frutas.
 - **Memoria/fugas**: tras muchos ciclos las colecciones siguen acotadas y `Input`
   retira exactamente los listeners que registró.
+- **Activos y tipos**: los sprites/sonidos declarados existen (sin huérfanos),
+  las fuentes y recursos del HTML/CSS resuelven, y `expectTypeOf` fija las firmas
+  públicas (lo verifica `tsc`).
 - **Property-based / fuzz** (fast-check): invariantes sobre cualquier entrada.
 
 ```bash
