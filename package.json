@@ -15,6 +15,7 @@
     "test:browsers": "playwright install chromium firefox webkit",
     "test:all": "npm test && npm run test:e2e",
     "test:mutation": "stryker run",
+    "test:budget": "node tools/check-budget.mjs",
     "coverage": "vitest run --coverage"
   },
   "devDependencies": {

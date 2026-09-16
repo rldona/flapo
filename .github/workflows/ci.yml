@@ -43,6 +43,9 @@ jobs:
       - name: Build de producción
         run: npm run build
 
+      - name: Presupuesto de bundle
+        run: npm run test:budget
+
       - name: Publicar artefacto
         uses: actions/upload-artifact@v4
         with:

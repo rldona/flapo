@@ -323,6 +323,7 @@ proyectos locales.
   desde cero y da el mismo score y las mismas tuberías.
 - **Audio**: `AudioDirector` con un `AudioContext` falso: cableado fuente→gain→bus,
   mute, ducking, pitch y tolerancia a que no haya audio.
+- **Rendimiento**: presupuesto del coste de un tick y poda de tuberías/frutas.
 - **Property-based / fuzz** (fast-check): invariantes sobre cualquier entrada.
 
 ```bash
@@ -467,6 +468,9 @@ y despliega `dist/` en cada push a `main`. No hay que commitear el build.
 - Pools y culling: las tuberías y frutas se liberan al salir de pantalla.
 - Escalado con `image-rendering: pixelated` y sin suavizado.
 - Bundle de producción: ~23 KB gzip de JS y ~3 KB de CSS.
+- Comprobado en CI: test de **presupuesto de tick** (`tests/performance.test.ts`,
+  muy por debajo de los 16,7 ms de un frame) y **presupuesto de bundle** con
+  `npm run test:budget` (gzip: JS ≤ 26 KB, CSS ≤ 4 KB).
 
 ## Port del original
 
