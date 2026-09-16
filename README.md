@@ -389,6 +389,8 @@ levantando Vite en un puerto libre. Cubren:
   cruzando tuberías (piloto automático), fin de partida, reinicio y persistencia
   del récord en `localStorage`.
 - **Visual**: escenas deterministas del canvas comparadas con baselines.
+- **Accesibilidad**: `axe-core` sin violaciones WCAG 2 A/AA en cada panel y
+  navegación por teclado (foco, Tab, Enter y P para pausar).
 
 ```bash
 npm run test:e2e
@@ -432,6 +434,9 @@ y despliega `dist/` en cada push a `main`. No hay que commitear el build.
 
 - Menús en DOM real: navegación por teclado, foco visible, `aria` y objetivos
   táctiles de 48 px.
+- Se permite el **zoom** (sin `user-scalable=no`) y el zoom por doble toque se
+  evita por JS.
+- `axe-core` se ejecuta en los E2E sobre cada panel: 0 violaciones WCAG A/AA.
 - Respeta `prefers-reduced-motion`.
 - `safe-area-inset` para notch y bordes redondeados.
 - El campo de juego llena la pantalla sin franjas; en pantallas anchas aparecen

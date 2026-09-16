@@ -22,6 +22,7 @@
     "@types/node": "^22.20.3",
     "@types/pngjs": "^6.0.5",
     "@vitest/coverage-v8": "2.1.9",
+    "axe-core": "^4.13.0",
     "fast-check": "^4.10.1",
     "pixelmatch": "^7.2.0",
     "pngjs": "^7.0.0",
