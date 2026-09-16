@@ -324,6 +324,8 @@ proyectos locales.
 - **Audio**: `AudioDirector` con un `AudioContext` falso: cableado fuente→gain→bus,
   mute, ducking, pitch y tolerancia a que no haya audio.
 - **Rendimiento**: presupuesto del coste de un tick y poda de tuberías/frutas.
+- **Memoria/fugas**: tras muchos ciclos las colecciones siguen acotadas y `Input`
+  retira exactamente los listeners que registró.
 - **Property-based / fuzz** (fast-check): invariantes sobre cualquier entrada.
 
 ```bash
