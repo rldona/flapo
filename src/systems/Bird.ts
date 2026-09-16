@@ -166,12 +166,16 @@ export class Bird {
       this.actualizarPlaneo(dt, flapHeld);
       this.applyGravity(dt);
       if (flapJust) {
+        // Stryker disable next-line ArithmeticOperator: signo() es ±1, multiplicar o dividir es lo mismo
         this.vy = C.FLAP_IMPULSE * this.registrarAleteo() * this.signo();
         this.burstLeft = C.FLAP_BURST_TIME;
         this.gastarAliento(C.BREATH_DRAIN_FLAP);
         this.cb.onFlapped();
       }
-    } else if (this.state === GameState.GAME_OVER) {
+    } else if (
+      // Stryker disable next-line ConditionalExpression: solo hay cuatro estados, este else solo puede ser GAME_OVER
+      this.state === GameState.GAME_OVER
+    ) {
       this.applyGravity(dt);
       this.rotation += C.STUN_SPIN * dt;
     }
@@ -180,6 +184,7 @@ export class Bird {
     this.clampToCeiling();
     if (this.state === GameState.PLAYING) this.updateRotation(dt);
 
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: restar a 0 y recortar deja 0 igual
     if (this.softCooldown > 0) this.softCooldown = Math.max(this.softCooldown - dt, 0);
     if (this.invulnerableLeft > 0) {
       this.invulnerableLeft = Math.max(this.invulnerableLeft - dt, 0);
@@ -191,6 +196,7 @@ export class Bird {
   die(cause: DeathCause, breathless: boolean): void {
     if (this.dead) return;
     this.dead = true;
+    // Stryker disable next-line ArithmeticOperator: signo() es ±1, multiplicar o dividir es lo mismo
     this.vy = C.BOUNCE_IMPULSE * this.signo();
     this.cb.onDied(cause, breathless);
   }
@@ -218,6 +224,7 @@ export class Bird {
   }
 
   private limitar(v: number, tope: number): number {
+    // Stryker disable next-line ArithmeticOperator: multiplicar por -1 y dividir entre -1 son lo mismo
     return this.mirror ? Math.max(v, tope * -1) : Math.min(v, tope);
   }
 
@@ -226,17 +233,21 @@ export class Bird {
     if (this.gliding) {
       if (this.termicas > 0) {
         this.vy = Math.max(
+          // Stryker disable next-line ArithmeticOperator: signo() es ±1, multiplicar o dividir es lo mismo
           this.vy - THERMAL_LIFT * dt * signo,
+          // Stryker disable next-line ArithmeticOperator: signo() es ±1, multiplicar o dividir es lo mismo
           -THERMAL_MAX_RISE * signo,
         );
         return;
       }
       this.vy = this.limitar(
+        // Stryker disable next-line ArithmeticOperator: signo() es ±1, multiplicar o dividir es lo mismo
         this.vy + C.GRAVITY * this.gravityMult * C.GLIDE_GRAVITY_MULT * dt * signo,
         C.GLIDE_MAX_FALL_SPEED,
       );
       return;
     }
+    // Stryker disable next-line ArithmeticOperator: signo() es ±1, multiplicar o dividir es lo mismo
     this.vy = this.limitar(this.vy + C.GRAVITY * this.gravityMult * dt * signo, C.MAX_FALL_SPEED);
   }
 
@@ -264,6 +275,7 @@ export class Bird {
   }
 
   private podarAlteos(ahora: number): void {
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: con el array vacío la comparación con undefined es NaN
     while (this.flapTimes.length > 0 && ahora - this.flapTimes[0] > C.FATIGUE_WINDOW) {
       this.flapTimes.shift();
     }
@@ -287,6 +299,7 @@ export class Bird {
   }
 
   private updateRotation(dt: number): void {
+    // Stryker disable next-line ArithmeticOperator: signo() es ±1, multiplicar o dividir es lo mismo
     const vel = this.vy * this.signo();
     const fallRatio = Math.min(
       Math.max((vel - C.FLAP_IMPULSE) / (C.MAX_FALL_SPEED - C.FLAP_IMPULSE), 0),

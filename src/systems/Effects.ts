@@ -11,7 +11,9 @@ export const enum EffectKind {
 
 const EJES: Record<string, EffectKind[]> = {
   gravedad: [EffectKind.PESADO, EffectKind.LIGERO],
+  // Stryker disable next-line ArrayDeclaration: el único efecto del eje es el que se aplica
   tamano: [EffectKind.GRANDE],
+  // Stryker disable next-line ArrayDeclaration: el único efecto del eje es el que se aplica
   mundo: [EffectKind.LENTO],
 };
 
@@ -19,6 +21,7 @@ function ejeDe(kind: EffectKind): string {
   for (const eje of Object.keys(EJES)) {
     if (EJES[eje].includes(kind)) return eje;
   }
+  // Stryker disable next-line StringLiteral: cualquier cadena que no sea un eje indexa undefined igual
   return '';
 }
 
@@ -56,7 +59,9 @@ export class Effects {
       this.onShieldChanged(this.shield);
       return;
     }
+    // Stryker disable next-line ArrayDeclaration: ejeDe nunca devuelve una clave inexistente en este recorrido
     for (const otro of EJES[ejeDe(kind)] ?? []) {
+      // Stryker disable next-line ConditionalExpression: set(kind) vuelve a fijar el efecto después
       if (otro !== kind) this.restantes.delete(otro);
     }
     this.restantes.set(kind, this.duration);

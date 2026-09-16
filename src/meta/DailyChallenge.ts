@@ -14,6 +14,7 @@ export class DailyChallenge {
     return [d.getFullYear(), d.getMonth() + 1, d.getDate()];
   }
 
+  // Stryker disable next-line ArrayDeclaration: cualquier valor por defecto con longitud != 3 usa hoy
   empezar(nueva: number[] = []): void {
     this.fecha = nueva.length === 3 ? [...nueva] : DailyChallenge.hoy();
   }
@@ -39,6 +40,7 @@ export class DailyChallenge {
 
   mejor(): number {
     const k = this.clave();
+    // Stryker disable next-line ConditionalExpression,StringLiteral: con clave vacía getDailyBest('') ya devuelve 0
     return k !== '' ? SaveManager.getDailyBest(k) : 0;
   }
 }

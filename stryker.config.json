@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "testRunner": "vitest",
+  "vitest": {
+    "configFile": "vite.config.ts"
+  },
+  "mutate": [
+    "src/config/GameConfig.ts",
+    "src/core/Rng.ts",
+    "src/core/types.ts",
+    "src/meta/SaveManager.ts",
+    "src/meta/DailyChallenge.ts",
+    "src/systems/Bird.ts",
+    "src/systems/Fruit.ts",
+    "src/systems/Effects.ts",
+    "src/systems/Journey.ts",
+    "src/systems/Wind.ts"
+  ],
+  "coverageAnalysis": "perTest",
+  "ignorePatterns": [".trunk", "dist", "coverage", "test-results"],
+  "reporters": ["clear-text", "progress", "html", "json"],
+  "htmlReporter": {
+    "fileName": "reports/mutation/mutation.html"
+  },
+  "jsonReporter": {
+    "fileName": "reports/mutation/mutation.json"
+  },
+  "thresholds": {
+    "high": 95,
+    "low": 90,
+    "break": 89
+  },
+  "timeoutMS": 20000,
+  "concurrency": 6,
+  "incremental": true,
+  "incrementalFile": "reports/stryker-incremental.json",
+  "tempDirName": ".stryker-tmp",
+  "cleanTempDir": true
+}

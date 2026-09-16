@@ -29,8 +29,16 @@ jobs:
       - name: Comprobar tipos
         run: npm run typecheck
 
-      - name: Tests
-        run: npm test
+      - name: Cobertura
+        run: npm run coverage
+
+      - name: Publicar informe de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          retention-days: 7
 
       - name: Build de producción
         run: npm run build
@@ -40,4 +48,34 @@ jobs:
         with:
           name: flapo-dist
           path: dist
+          retention-days: 7
+
+  e2e:
+    name: E2E (Chrome headless)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar tests E2E
+        run: npm run test:e2e
+        env:
+          # ubuntu-latest trae Google Chrome preinstalado.
+          CHROME_PATH: /usr/bin/google-chrome
+
+      - name: Publicar capturas si falla
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: test-results
           retention-days: 7

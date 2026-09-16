@@ -223,7 +223,7 @@ la partida continúa.
 - **DOM + CSS** para menús, HUD y paneles: responsive, accesible y navegable por
   teclado.
 - **Web Audio API** para los efectos (buffers WAV, buses y mute persistente).
-- **Vite** para desarrollo y build; **Vitest** para tests.
+- **Vite** para desarrollo y build; **Vitest** para unitarios, **Puppeteer** para E2E y **Stryker** para mutación.
 - **Service Worker** para PWA offline.
 - **GitHub Actions** para CI y despliegue a GitHub Pages.
 
@@ -271,7 +271,7 @@ flapo/
 │   ├── ui/                    # Menús, HUD y paneles (DOM)
 │   ├── styles/                # CSS
 │   └── main.ts                # Arranque
-├── tests/                     # Vitest
+├── tests/                     # Vitest (unitarios) y tests/e2e (Puppeteer)
 ├── tools/                     # Utilidades de desarrollo (smoke/captura)
 ├── docs/                      # Documentación
 ├── assets/                    # Imágenes del README
@@ -299,10 +299,16 @@ proyectos locales.
 | `npm run build` | Typecheck + build de producción en `dist/` |
 | `npm run preview` | Sirve el build de producción |
 | `npm run typecheck` | Comprueba tipos sin emitir |
-| `npm test` | Tests con Vitest |
+| `npm test` | Tests unitarios con Vitest |
 | `npm run test:watch` | Tests en modo vigilancia |
+| `npm run test:e2e` | Tests E2E con Chrome headless (Puppeteer) |
+| `npm run test:all` | Unitarios + E2E |
+| `npm run test:mutation` | Tests de mutación con Stryker (informe en `reports/mutation/`) |
+| `npm run coverage` | Tests + informe de cobertura en `coverage/` |
 
 ## Tests
+
+### Unitarios
 
 - **Funciones puras**: curva de dificultad, aliento/fatiga, medallas, semilla y
   códigos, layout adaptativo y viento.
@@ -314,6 +320,61 @@ proyectos locales.
 ```bash
 npm test
 ```
+
+La cobertura se mide con `@vitest/coverage-v8` y abarca todo `src/**/*.ts`
+(excepto `src/main.ts`), incluyendo los módulos aún sin tests. Los umbrales son
+un *ratchet*: están fijados unos puntos por debajo de la cobertura actual, así
+que CI solo falla si la cobertura **baja**. El informe HTML/LCOV se genera en
+`coverage/` (ignorado por git) y CI lo publica como artefacto descargable.
+
+```bash
+npm run coverage
+```
+
+### Mutación
+
+Los **tests de mutación** (Stryker + `@stryker-mutator/vitest-runner`) comprueban
+que los tests unitarios no solo ejecutan el código, sino que detectan cambios de
+comportamiento. Se muta el **núcleo bien cubierto**: `config/GameConfig`,
+`core/Rng`, `core/types`, `meta/SaveManager`, `meta/DailyChallenge` y
+`systems/{Bird,Fruit,Effects,Journey,Wind}`.
+
+- Mutation score actual: **100 %** (1172 detectados + 5 por *timeout*).
+- Los mutantes **equivalentes** (imposibles de matar: `signo()` es ±1, ramas
+  defensivas contra constantes, etc.) se marcan en el código con
+  `// Stryker disable next-line`. La directiva es por línea y mutador, así que
+  también excluye el mutante hermano del mismo operador.
+- Umbral `break` en **89**, también *ratchet*: si baja, Stryker sale con error.
+- Informe HTML/JSON en `reports/mutation/` (ignorado por git).
+- Con `incremental` activado, las repeticiones locales son de segundos.
+
+```bash
+npm run test:mutation
+```
+
+Se ejecuta en CI en un workflow aparte (`.github/workflows/mutation.yml`),
+**manual** (`workflow_dispatch`) o **semanal** (lunes 03:00 UTC); no bloquea los
+PR porque tarda varios minutos.
+
+### E2E
+
+Prueban la app real en **Chrome headless** con Puppeteer (`puppeteer-core`),
+levantando Vite en un puerto libre. Cubren:
+
+- **Arranque**: carga sin errores de consola, menú principal, canvas 288×alto,
+  paneles de opciones/estadísticas y layout en móvil y escritorio.
+- **Partida**: paso a READY/PLAYING, pausa y reanudación, puntuación real
+  cruzando tuberías (piloto automático), fin de partida, reinicio y persistencia
+  del récord en `localStorage`.
+
+```bash
+npm run test:e2e
+```
+
+El navegador se resuelve por `CHROME_PATH` / `PUPPETEER_EXECUTABLE_PATH` o por
+las rutas habituales de macOS y Linux. Si un caso falla, se guarda una captura
+en `test-results/` (ignorado por git; CI lo publica como artefacto). Para probar
+contra una URL ya levantada, define `E2E_URL`.
 
 ## Despliegue en GitHub Pages
 

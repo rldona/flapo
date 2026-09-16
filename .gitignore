@@ -1,4 +1,8 @@
 node_modules/
 dist/
+coverage/
+test-results/
+reports/
+.stryker-tmp/
 .DS_Store
 *.local

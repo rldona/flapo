@@ -109,6 +109,7 @@ export class FruitSpawner {
   }
 
   private crear(): void {
+    // Stryker disable next-line ConditionalExpression: update ya comprueba el rng antes de llamar aquí
     if (!this.rng) return;
     const kinds = this.kindsDisponibles();
     const kind = kinds[this.rng.randiRange(0, kinds.length - 1)];

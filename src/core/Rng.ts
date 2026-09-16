@@ -54,6 +54,7 @@ export class Rng {
 
   /** [from, to] ambos inclusive, como `randi_range`. */
   randiRange(from: number, to: number): number {
+    // Stryker disable next-line EqualityOperator: con to=from el rango de un solo valor devuelve from
     if (to <= from) return from;
     return from + Math.floor(this.randf() * (to - from + 1));
   }

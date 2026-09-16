@@ -226,6 +226,7 @@ export function mix(a: number, b: number, t: number): number {
 }
 
 export function clamp(v: number, lo: number, hi: number): number {
+  // Stryker disable next-line EqualityOperator: en el borde devuelve lo/hi igual con < o <=
   return v < lo ? lo : v > hi ? hi : v;
 }
 
@@ -314,11 +315,13 @@ export function sanitizePlayerName(texto: string): string {
   let limpio = '';
   for (const ch of texto) {
     const code = ch.codePointAt(0) ?? 0;
+    // Stryker disable next-line EqualityOperator: el código 32 es un espacio y se sustituye por otro
     if (code < 32 || code === 127) limpio += ' ';
     else limpio += ch;
   }
   while (limpio.includes('  ')) limpio = limpio.replace(/ {2}/g, ' ');
   limpio = limpio.trim();
+  // Stryker disable next-line ConditionalExpression,EqualityOperator: recortar a 12 o menos no cambia nada
   if (limpio.length > PLAYER_NAME_MAX_LEN) limpio = limpio.slice(0, PLAYER_NAME_MAX_LEN).trim();
   return limpio;
 }
@@ -407,6 +410,7 @@ export function movingPipePeakSpeed(amplitud: number): number {
 }
 
 export function isSoftPipe(indice: number): boolean {
+  // Stryker disable next-line ConditionalExpression,EqualityOperator: SOFT_PIPE_INTERVAL es constante positiva
   if (indice <= 0 || SOFT_PIPE_INTERVAL <= 0) return false;
   return indice % SOFT_PIPE_INTERVAL === 0;
 }
@@ -419,8 +423,10 @@ export interface Rect {
 }
 
 export function windowScaleFor(ventanaW: number, ventanaH: number, fractional = false): number {
+  // Stryker disable next-line ConditionalExpression,EqualityOperator,LogicalOperator: el clamp inferior ya devuelve MIN_WINDOW_SCALE
   if (ventanaW <= 0 || ventanaH <= 0) return MIN_WINDOW_SCALE;
   const fit = Math.min(ventanaW / VIEWPORT_WIDTH, ventanaH / VIEWPORT_HEIGHT);
+  // Stryker disable next-line EqualityOperator: con fit=2, floor(2) ya coincide
   if (fit >= 2 && !fractional) {
     return clamp(Math.floor(fit), MIN_WINDOW_SCALE, MAX_WINDOW_SCALE);
   }
@@ -449,6 +455,7 @@ export function layoutMarginFor(
 
 export function windFactorFor(score: number, modo: Difficulty, aFavor: boolean): number {
   const base = scrollSpeedFor(score, modo);
+  // Stryker disable next-line ConditionalExpression,EqualityOperator: scrollSpeedFor siempre es positivo
   if (base <= 0) return 1;
   const suelo = scrollSpeedFor(0, modo);
   const techo = scrollSpeedFor(DIFFICULTY_CAP, modo);
@@ -456,6 +463,7 @@ export function windFactorFor(score: number, modo: Difficulty, aFavor: boolean):
   const contra = clamp(base * WIND_FACTOR_HEAD, suelo, techo) / base;
   const preferido = aFavor ? cola : contra;
   const alternativo = aFavor ? contra : cola;
+  // Stryker disable next-line EqualityOperator: el umbral 1e-6 no es alcanzable con estos valores
   if (Math.abs(preferido - 1) > 1e-6) return preferido;
   return alternativo;
 }
@@ -480,8 +488,10 @@ export function pantLevel(aliento: number, maximo: number): Pant {
 }
 
 export function pantTintWeight(aliento: number, maximo: number): number {
+  // Stryker disable next-line ConditionalExpression,EqualityOperator: BREATH_LOW_RATIO es constante positiva
   if (maximo <= 0 || BREATH_LOW_RATIO <= 0) return 0;
   const ratio = clamp(aliento / maximo, 0, 1);
+  // Stryker disable next-line EqualityOperator: justo en el borde el peso hundido vale 0
   if (ratio >= BREATH_LOW_RATIO) return 0;
   const hundido = 1 - ratio / BREATH_LOW_RATIO;
   return hundido * PANT_TINT_MAX;

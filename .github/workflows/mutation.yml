@@ -1,0 +1,39 @@
+name: Mutation testing
+
+on:
+  # Manual: Actions → Mutation testing → Run workflow.
+  workflow_dispatch:
+  # Semanal: lunes a las 03:00 UTC.
+  schedule:
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    name: Stryker (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Mutación
+        run: npm run test:mutation
+
+      - name: Publicar informe de mutación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation
+          retention-days: 14
