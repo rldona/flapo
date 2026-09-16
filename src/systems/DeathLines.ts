@@ -2,6 +2,7 @@ import type { Rng } from '../core/Rng';
 import { DeathCause } from '../core/types';
 
 /** Contenido portado de `assets/data/death_lines.tres` (T-056/T-075). */
+// Stryker disable ArrayDeclaration,StringLiteral: repertorio genérico inalcanzable (cada causa y el jadeo tienen el suyo)
 const LINES = [
   '¡Uf!',
   'Casi.',
@@ -16,6 +17,7 @@ const LINES = [
   'Buen intento, de verdad.',
   'Se te ha ido un pelín.',
 ];
+// Stryker restore ArrayDeclaration,StringLiteral
 
 const LINES_PIPE = [
   'Esa tubería salió de la nada.',

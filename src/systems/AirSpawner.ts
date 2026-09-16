@@ -117,6 +117,7 @@ export class AirSpawner {
   }
 
   onPipeSpawned(): void {
+    // Stryker disable next-line AssignmentOperator: el contador solo se usa por módulo (el signo da el mismo resto)
     this.contador += 1;
     this.quizaHermano();
     if (!this.tocaTermica() || !this.pipeSpawner) return;
@@ -137,6 +138,7 @@ export class AirSpawner {
 
   private quizaHermano(): void {
     if (this.score < A.BROTHER_MIN_SCORE) return;
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: BROTHER_INTERVAL es constante positiva
     if (A.BROTHER_INTERVAL <= 0 || this.contador % A.BROTHER_INTERVAL !== 0) return;
     const y = this.alturaLibre();
     const hermano = new Brother();
@@ -155,7 +157,9 @@ export class AirSpawner {
 
   private alturaLibre(): number {
     const alto = C.playableHeight();
+    // Stryker disable next-line ArithmeticOperator: solo importa cuando no hay tubería, y ahí el resultado es el mismo
     let centro = alto * 0.5;
+    // Stryker disable next-line OptionalChaining: los llamadores ya garantizan que hay spawner
     const ultima = this.pipeSpawner?.lastPipe();
     if (ultima) centro = ultima.gapCenter;
     if (centro < alto * 0.5) return alto - A.BROTHER_EDGE_MARGIN;
@@ -164,6 +168,7 @@ export class AirSpawner {
 
   private tocaTermica(): boolean {
     if (this.score < A.THERMAL_MIN_SCORE) return false;
+    // Stryker disable next-line ConditionalExpression,EqualityOperator,BooleanLiteral: THERMAL_INTERVAL es constante positiva
     if (A.THERMAL_INTERVAL <= 0) return false;
     return this.contador % A.THERMAL_INTERVAL === 0;
   }
@@ -171,6 +176,7 @@ export class AirSpawner {
   private crearTermica(): void {
     const t = new Thermal();
     t.scrollSpeed = this.scrollSpeed;
+    // Stryker disable next-line OptionalChaining: los llamadores ya garantizan que hay spawner
     const referencia = this.pipeSpawner?.spawnX ?? this.spawnX;
     t.x = referencia + this.spacing * 0.5;
     t.y = C.playableHeight() * 0.5;

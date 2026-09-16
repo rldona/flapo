@@ -78,6 +78,33 @@ describe('GhostRecord', () => {
     expect(GhostRecord.cargar()).toBeNull();
   });
 
+  it('acepta justo el máximo de frames', () => {
+    localStorage.setItem(
+      'flapo.ghost.v1',
+      JSON.stringify({
+        semilla: 1,
+        score: 2,
+        posiciones: new Array(GHOST_MAX_FRAMES).fill(1),
+      }),
+    );
+    expect(GhostRecord.cargar()?.frames()).toBe(GHOST_MAX_FRAMES);
+  });
+
+  it('exige el tipo correcto en cada campo', () => {
+    const base = { semilla: 1, score: 2, posiciones: [1, 2] };
+    localStorage.setItem('flapo.ghost.v1', JSON.stringify({ ...base, semilla: 'x' }));
+    expect(GhostRecord.cargar()).toBeNull();
+
+    localStorage.setItem('flapo.ghost.v1', JSON.stringify({ ...base, score: 'x' }));
+    expect(GhostRecord.cargar()).toBeNull();
+
+    localStorage.setItem(
+      'flapo.ghost.v1',
+      JSON.stringify({ semilla: 1, score: 2, posiciones: 'x' }),
+    );
+    expect(GhostRecord.cargar()).toBeNull();
+  });
+
   it('descarta posiciones que no son números', () => {
     localStorage.setItem(
       'flapo.ghost.v1',

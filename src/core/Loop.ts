@@ -42,6 +42,7 @@ export class Loop {
     if (!this.running) return;
     let dtReal = (now - this.last) / 1000;
     this.last = now;
+    // Stryker disable next-line EqualityOperator: justo en el borde asigna el mismo valor
     if (dtReal > this.maxFrame) dtReal = this.maxFrame;
 
     this.onFrame(dtReal);

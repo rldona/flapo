@@ -9,13 +9,23 @@
     "src/config/GameConfig.ts",
     "src/core/Rng.ts",
     "src/core/types.ts",
+    "src/core/Loop.ts",
+    "src/core/Input.ts",
     "src/meta/SaveManager.ts",
     "src/meta/DailyChallenge.ts",
+    "src/meta/GhostRecord.ts",
     "src/systems/Bird.ts",
     "src/systems/Fruit.ts",
     "src/systems/Effects.ts",
     "src/systems/Journey.ts",
-    "src/systems/Wind.ts"
+    "src/systems/Wind.ts",
+    "src/systems/Pipe.ts",
+    "src/systems/PipeSpawner.ts",
+    "src/systems/AirSpawner.ts",
+    "src/systems/Ghost.ts",
+    "src/systems/DeathLines.ts",
+    "src/systems/Snapshot.ts",
+    "src/systems/Juice.ts"
   ],
   "coverageAnalysis": "perTest",
   "ignorePatterns": [".trunk", "dist", "coverage", "test-results"],
@@ -27,9 +37,9 @@
     "fileName": "reports/mutation/mutation.json"
   },
   "thresholds": {
-    "high": 95,
-    "low": 90,
-    "break": 89
+    "high": 98,
+    "low": 96,
+    "break": 95
   },
   "timeoutMS": 20000,
   "concurrency": 6,

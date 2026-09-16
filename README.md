@@ -374,16 +374,17 @@ npm run coverage
 
 Los **tests de mutación** (Stryker + `@stryker-mutator/vitest-runner`) comprueban
 que los tests unitarios no solo ejecutan el código, sino que detectan cambios de
-comportamiento. Se muta el **núcleo bien cubierto**: `config/GameConfig`,
-`core/Rng`, `core/types`, `meta/SaveManager`, `meta/DailyChallenge` y
-`systems/{Bird,Fruit,Effects,Journey,Wind}`.
+comportamiento. Se mutan **20 módulos** del núcleo y los sistemas:
+`config/GameConfig`, `core/{Rng,types,Loop,Input}`,
+`meta/{SaveManager,DailyChallenge,GhostRecord}` y
+`systems/{Bird,Fruit,Effects,Journey,Wind,Pipe,PipeSpawner,AirSpawner,Ghost,DeathLines,Snapshot,Juice}`.
 
-- Mutation score actual: **100 %** (1172 detectados + 5 por *timeout*).
+- Mutation score actual: **97,6 %** (1979 detectados + 9 por *timeout*).
 - Los mutantes **equivalentes** (imposibles de matar: `signo()` es ±1, ramas
   defensivas contra constantes, etc.) se marcan en el código con
   `// Stryker disable next-line`. La directiva es por línea y mutador, así que
   también excluye el mutante hermano del mismo operador.
-- Umbral `break` en **89**, también *ratchet*: si baja, Stryker sale con error.
+- Umbral `break` en **95**, también *ratchet*: si baja, Stryker sale con error.
 - Informe HTML/JSON en `reports/mutation/` (ignorado por git).
 - Con `incremental` activado, las repeticiones locales son de segundos.
 

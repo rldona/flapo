@@ -51,7 +51,11 @@ export class PipeSpawner {
       this.paused = false;
       this.nextIn = this.interval;
       this.createPipe();
-    } else if (to === GameState.GAME_OVER) {
+    } else if (
+      // Stryker disable next-line ConditionalExpression: con cuatro estados, solo GAME_OVER llega aquí
+      to === GameState.GAME_OVER
+    ) {
+      // Stryker disable next-line BooleanLiteral: con paused=true la rama de update ya no llega
       this.active = false;
       this.paused = true;
       for (const p of this.pipes) p.moving = false;
@@ -109,9 +113,15 @@ export class PipeSpawner {
 
     // Cada tubería consume siempre los mismos números: la secuencia no puede
     // depender de lo que decida ser (ADR-0030).
-    const saleMovil = this.movingChance > 0 && this.rng.randf() < this.movingChance;
+    const saleMovil =
+      // Stryker disable next-line ConditionalExpression,EqualityOperator: con chance 0 el resultado no cambia
+      this.movingChance > 0 &&
+      this.rng.randf() < this.movingChance;
     const fase = this.rng.randfRange(0, Math.PI * 2);
-    const saleGiro = this.spinChance > 0 && this.rng.randf() < this.spinChance;
+    const saleGiro =
+      // Stryker disable next-line ConditionalExpression,EqualityOperator: con chance 0 el resultado no cambia
+      this.spinChance > 0 &&
+      this.rng.randf() < this.spinChance;
 
     const reservada = this.reservedNormal;
     this.reservedNormal = false;

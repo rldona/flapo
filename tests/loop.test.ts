@@ -6,18 +6,22 @@ import { Loop } from '../src/core/Loop';
  * pasos por frame, pausa e interpolación para el render.
  */
 
-function rafFalso(): { disparar: (ms: number) => void; veces: () => number } {
+function rafFalso(): { disparar: (ms: number) => void; veces: () => number; cancelados: () => number } {
   let ultimo: FrameRequestCallback | null = null;
   let veces = 0;
+  let cancelados = 0;
   vi.stubGlobal('requestAnimationFrame', (f: FrameRequestCallback) => {
     ultimo = f;
     veces++;
     return veces;
   });
-  vi.stubGlobal('cancelAnimationFrame', () => {});
+  vi.stubGlobal('cancelAnimationFrame', () => {
+    cancelados++;
+  });
   return {
     disparar: (ms: number) => ultimo?.(ms),
     veces: () => veces,
+    cancelados: () => cancelados,
   };
 }
 
@@ -143,6 +147,7 @@ describe('Loop · start/stop', () => {
     const { loop, updates } = crear();
     loop.start();
     loop.stop();
+    expect(raf.cancelados()).toBeGreaterThan(0);
     raf.disparar(PASO_MS);
     expect(updates).toHaveLength(0);
   });
