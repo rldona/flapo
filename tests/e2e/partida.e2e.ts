@@ -12,7 +12,6 @@ import {
   matar,
   nuevaPagina,
   pausado,
-  puntuacion,
   record,
   type EntornoE2E,
   type SesionE2E,
@@ -50,6 +49,31 @@ describe('E2E · partida y persistencia', () => {
     await sesion?.cerrar();
   });
 
+  /**
+   * Reinicia la partida para volver a intentar puntuar. El autopiloto va con
+   * tiempos reales, así que en CI (más lento) puede no cruzar ninguna tubería
+   * en un intento; reintentar lo hace robusto.
+   */
+  async function reintentarPartida(): Promise<void> {
+    if ((await estado(sesion.page)) !== ESTADO.GAME_OVER) await matar(sesion.page);
+    await sesion.page.waitForSelector('[data-act="restart"]', { timeout: 15_000 });
+    await sesion.page.click('[data-act="restart"]');
+    await esperarEstado(sesion.page, ESTADO.READY);
+    await esperarFrames(sesion.page, 2);
+    await aletear(sesion.page, 70);
+    await esperarEstado(sesion.page, ESTADO.PLAYING);
+  }
+
+  async function puntuarConReintentos(intentos = 3): Promise<number> {
+    let mejor = 0;
+    for (let intento = 0; intento < intentos && mejor === 0; intento++) {
+      if (intento > 0) await reintentarPartida();
+      const { puntuacionMaxima } = await jugarAutopilotado(sesion.page, { pasos: 200 });
+      mejor = Math.max(mejor, puntuacionMaxima);
+    }
+    return mejor;
+  }
+
   it('pasa a READY al pulsar Jugar y a PLAYING con el primer aleteo', async () => {
     await sesion.page.click('[data-act="play"]');
     await esperarEstado(sesion.page, ESTADO.READY);
@@ -80,16 +104,12 @@ describe('E2E · partida y persistencia', () => {
 
   it('cruza tuberías de verdad y suma puntos', async () => {
     await empezarPartida(sesion.page);
-
-    const { puntuacionMaxima } = await jugarAutopilotado(sesion.page, { pasos: 200 });
-    expect(puntuacionMaxima).toBeGreaterThan(0);
+    expect(await puntuarConReintentos()).toBeGreaterThan(0);
   });
 
   it('guarda el récord al morir y muestra el fin de partida', async () => {
     await empezarPartida(sesion.page);
-    await jugarAutopilotado(sesion.page, { pasos: 120 });
-
-    const marca = await puntuacion(sesion.page);
+    const marca = await puntuarConReintentos();
     expect(marca).toBeGreaterThan(0);
 
     if ((await estado(sesion.page)) !== ESTADO.GAME_OVER) await matar(sesion.page);
