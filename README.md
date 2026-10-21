@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/cover/cover.png" alt="Flapo: toca para aletear y no toques nada" width="860"></p>
+
 # Flapo
 
 ### 🎮 [Jugar ahora](https://rldona.github.io/flapo/)
