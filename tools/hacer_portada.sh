@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Regenera docs/cover/cover.png (portada del repositorio / social preview de GitHub, 1280x640)
-# a partir de docs/cover/cover.html, que compone el icono, el nombre y docs/cover/screenshot.png.
+# a partir de docs/cover/cover.html, que compone el icono, el nombre y docs/cover/screenshot.jpg.
 #
 #   ./tools/hacer_portada.sh
 #
